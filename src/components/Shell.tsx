@@ -1,21 +1,17 @@
 "use client"
 import React, { useState } from 'react'
 import Sidebar from './Sidebar'
-import Header from './Header'
 
 type ShellProps = {
   children: React.ReactNode
 }
 
 const Shell = ({ children }: ShellProps) => {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
   return (
-    <div className="flex">
-      <div className={`${collapsed ? 'w-0' : 'w-64'} h-screen overflow-y-auto transition-[width] duration-200`}> 
-        <Sidebar collapsed={collapsed} />
-      </div>
-      <div className="bg-white flex-1 h-screen overflow-y-auto relative [scrollbar-gutter:stable]">
-        <Header onToggleSidebar={() => setCollapsed(v => !v)} />
+    <div className="flex h-screen">
+      <Sidebar collapsed={collapsed} onToggleSidebar={() => setCollapsed(v => !v)} />
+      <div className="bg-white flex-1 overflow-y-auto relative [scrollbar-gutter:stable]">
         {children}
       </div>
     </div>

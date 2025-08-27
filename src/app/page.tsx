@@ -46,11 +46,11 @@ export default function Home() {
         // If the bottom anchor is visible (within margin), we are near bottom -> hide button
         setShowScrollToBottom(!entry.isIntersecting);
       },
-      { root: rootEl, threshold: 0, rootMargin: '0px 0px -80px 0px' }
+      { root: rootEl, threshold: 0, rootMargin: `0px 0px -${Math.max(0, inputHeight + 20)}px 0px` }
     );
     observer.observe(anchorRef.current);
     return () => observer.disconnect();
-  }, [hasMessages]);
+  }, [hasMessages, inputHeight, messages.length]);
 
   // scroll-to-bottom handled inside ChatInput via refs
 
@@ -109,7 +109,7 @@ export default function Home() {
   }, [messages]);
 
   return (
-    <main className="h-[calc(100vh-2.5rem)] flex flex-col items-center p-2 pt-2">
+    <main className="h-full flex flex-col items-center pt-10">
       <div className={`w-full max-w-4xl mx-auto relative ${hasMessages ? 'flex flex-col gap-3 h-full' : 'flex items-center justify-center h-full px-4'}`}>
         {hasMessages && (
           <div className="flex-1 px-4">
@@ -125,7 +125,6 @@ export default function Home() {
             titleText="What can I help with?"
             showScrollButton={hasMessages && showScrollToBottom}
             scrollParentRef={scrollParentRef}
-            onAnchorRefChange={(el) => { anchorRef.current = el }}
             onHeightChange={setInputHeight}
           />
         </div>

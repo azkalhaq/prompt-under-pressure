@@ -1,9 +1,14 @@
 "use client"
-import React, { useState, KeyboardEvent } from 'react'
+import React, { useState, KeyboardEvent, FormEvent } from 'react'
 import { ImArrowUpRight, ImArrowUpRight2 } from 'react-icons/im'
 import { TbPaperclip } from 'react-icons/tb'
 
-const ChatInput = () => {
+type ChatInputProps = {
+  onSubmitPrompt?: (prompt: string) => Promise<void> | void
+  disabled?: boolean
+}
+
+const ChatInput = ({ onSubmitPrompt, disabled }: ChatInputProps) => {
   const [prompt, setPrompt] = useState('')
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -12,7 +17,7 @@ const ChatInput = () => {
       setPrompt(prev => prev + '\n')
     } else if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      // Handle form submission here
+      void handleSubmit()
     }
   }
 
@@ -27,9 +32,24 @@ const ChatInput = () => {
     adjustTextAreaHeight(e.target)
   }
 
+  const handleSubmit = async () => {
+    if (!prompt || disabled) return
+    try {
+      await onSubmitPrompt?.(prompt)
+      setPrompt('')
+    } catch (err) {
+      // swallow; higher-level component can handle
+    }
+  }
+
+  const onFormSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    void handleSubmit()
+  }
+
   return (
     <div className='w-full flex flex-col items-center justify-center max-w-3xl mx-auto pt-3 px-4'>
-      <form className='rounded-full flex items-center px-4 py-2.5 w-full shadow-sm outline-1 outline-gray-200'>
+      <form onSubmit={onFormSubmit} className='rounded-full flex items-center px-4 py-2.5 w-full shadow-sm outline-1 outline-gray-200'>
         <TbPaperclip className='text-2xl -rotate-45 text-gray-600' />
         <textarea 
           placeholder='Ask Anything'
@@ -40,7 +60,7 @@ const ChatInput = () => {
           className='bg-transparent flex-grow outline-none text-gray-700 placeholder-gray-500 px-2 font-medium tracking-wide resize-none overflow-hidden min-h-[24px] max-h-32 break-words whitespace-pre-wrap'
           style={{ height: 'auto' }}
         />
-        <button disabled={!prompt} className='p-2.5 rounded-full bg-black disabled:bg-gray-400'>
+        <button type='submit' disabled={!prompt || disabled} className='p-2.5 rounded-full bg-black disabled:bg-gray-400'>
           <ImArrowUpRight2 className='-rotate-45 text-white' />
         </button>
       </form>

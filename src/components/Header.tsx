@@ -1,11 +1,18 @@
+"use client"
 import React from 'react'
+import { RxHamburgerMenu } from 'react-icons/rx'
 
-const Header = () => {
+type HeaderProps = {
+  onToggleSidebar?: () => void
+}
+
+const Header = ({ onToggleSidebar }: HeaderProps) => {
   return (
-    <div className='flex items-center justify-between h-10 absolute w-full top-0 left-0 p-2'>
-      <button>
-        Header
+    <div className='flex items-center gap-2 h-10 sticky top-0 left-0 z-20 p-2 bg-gray-50/80 backdrop-blur supports-[backdrop-filter]:bg-gray-50/60'>
+      <button aria-label='Toggle sidebar' onClick={onToggleSidebar} className='p-2 rounded hover:bg-gray-200 active:scale-[0.98]'>
+        <RxHamburgerMenu />
       </button>
+      <div className='font-semibold'>Chat</div>
     </div>
   )
 }

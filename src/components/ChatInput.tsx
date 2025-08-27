@@ -11,11 +11,11 @@ type ChatInputProps = {
   titleText?: string
   showScrollButton?: boolean
   scrollParentRef?: React.MutableRefObject<HTMLElement | null>
-  anchorRef?: React.MutableRefObject<HTMLDivElement | null>
   onHeightChange?: (height: number) => void
+  onAnchorRefChange?: (el: HTMLDivElement | null) => void
 }
 
-const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollButton, scrollParentRef, anchorRef, onHeightChange }: ChatInputProps) => {
+const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollButton, scrollParentRef, onHeightChange, onAnchorRefChange }: ChatInputProps) => {
   const [prompt, setPrompt] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -82,13 +82,26 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
   }
 
   const handleScrollToBottom = useCallback(() => {
-    const parent = scrollParentRef?.current
+    let parent = scrollParentRef?.current
+    if (!parent && containerRef.current) {
+      const getOverflowY = (el: HTMLElement) => window.getComputedStyle(el).overflowY
+      let node: HTMLElement | null = containerRef.current
+      while (node) {
+        const oy = getOverflowY(node)
+        if ((oy === 'auto' || oy === 'scroll') && node.scrollHeight > node.clientHeight) {
+          parent = node
+          if (scrollParentRef) scrollParentRef.current = node
+          break
+        }
+        node = node.parentElement as HTMLElement | null
+      }
+    }
     if (parent) {
       parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' })
-    } else if (anchorRef?.current) {
-      anchorRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    } else if (containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
     }
-  }, [scrollParentRef, anchorRef])
+  }, [scrollParentRef])
 
   useEffect(() => {
     if (!containerRef.current || !onHeightChange) return
@@ -104,6 +117,10 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
     onHeightChange(el.getBoundingClientRect().height)
     return () => ro.disconnect()
   }, [onHeightChange])
+
+  useEffect(() => {
+    onAnchorRefChange?.(containerRef.current)
+  }, [onAnchorRefChange])
 
   return (
     <div className='w-full flex flex-col items-center justify-center max-w-3xl mx-auto px-4'>

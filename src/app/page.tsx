@@ -114,7 +114,7 @@ export default function Home() {
         {hasMessages && (
           <div className="flex-1 px-4">
             <ChatItem messages={messages} isLoading={isLoading} />
-            <div ref={anchorRef} style={{ height: Math.max(24, inputHeight) }} />
+            <div ref={anchorRef} style={{ height: Math.max(24, inputHeight-20) }} />
           </div>
         )}
         <div className={`${hasMessages ? 'sticky bottom-0' : ''} w-full flex justify-center px-4`}>
@@ -125,7 +125,7 @@ export default function Home() {
             titleText="What can I help with?"
             showScrollButton={hasMessages && showScrollToBottom}
             scrollParentRef={scrollParentRef}
-            anchorRef={anchorRef}
+            onAnchorRefChange={(el) => { anchorRef.current = el }}
             onHeightChange={setInputHeight}
           />
         </div>

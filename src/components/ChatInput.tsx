@@ -1,6 +1,7 @@
 "use client"
-import React, { useState, KeyboardEvent, FormEvent, useRef, MouseEvent } from 'react'
+import React, { useState, KeyboardEvent, FormEvent, useRef, MouseEvent, useCallback, useEffect } from 'react'
 import { ImArrowUpRight2 } from 'react-icons/im'
+import { IoArrowDown } from 'react-icons/io5'
 // import { TbPaperclip } from 'react-icons/tb'
 
 type ChatInputProps = {
@@ -8,11 +9,16 @@ type ChatInputProps = {
   disabled?: boolean
   showTitle?: boolean
   titleText?: string
+  showScrollButton?: boolean
+  scrollParentRef?: React.MutableRefObject<HTMLElement | null>
+  anchorRef?: React.MutableRefObject<HTMLDivElement | null>
+  onHeightChange?: (height: number) => void
 }
 
-const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText }: ChatInputProps) => {
+const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollButton, scrollParentRef, anchorRef, onHeightChange }: ChatInputProps) => {
   const [prompt, setPrompt] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.shiftKey && e.key === 'Enter') {
@@ -75,13 +81,50 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText }: ChatInput
     }
   }
 
+  const handleScrollToBottom = useCallback(() => {
+    const parent = scrollParentRef?.current
+    if (parent) {
+      parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' })
+    } else if (anchorRef?.current) {
+      anchorRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    }
+  }, [scrollParentRef, anchorRef])
+
+  useEffect(() => {
+    if (!containerRef.current || !onHeightChange) return
+    const el = containerRef.current
+    const ro = new ResizeObserver(entries => {
+      const entry = entries[0]
+      if (!entry) return
+      const height = entry.contentRect.height
+      onHeightChange(height)
+    })
+    ro.observe(el)
+    // initial
+    onHeightChange(el.getBoundingClientRect().height)
+    return () => ro.disconnect()
+  }, [onHeightChange])
+
   return (
-    <div className='bg-white w-full flex flex-col items-center justify-center max-w-3xl mx-auto pb-1 px-4'>
+    <div className='w-full flex flex-col items-center justify-center max-w-3xl mx-auto px-4'>
       {showTitle && (
         <h2 className='text-center text-xl md:text-2xl font-semibold mb-5 select-none'>
           {titleText || 'What can I help with?'}
         </h2>
       )}
+      {showScrollButton && (
+        <div className='w-full flex justify-center pr-3 mb-2'>
+          <button
+            type='button'
+            onClick={handleScrollToBottom}
+            className='bg-gray-900 text-white rounded-full p-3 shadow-lg hover:opacity-90 active:scale-[0.98] h-9 w-9 flex items-center justify-center'
+            aria-label='Scroll to bottom'
+          >
+            <IoArrowDown size={18} />
+          </button>
+        </div>
+      )}
+      <div ref={containerRef} className='bg-white w-full flex flex-col items-center justify-center max-w-3xl mx-auto pb-1 px-4'>
       <form onMouseDown={handleFormMouseDown} onSubmit={onFormSubmit} className='relative w-full cursor-text'>
         <label className='relative flex w-full flex-col overflow-hidden rounded-2xl py-4 pl-4 pr-[52px] border border-gray-200 bg-white shadow-sm'>
           <div className='sr-only'>Message ChatGPT</div>
@@ -105,6 +148,7 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText }: ChatInput
       <p className="text-xs mt-2 font-medium tracking-wide text-gray-600">
         ChatGPT can make mistakes. Check important info.
       </p>
+      </div>
       {/* model selection */}
     </div>
   )

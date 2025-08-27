@@ -13,6 +13,8 @@ export async function POST(req: NextRequest) {
 
     const stream = await streamChatCompletion({ client, model, messages });
 
+    // console.log(messages);
+
     return new Response(stream, {
       headers: {
         "Content-Type": "text/event-stream; charset=utf-8",

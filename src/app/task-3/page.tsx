@@ -1,11 +1,14 @@
 "use client"
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
 
 type UiMessage = { id: string; role: "user" | "assistant"; content: string };
 
 export default function ScenarioThree() {
+  const searchParams = useSearchParams();
+  const userId = (searchParams.get('u') || 'anonymous').slice(0, 100);
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -67,6 +70,7 @@ export default function ScenarioThree() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model,
+          user_id: userId,
           messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
         }),
         signal: ac.signal,

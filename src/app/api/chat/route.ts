@@ -10,11 +10,12 @@ export async function POST(req: NextRequest) {
     const supabase = getSupabaseServerClientOrNull();
 
     const body = await req.json();
+    const qpUser = req.nextUrl.searchParams.get('u') || undefined;
     const messages: ChatMessage[] = body?.messages ?? [];
     const model: string = (typeof body?.model === 'string' && body.model.trim().length > 0)
       ? body.model.trim()
       : process.env.OPENAI_MODEL;
-    const userId: string = body?.user_id || "anonymous";
+    const userId: string = body?.user_id || qpUser || "anonymous";
     const cookieName = 'sid';
     let sessionId: string | undefined = body?.session_id || req.cookies.get(cookieName)?.value;
     let shouldSetSessionCookie = false;

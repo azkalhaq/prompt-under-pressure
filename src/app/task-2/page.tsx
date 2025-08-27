@@ -1,5 +1,5 @@
 "use client"
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
@@ -20,6 +20,12 @@ export default function Home() {
 
   const model = process.env.OPENAI_MODEL;
   const hasMessages = messages.length > 0;
+
+  // Use useMemo to create stable references and prevent unnecessary re-renders
+  const observerConfig = useMemo(() => ({
+    rootMargin: `0px 0px -${Math.max(80, inputHeight + 40)}px 0px`,
+    threshold: 0
+  }), [inputHeight]);
 
   useEffect(() => {
     const getOverflowY = (el: HTMLElement) => {
@@ -49,11 +55,11 @@ export default function Home() {
         // If the bottom anchor is visible (within margin), we are near bottom -> hide button
         setShowScrollToBottom(!entry.isIntersecting);
       },
-      { root: rootEl, threshold: 0, rootMargin: `0px 0px -${Math.max(0, inputHeight + 20)}px 0px` }
+      { root: rootEl, ...observerConfig }
     );
     observer.observe(anchorRef.current);
     return () => observer.disconnect();
-  }, [hasMessages, inputHeight, messages.length]);
+  }, [hasMessages, observerConfig]);
 
   // scroll-to-bottom handled inside ChatInput via refs
 
@@ -100,6 +106,13 @@ export default function Home() {
           if (eventName === "token") {
             const token = JSON.parse(payload);
             setMessages(prev => prev.map(m => m.id === assistantMsg.id ? { ...m, content: m.content + token } : m));
+            // Auto-scroll to bottom during streaming
+            requestAnimationFrame(() => {
+              const parent = scrollParentRef.current;
+              if (parent) {
+                parent.scrollTo({ top: parent.scrollHeight, behavior: 'auto' });
+              }
+            });
           } else if (eventName === "done") {
             // no-op
           }

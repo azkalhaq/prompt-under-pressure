@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, KeyboardEvent, FormEvent, useRef, MouseEvent, useCallback, useEffect } from 'react'
+import React, { useState, KeyboardEvent, FormEvent, useRef, MouseEvent, useCallback, useEffect, useLayoutEffect } from 'react'
 import { ImArrowUpRight2 } from 'react-icons/im'
 import { IoArrowDown } from 'react-icons/io5'
 // import { TbPaperclip } from 'react-icons/tb'
@@ -42,15 +42,18 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
     }
   }
 
-  // Add auto-resize function
-  const adjustTextAreaHeight = (element: HTMLTextAreaElement) => {
+  // Add auto-resize function with throttling
+  const adjustTextAreaHeight = useCallback((element: HTMLTextAreaElement) => {
     element.style.height = 'auto'
     element.style.height = `${element.scrollHeight}px`
-  }
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPrompt(e.target.value)
-    adjustTextAreaHeight(e.target)
+    // Use requestAnimationFrame to prevent layout thrashing
+    requestAnimationFrame(() => {
+      adjustTextAreaHeight(e.target)
+    })
   }
 
   const handleSubmit = async () => {
@@ -97,25 +100,41 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
       }
     }
     if (parent) {
-      parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' })
+      parent.scrollTo({ top: parent.scrollHeight, behavior: 'auto' })
     } else if (containerRef.current) {
-      containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
+      containerRef.current.scrollIntoView({ behavior: 'auto', block: 'end' })
     }
   }, [scrollParentRef])
 
   useEffect(() => {
     if (!containerRef.current || !onHeightChange) return
     const el = containerRef.current
+    let timeoutId: NodeJS.Timeout
+    let lastHeight = 0
+    
     const ro = new ResizeObserver(entries => {
       const entry = entries[0]
       if (!entry) return
-      const height = entry.contentRect.height
-      onHeightChange(height)
+      const height = Math.round(entry.contentRect.height)
+      
+      // Only update if height actually changed significantly
+      if (Math.abs(height - lastHeight) > 2) {
+        clearTimeout(timeoutId)
+        timeoutId = setTimeout(() => {
+          lastHeight = height
+          onHeightChange(height)
+        }, 150) // Increased debounce time
+      }
     })
     ro.observe(el)
     // initial
-    onHeightChange(el.getBoundingClientRect().height)
-    return () => ro.disconnect()
+    const initialHeight = Math.round(el.getBoundingClientRect().height)
+    lastHeight = initialHeight
+    onHeightChange(initialHeight)
+    return () => {
+      ro.disconnect()
+      clearTimeout(timeoutId)
+    }
   }, [onHeightChange])
 
   useEffect(() => {

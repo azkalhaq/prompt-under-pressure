@@ -1,6 +1,6 @@
 "use client"
 import { useCallback, useRef, useState } from "react";
-import ChatHelp from "@/components/ChatHelp";
+import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
 
 type UiMessage = { id: string; role: "user" | "assistant"; content: string };
@@ -70,7 +70,7 @@ export default function Home() {
       <div className={`w-full max-w-4xl mx-auto relative ${hasMessages ? 'flex flex-col gap-3 h-full' : 'flex items-center justify-center h-full px-4'}`}>
         {hasMessages && (
           <div className="flex-1 px-4">
-            <ChatHelp messages={messages} isLoading={isLoading} />
+            <ChatItem messages={messages} isLoading={isLoading} />
           </div>
         )}
         <div className={`${hasMessages ? 'sticky bottom-0' : ''} w-full flex justify-center px-4`}>

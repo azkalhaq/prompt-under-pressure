@@ -8,12 +8,12 @@ type Message = {
   content: string
 }
 
-type ChatHelpProps = {
+type ChatItemProps = {
   messages: Message[]
   isLoading?: boolean
 }
 
-const ChatHelp = ({ messages, isLoading }: ChatHelpProps) => {
+const ChatItem = ({ messages, isLoading }: ChatItemProps) => {
   const endRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -95,7 +95,7 @@ const ChatHelp = ({ messages, isLoading }: ChatHelpProps) => {
   )
 }
 
-export default ChatHelp
+export default ChatItem
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)

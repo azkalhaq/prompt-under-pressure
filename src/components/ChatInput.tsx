@@ -48,10 +48,10 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText }: ChatInput
   }
 
   const handleSubmit = async () => {
+    setPrompt('')
     if (!prompt || disabled) return
     try {
       await onSubmitPrompt?.(prompt)
-      setPrompt('')
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto'
       }

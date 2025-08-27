@@ -14,7 +14,7 @@ const Shell = ({ children }: ShellProps) => {
       <div className="h-screen overflow-y-auto">
         <Sidebar collapsed={collapsed} />
       </div>
-      <div className="bg-gray-50 flex-1 h-screen overflow-y-auto relative">
+      <div className="bg-gray-50 flex-1 h-screen overflow-y-auto relative [scrollbar-gutter:stable]">
         <Header onToggleSidebar={() => setCollapsed(v => !v)} />
         {children}
       </div>

@@ -12,7 +12,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
       <button aria-label='Toggle sidebar' onClick={onToggleSidebar} className='p-2 rounded hover:bg-gray-200 active:scale-[0.98]'>
         <RxHamburgerMenu />
       </button>
-      <div className='font-semibold'>Chat</div>
+      <div className='font-semibold'>Chat GPT 5</div>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 "use client"
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import ChatHelp from "@/components/ChatHelp";
 import ChatInput from "@/components/ChatInput";
 
@@ -11,6 +11,7 @@ export default function Home() {
   const abortRef = useRef<AbortController | null>(null);
 
   const model = "gpt-4o-mini";
+  const hasMessages = messages.length > 0;
 
   const handleSubmitPrompt = useCallback(async (prompt: string) => {
     const userMsg: UiMessage = { id: crypto.randomUUID(), role: "user", content: prompt };
@@ -57,7 +58,7 @@ export default function Home() {
           }
         }
       }
-    } catch (e) {
+    } catch {
       setMessages(prev => prev.map(m => m.id === assistantMsg.id ? { ...m, content: (m.content || "") + "\n[Error fetching response]" } : m));
     } finally {
       setIsLoading(false);
@@ -65,10 +66,16 @@ export default function Home() {
   }, [messages]);
 
   return (
-    <main className="min-h-screen flex flex-col items-center p-2 pt-12">
-      <div className="w-full flex flex-col items-center gap-3 px-4">
-        <ChatHelp messages={messages} isLoading={isLoading} />
-        <ChatInput onSubmitPrompt={handleSubmitPrompt} disabled={isLoading} />
+    <main className="h-[calc(100vh-2.5rem)] flex flex-col items-center p-2 pt-2">
+      <div className={`w-full max-w-4xl mx-auto relative ${hasMessages ? 'flex flex-col gap-3 h-full' : 'flex items-center justify-center h-full px-4'}`}>
+        {hasMessages && (
+          <div className="flex-1 px-4">
+            <ChatHelp messages={messages} isLoading={isLoading} />
+          </div>
+        )}
+        <div className={`${hasMessages ? 'sticky bottom-0' : ''} w-full flex justify-center px-4`}>
+          <ChatInput onSubmitPrompt={handleSubmitPrompt} disabled={isLoading} showTitle={!hasMessages} titleText="What can I help with?" />
+        </div>
       </div>
     </main>
   );

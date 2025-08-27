@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import type { PostgrestError } from "@supabase/supabase-js";
 import { getOpenAIClient, streamChatCompletion, type ChatMessage } from "@/app/lib/chatgpt";
 import { getSupabaseServerClientOrNull } from "@/app/lib/supabase";
 
@@ -16,7 +15,13 @@ export async function POST(req: NextRequest) {
       ? body.model.trim()
       : process.env.OPENAI_MODEL;
     const userId: string = body?.user_id || "anonymous";
-    const sessionId: string | undefined = body?.session_id;
+    const cookieName = 'sid';
+    let sessionId: string | undefined = body?.session_id || req.cookies.get(cookieName)?.value;
+    let shouldSetSessionCookie = false;
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      shouldSetSessionCookie = true;
+    }
 
     const apiCallId = crypto.randomUUID();
 
@@ -29,6 +34,7 @@ export async function POST(req: NextRequest) {
         try {
           const prompt = messages[messages.length - 1]?.content || "";
           const role = messages[messages.length - 1]?.role || 'user';
+          console.log("messages", messages);
           await supabase
             .schema('public')
             .from('chat_interactions')
@@ -51,14 +57,16 @@ export async function POST(req: NextRequest) {
 
     // console.log(messages);
 
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/event-stream; charset=utf-8",
-        "Cache-Control": "no-cache, no-transform",
-        Connection: "keep-alive",
-        "X-Accel-Buffering": "no",
-      },
-    });
+    const headers: Record<string, string> = {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+    };
+    if (shouldSetSessionCookie && sessionId) {
+      headers['Set-Cookie'] = `${cookieName}=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=15552000`;
+    }
+    return new Response(stream, { headers });
   } catch (error: unknown) {
     return new Response(error instanceof Error ? error.message : "Unexpected error", { status: 500 });
   }

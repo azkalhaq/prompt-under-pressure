@@ -27,27 +27,55 @@ export async function streamChatCompletion({
   client: OpenAI;
   model: string;
   messages: ChatMessage[];
-  onMetrics?: (m: { responseText: string; tokensInput: number; tokensOutput: number; apiCallId?: string }) => void;
+  onMetrics?: (m: { responseText: string; tokensInput: number; tokensOutput: number; apiCallId?: string; rawRequest?: object; rawResponse?: object }) => void;
 }) {
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        const response = await client.chat.completions.create({
+        const requestPayload = {
           model,
           messages,
           stream: true,
-        });
+        };
+        
+        const response = await client.chat.completions.create(requestPayload);
 
         let responseText = "";
         let metricsSent = false;
+        
         for await (const chunk of (response as AsyncIterable<MinimalChunk>)) {
           const choice = chunk?.choices?.[0];
           const delta = choice?.delta?.content || "";
+          
           if (choice?.finish_reason === "stop") {
+            // Construct the complete response object
+            const completeResponse = {
+              model: model,
+              choices: [{
+                index: 0,
+                message: {
+                  role: "assistant",
+                  content: responseText
+                },
+                finish_reason: "stop"
+              }],
+              usage: {
+                prompt_tokens: messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0),
+                completion_tokens: Math.ceil(responseText.length / 4),
+                total_tokens: messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0) + Math.ceil(responseText.length / 4)
+              }
+            };
+            
             if (!metricsSent) {
-              onMetrics?.({ responseText, tokensInput: messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0), tokensOutput: Math.ceil(responseText.length / 4) });
+              onMetrics?.({ 
+                responseText, 
+                tokensInput: messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0), 
+                tokensOutput: Math.ceil(responseText.length / 4),
+                rawRequest: requestPayload,
+                rawResponse: completeResponse
+              });
               metricsSent = true;
             }
             controller.enqueue(encoder.encode("event: done\n\n"));
@@ -63,7 +91,30 @@ export async function streamChatCompletion({
         }
         // Fallback: ensure metrics sent even if finish_reason was not 'stop'
         if (!metricsSent) {
-          onMetrics?.({ responseText, tokensInput: messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0), tokensOutput: Math.ceil(responseText.length / 4) });
+          const completeResponse = {
+            model: model,
+            choices: [{
+              index: 0,
+              message: {
+                role: "assistant",
+                content: responseText
+              },
+              finish_reason: "stop"
+            }],
+            usage: {
+              prompt_tokens: messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0),
+              completion_tokens: Math.ceil(responseText.length / 4),
+              total_tokens: messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0) + Math.ceil(responseText.length / 4)
+            }
+          };
+          
+          onMetrics?.({ 
+            responseText, 
+            tokensInput: messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0), 
+            tokensOutput: Math.ceil(responseText.length / 4),
+            rawRequest: requestPayload,
+            rawResponse: completeResponse
+          });
           metricsSent = true;
           try { controller.enqueue(encoder.encode("event: done\n\n")); } catch {}
           try { controller.close(); } catch {}

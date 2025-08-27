@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       client,
       model,
       messages,
-      onMetrics: async ({ responseText, tokensInput, tokensOutput }) => {
+      onMetrics: async ({ responseText, tokensInput, tokensOutput, rawRequest, rawResponse }) => {
         if (!supabase) return;
         try {
           const prompt = messages[messages.length - 1]?.content || "";
@@ -51,6 +51,8 @@ export async function POST(req: NextRequest) {
               tokens_input: tokensInput,
               tokens_output: tokensOutput,
               api_call_id: apiCallId.slice(0, 255),
+              raw_request: rawRequest,
+              raw_respond: rawResponse,
             });
         } catch (e) {
           console.error('Supabase insert exception', e);

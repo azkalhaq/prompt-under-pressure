@@ -134,7 +134,7 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
           <button
             type='button'
             onClick={handleScrollToBottom}
-            className='bg-gray-900 text-white rounded-full p-3 shadow-lg hover:opacity-90 active:scale-[0.98] h-9 w-9 flex items-center justify-center'
+            className='bg-gray-100 rounded-full p-3 shadow-lg hover:opacity-90 active:scale-[0.98] h-9 w-9 flex items-center justify-center'
             aria-label='Scroll to bottom'
           >
             <IoArrowDown size={18} />

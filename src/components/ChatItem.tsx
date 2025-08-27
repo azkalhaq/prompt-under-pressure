@@ -25,8 +25,8 @@ const ChatItem = ({ messages, isLoading }: ChatItemProps) => {
   return (
     <div className='w-full max-w-3xl mx-auto px-4 space-y-4'>
       {messages.map((m) => (
-        <div key={m.id} className={`w-full flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-          <div className={`px-4 py-2 rounded-2xl text-sm md:text-base max-w-[100%] break-words ${m.role === 'user' ? 'bg-gray-100 whitespace-pre-wrap' : 'text-gray-900'}`}>
+        <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'w-full justify-start'}`}>
+          <div className={`px-4 py-2 rounded-2xl text-sm md:text-base break-words ${m.role === 'user' ? 'max-w-[75%] bg-gray-100 whitespace-pre-wrap' : 'text-gray-900'}`}>
             {m.role === 'assistant' ? (
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}

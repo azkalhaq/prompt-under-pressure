@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getOpenAIClient, streamChatCompletion, type ChatMessage } from "@/app/lib/chatgpt";
 import { getSupabaseServerClientOrNull } from "@/app/lib/supabase";
+import { calculateStandardTokenCost } from "@/app/utils/CostCalculator";
 
 export const runtime = "nodejs";
 
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
               session_id: sessionId ?? null,
               role,
               prompt,
+              cost_usd: calculateStandardTokenCost(model, tokensInput, tokensOutput),
               response: responseText,
               model: (model ?? '').slice(0, 50),
               tokens_input: tokensInput,

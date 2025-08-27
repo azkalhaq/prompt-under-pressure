@@ -14,7 +14,7 @@ export default function ScenarioThree() {
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
 
-  const model = "gpt-4o-mini";
+  const model = process.env.OPENAI_MODEL;
   const hasMessages = messages.length > 0;
 
   useEffect(() => {
@@ -61,6 +61,7 @@ export default function ScenarioThree() {
     abortRef.current = ac;
 
     try {
+      console.log("model", model);
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

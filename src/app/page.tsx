@@ -15,7 +15,7 @@ export default function Home() {
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
 
-  const model = "gpt-4o-mini";
+  const model = process.env.OPENAI_MODEL;
   const hasMessages = messages.length > 0;
 
   useEffect(() => {

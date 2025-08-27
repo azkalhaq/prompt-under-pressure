@@ -1,7 +1,7 @@
 "use client"
-import React, { useState, KeyboardEvent, FormEvent, useRef } from 'react'
+import React, { useState, KeyboardEvent, FormEvent, useRef, MouseEvent } from 'react'
 import { ImArrowUpRight2 } from 'react-icons/im'
-import { TbPaperclip } from 'react-icons/tb'
+// import { TbPaperclip } from 'react-icons/tb'
 
 type ChatInputProps = {
   onSubmitPrompt?: (prompt: string) => Promise<void> | void
@@ -65,28 +65,42 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText }: ChatInput
     void handleSubmit()
   }
 
+  const handleFormMouseDown = (e: MouseEvent<HTMLFormElement>) => {
+    const target = e.target as HTMLElement
+    if (target.closest('textarea') || target.closest('button')) return
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+      const len = textareaRef.current.value.length
+      try { textareaRef.current.setSelectionRange(len, len) } catch {}
+    }
+  }
+
   return (
-    <div className='bg-gray-50 w-full flex flex-col items-center justify-center max-w-3xl mx-auto pb-1 px-4'>
+    <div className='bg-white w-full flex flex-col items-center justify-center max-w-3xl mx-auto pb-1 px-4'>
       {showTitle && (
         <h2 className='text-center text-xl md:text-2xl font-semibold mb-5 select-none'>
           {titleText || 'What can I help with?'}
         </h2>
       )}
-      <form onSubmit={onFormSubmit} className='rounded-full flex items-center px-4 py-2.5 w-full shadow-sm outline-1 outline-gray-200'>
-        <TbPaperclip className='text-2xl -rotate-45 text-gray-600' />
-        <textarea 
-          ref={textareaRef}
-          placeholder='Ask Anything'
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          value={prompt}
-          rows={1}
-          className='bg-transparent flex-grow outline-none text-gray-700 placeholder-gray-500 px-2 font-medium tracking-wide resize-none overflow-hidden min-h-[24px] max-h-32 break-words whitespace-pre-wrap'
-          style={{ height: 'auto', overflow: 'clip' }}
-        />
-        <button type='submit' disabled={!prompt || disabled} className='p-2.5 rounded-full bg-black disabled:bg-gray-400'>
-          <ImArrowUpRight2 className='-rotate-45 text-white' />
-        </button>
+      <form onMouseDown={handleFormMouseDown} onSubmit={onFormSubmit} className='relative w-full cursor-text'>
+        <label className='relative flex w-full flex-col overflow-hidden rounded-2xl py-4 pl-4 pr-[52px] border border-gray-200 bg-white shadow-sm'>
+          <div className='sr-only'>Message ChatGPT</div>
+          <textarea 
+            ref={textareaRef}
+            placeholder='Ask anything'
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            value={prompt}
+            rows={1}
+            className='placeholder:text-gray-500 w-full resize-none bg-transparent text-base leading-6 focus:outline-none overflow-auto max-h-60'
+            style={{ height: 'auto' }}
+          />
+        </label>
+        <div className='absolute bottom-3 right-3 mt-auto flex justify-end'>
+          <button type='submit' disabled={!prompt || disabled} aria-label='Send prompt' className='bg-black text-white disabled:bg-gray-300 disabled:text-gray-600 relative h-9 w-9 rounded-full p-0 transition-colors hover:opacity-80 disabled:hover:opacity-100 flex items-center justify-center'>
+            <ImArrowUpRight2 className='-rotate-45' />
+          </button>
+        </div>
       </form>
       <p className="text-xs mt-2 font-medium tracking-wide text-gray-600">
         ChatGPT can make mistakes. Check important info.

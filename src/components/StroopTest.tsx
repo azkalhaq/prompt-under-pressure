@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { insertStroopTrial, createStroopSession, updateStroopSession, type StroopTrialData } from '@/app/lib/stroop-db';
+import { type StroopTrialData } from '@/app/lib/stroop-db';
 
 interface StroopConfig {
   iti: number;
@@ -32,7 +32,7 @@ export default function StroopTest({ userId }: { userId: string }) {
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
   const [itiCountdown, setItiCountdown] = useState(0);
   const [trialCountdown, setTrialCountdown] = useState(0);
-  const [isSessionComplete, setIsSessionComplete] = useState(false);
+  const [isSessionComplete] = useState(false);
 
   // Refs for timers
   const trialTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -79,26 +79,19 @@ export default function StroopTest({ userId }: { userId: string }) {
     if (config.trialTimer > 0) {
       setTrialCountdown(config.trialTimer / 1000);
       trialTimerRef.current = setTimeout(() => {
-        handleTrialTimeout();
+        // Handle trial timeout inline to avoid circular dependencies
+        if (currentTrialData) {
+          const endTime = Date.now();
+          const rt = trialStartTime ? endTime - trialStartTime : null;
+          saveTrialData(rt, null);
+          setFeedback('incorrect');
+          setTimeout(() => {
+            nextTrial();
+          }, 1000);
+        }
       }, config.trialTimer);
     }
   }, [generateTrial, config.trialTimer]);
-
-  // Handle trial timeout
-  const handleTrialTimeout = useCallback(() => {
-    if (!currentTrialData) return;
-    
-    const endTime = Date.now();
-    const rt = trialStartTime ? endTime - trialStartTime : null;
-    
-    // Save trial data with null correctness (timeout)
-    saveTrialData(rt, null);
-    
-    setFeedback('incorrect');
-    setTimeout(() => {
-      nextTrial();
-    }, 1000);
-  }, [currentTrialData, trialStartTime]);
 
   // Handle user response
   const handleResponse = useCallback((selectedAnswer: string) => {

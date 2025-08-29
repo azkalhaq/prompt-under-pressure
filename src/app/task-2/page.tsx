@@ -124,7 +124,7 @@ function Task2Content() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages]);
+  }, [messages, userId, model]);
 
   return (
     <main className="h-screen flex flex-col pt-10">

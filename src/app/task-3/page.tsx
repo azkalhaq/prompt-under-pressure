@@ -1,12 +1,12 @@
 "use client"
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
 
 type UiMessage = { id: string; role: "user" | "assistant"; content: string };
 
-export default function ScenarioThree() {
+function ScenarioThreeContent() {
   const searchParams = useSearchParams();
   const userId = (searchParams.get('u') || 'anonymous').slice(0, 100);
   const [messages, setMessages] = useState<UiMessage[]>([]);
@@ -116,7 +116,7 @@ export default function ScenarioThree() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages]);
+  }, [messages, userId, model]);
 
   return (
     <main className="h-full flex flex-col items-center pt-10">
@@ -139,7 +139,24 @@ export default function ScenarioThree() {
           />
         </div>
       </div>
-    </main>
+         </main>
+   );
+}
+
+export default function ScenarioThree() {
+  return (
+    <Suspense fallback={
+      <main className="h-full flex flex-col items-center pt-10">
+        <div className="w-full max-w-4xl mx-auto relative flex items-center justify-center h-full px-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </main>
+    }>
+      <ScenarioThreeContent />
+    </Suspense>
   );
 }
 

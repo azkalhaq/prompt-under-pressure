@@ -11,6 +11,7 @@ export interface StroopTrialData {
   iti: number;
   reaction_time: number | null;
   correctness: boolean | null;
+  user_answer: string | null;
 }
 
 export interface StroopSession {
@@ -37,6 +38,7 @@ export async function insertStroopTrial(data: StroopTrialData): Promise<void> {
       iti: data.iti,
       reaction_time: data.reaction_time,
       correctness: data.correctness,
+      user_answer: data.user_answer,
       created_at: new Date().toISOString()
     });
 

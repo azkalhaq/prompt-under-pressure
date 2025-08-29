@@ -25,9 +25,13 @@ CREATE TABLE IF NOT EXISTS stroop_trials (
     iti INTEGER NOT NULL,
     reaction_time INTEGER,
     correctness BOOLEAN,
+    user_answer TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     FOREIGN KEY (session_id) REFERENCES stroop_sessions(session_id) ON DELETE CASCADE
 );
+
+-- Add user_answer column to existing stroop_trials table (if table already exists)
+ALTER TABLE stroop_trials ADD COLUMN IF NOT EXISTS user_answer TEXT;
 
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_stroop_sessions_user_id ON stroop_sessions(user_id);

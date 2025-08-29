@@ -16,6 +16,7 @@ The component records the following data for each trial:
 - **ITI**: Inter-trial interval in milliseconds
 - **Reaction Time**: Participant response time in milliseconds
 - **Correctness**: Whether the response was correct (true/false/null for timeouts)
+- **User Answer**: The participant's selected answer
 
 ### Configuration
 The component is configurable via environment variables:
@@ -86,6 +87,7 @@ The Stroop test component is already integrated into the task-2 page. It appears
 - `iti`: Inter-trial interval
 - `reaction_time`: Response time in milliseconds (nullable)
 - `correctness`: Response accuracy (nullable for timeouts)
+- `user_answer`: Participant's selected answer (nullable for timeouts)
 - `created_at`: Record creation timestamp
 
 ## API Endpoints

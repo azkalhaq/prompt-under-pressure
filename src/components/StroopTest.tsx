@@ -46,8 +46,19 @@ export default function StroopTest({ userId }: { userId: string }) {
     instructionSwitchTrials: parseInt(process.env.NEXT_PUBLIC_STROOP_INSTRUCTION_SWITCH || '10')
   };
 
-  // Generate a random Stroop trial
-  const generateTrial = useCallback((): StroopTrial => {
+
+
+  // Start a new trial
+  const startTrial = useCallback((newInstruction?: 'word' | 'color') => {
+    const instructionToUse = newInstruction || instruction;
+    
+    console.log('Start Trial Debug:', {
+      currentInstruction: instruction,
+      newInstruction: instructionToUse,
+      currentTrial
+    });
+    
+    // Generate trial with the correct instruction
     const randomWord = COLOR_WORDS[Math.floor(Math.random() * COLOR_WORDS.length)];
     const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
     
@@ -56,18 +67,24 @@ export default function StroopTest({ userId }: { userId: string }) {
     const textColor = isConsistent ? randomWord.toLowerCase() : randomColor;
     const condition = isConsistent ? 'consistent' : 'inconsistent';
     
-    return {
-      instruction,
+    // Determine correct answer based on instruction
+    let correctAnswer: string;
+    if (instructionToUse === 'word') {
+      // When instruction is "word", the correct answer is the word itself (lowercase)
+      correctAnswer = randomWord.toLowerCase();
+    } else {
+      // When instruction is "color", the correct answer is the color of the text
+      correctAnswer = textColor;
+    }
+    
+    const trial = {
+      instruction: instructionToUse,
       text: randomWord,
       textColor,
-      condition,
-      correctAnswer: instruction === 'word' ? randomWord.toLowerCase() : textColor
+      condition: condition as 'consistent' | 'inconsistent',
+      correctAnswer
     };
-  }, [instruction]);
-
-  // Start a new trial
-  const startTrial = useCallback(() => {
-    const trial = generateTrial();
+    
     setCurrentTrialData(trial);
     setReactionTime(null);
     setFeedback(null);
@@ -83,7 +100,7 @@ export default function StroopTest({ userId }: { userId: string }) {
         if (currentTrialData) {
           const endTime = Date.now();
           const rt = trialStartTime ? endTime - trialStartTime : null;
-          saveTrialData(rt, null);
+          saveTrialData(rt, null, null); // null for user answer when timeout occurs
           setFeedback('incorrect');
           setTimeout(() => {
             nextTrial();
@@ -91,7 +108,7 @@ export default function StroopTest({ userId }: { userId: string }) {
         }
       }, config.trialTimer);
     }
-  }, [generateTrial, config.trialTimer]);
+  }, [config.trialTimer]);
 
   // Handle user response
   const handleResponse = useCallback((selectedAnswer: string) => {
@@ -100,6 +117,17 @@ export default function StroopTest({ userId }: { userId: string }) {
     const endTime = Date.now();
     const rt = trialStartTime ? endTime - trialStartTime : null;
     const isCorrect = selectedAnswer === currentTrialData.correctAnswer;
+    
+    // Debug logging
+    console.log('Stroop Debug:', {
+      instruction: currentTrialData.instruction,
+      text: currentTrialData.text,
+      textColor: currentTrialData.textColor,
+      condition: currentTrialData.condition,
+      correctAnswer: currentTrialData.correctAnswer,
+      selectedAnswer,
+      isCorrect
+    });
     
     setReactionTime(rt);
     setFeedback(isCorrect ? 'correct' : 'incorrect');
@@ -112,7 +140,7 @@ export default function StroopTest({ userId }: { userId: string }) {
     }
     
     // Save trial data
-    saveTrialData(rt, isCorrect);
+    saveTrialData(rt, isCorrect, selectedAnswer);
     
     // Show feedback and move to next trial
     setTimeout(() => {
@@ -121,7 +149,7 @@ export default function StroopTest({ userId }: { userId: string }) {
   }, [currentTrialData, isActive, isPaused, trialStartTime]);
 
   // Save trial data to database
-  const saveTrialData = useCallback(async (rt: number | null, correctness: boolean | null) => {
+  const saveTrialData = useCallback(async (rt: number | null, correctness: boolean | null, userAnswer: string | null) => {
     if (!currentTrialData) return;
     
     const trialData: StroopTrialData = {
@@ -134,7 +162,8 @@ export default function StroopTest({ userId }: { userId: string }) {
       condition: currentTrialData.condition,
       iti: config.iti,
       reaction_time: rt,
-      correctness: correctness
+      correctness: correctness,
+      user_answer: userAnswer
     };
 
     try {
@@ -153,6 +182,25 @@ export default function StroopTest({ userId }: { userId: string }) {
 
   // Move to next trial
   const nextTrial = useCallback(() => {
+    // Check if instruction should switch BEFORE incrementing trial number
+    const shouldSwitchInstruction = currentTrial % config.instructionSwitchTrials === 0;
+    
+    // Debug logging
+    console.log('Next Trial Debug:', {
+      currentTrial,
+      instructionSwitchTrials: config.instructionSwitchTrials,
+      shouldSwitchInstruction,
+      currentInstruction: instruction
+    });
+    
+    // Determine the instruction for the next trial
+    let nextInstruction = instruction;
+    if (shouldSwitchInstruction) {
+      nextInstruction = instruction === 'word' ? 'color' : 'word';
+      console.log('Switching instruction from', instruction, 'to', nextInstruction);
+      setInstruction(nextInstruction);
+    }
+    
     setCurrentTrial(prev => prev + 1);
     setIsActive(false);
     setIsPaused(false);
@@ -160,21 +208,16 @@ export default function StroopTest({ userId }: { userId: string }) {
     setReactionTime(null);
     setTrialStartTime(null);
     
-    // Check if instruction should switch
-    if (currentTrial % config.instructionSwitchTrials === 0) {
-      setInstruction(prev => prev === 'word' ? 'color' : 'word');
-    }
-    
     // Start ITI countdown
     if (config.iti > 0) {
       setItiCountdown(config.iti / 1000);
       itiTimerRef.current = setTimeout(() => {
-        startTrial();
+        startTrial(nextInstruction);
       }, config.iti);
     } else {
-      startTrial();
+      startTrial(nextInstruction);
     }
-  }, [currentTrial, config.instructionSwitchTrials, config.iti, startTrial]);
+  }, [currentTrial, config.instructionSwitchTrials, config.iti, startTrial, instruction]);
 
   // Start session
   const startSession = useCallback(async () => {
@@ -187,11 +230,11 @@ export default function StroopTest({ userId }: { userId: string }) {
           data: { userId, sessionId }
         })
       });
-      startTrial();
+      startTrial(instruction);
     } catch (error) {
       console.error('Failed to create session:', error);
     }
-  }, [userId, sessionId, startTrial]);
+  }, [userId, sessionId, startTrial, instruction]);
 
   // End session
   const endSession = useCallback(async () => {
@@ -319,20 +362,39 @@ export default function StroopTest({ userId }: { userId: string }) {
           {/* Response buttons */}
           {!feedback && isActive && (
             <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-              {COLORS.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => handleResponse(color)}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                    color === 'red' ? 'bg-red-500 hover:bg-red-600 text-white' :
-                    color === 'blue' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
-                    color === 'green' ? 'bg-green-500 hover:bg-green-600 text-white' :
-                    'bg-yellow-500 hover:bg-yellow-600 text-black'
-                  }`}
-                >
-                  {color.toUpperCase()}
-                </button>
-              ))}
+              {instruction === 'word' ? (
+                // Show word buttons when instruction is "word"
+                COLOR_WORDS.map((word) => (
+                  <button
+                    key={word}
+                    onClick={() => handleResponse(word.toLowerCase())}
+                    className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+                      word === 'RED' ? 'bg-red-500 hover:bg-red-600 text-white' :
+                      word === 'BLUE' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
+                      word === 'GREEN' ? 'bg-green-500 hover:bg-green-600 text-white' :
+                      'bg-yellow-500 hover:bg-yellow-600 text-black'
+                    }`}
+                  >
+                    {word}
+                  </button>
+                ))
+              ) : (
+                // Show color buttons when instruction is "color"
+                COLORS.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => handleResponse(color)}
+                    className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+                      color === 'red' ? 'bg-red-500 hover:bg-red-600 text-white' :
+                      color === 'blue' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
+                      color === 'green' ? 'bg-green-500 hover:bg-green-600 text-white' :
+                      'bg-yellow-500 hover:bg-yellow-600 text-black'
+                    }`}
+                  >
+                    {color.toUpperCase()}
+                  </button>
+                ))
+              )}
             </div>
           )}
 

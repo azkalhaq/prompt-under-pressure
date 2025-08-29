@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getOpenAIClient, streamChatCompletion, type ChatMessage } from "@/lib/chatgpt";
 import { getSupabaseServerClientOrNull } from "@/lib/supabase";
-import { calculateStandardTokenCost } from "@/app/utils/CostCalculator";
+import { calculateStandardTokenCost } from "@/utils/CostCalculator";
 import { insertChatInteraction, createUserSession, getUserSession, incrementSessionPrompts } from "@/lib/chat-db";
 
 export const runtime = "nodejs";

@@ -15,6 +15,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [sessionEnsured, setSessionEnsured] = useState(false);
 
   useEffect(() => {
     // Try to get session ID from cookie first
@@ -52,7 +53,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   // Create session when sessionId and userId are available
   useEffect(() => {
-    if (sessionId && userId && !isCreatingSession) {
+    if (sessionId && userId && !sessionEnsured && !isCreatingSession) {
       const ensureSession = async () => {
         setIsCreatingSession(true);
         try {
@@ -82,6 +83,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           } else {
             console.log(`Session already exists in database: ${sessionId} for user: ${userId}`);
           }
+          setSessionEnsured(true);
         } catch (error) {
           console.error('Failed to ensure session exists:', error);
         } finally {
@@ -91,7 +93,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
       ensureSession();
     }
-  }, [sessionId, userId, isCreatingSession]);
+  }, [sessionId, userId, sessionEnsured, isCreatingSession]);
 
   // Handle browser close/refresh to update session end time
   useEffect(() => {

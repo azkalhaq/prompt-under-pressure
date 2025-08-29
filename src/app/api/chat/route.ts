@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getOpenAIClient, streamChatCompletion, type ChatMessage } from "@/lib/chatgpt";
 import { getSupabaseServerClientOrNull } from "@/lib/supabase";
 import { calculateStandardTokenCost } from "@/utils/CostCalculator";
-import { insertChatInteraction, createUserSession, getUserSession, incrementSessionPrompts, updateUserSession } from "@/lib/chat-db";
+import { insertChatInteraction, createUserSession, getUserSession, incrementSessionPrompts } from "@/lib/chat-db";
 import { calculateTextMetrics } from "@/utils/textAnalysis";
 
 export const runtime = "nodejs";

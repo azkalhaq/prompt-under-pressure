@@ -15,24 +15,6 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()     -- record creation time
 );
 
--- Migration-safe addition of route_path for existing deployments
-ALTER TABLE IF EXISTS user_sessions ADD COLUMN IF NOT EXISTS route_path TEXT;
--- If the column exists but with a different type, migrate it to TEXT
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'user_sessions' AND column_name = 'route_path' AND data_type <> 'text'
-  ) THEN
-    BEGIN
-      ALTER TABLE user_sessions ALTER COLUMN route_path TYPE TEXT;
-    EXCEPTION WHEN others THEN
-      -- ignore if permissions or locks; handle via manual migration if needed
-      NULL;
-    END;
-  END IF;
-END $$;
-
 -- Create stroop_trials table
 CREATE TABLE IF NOT EXISTS stroop_trials (
     id BIGSERIAL PRIMARY KEY,                         -- surrogate key

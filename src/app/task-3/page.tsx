@@ -112,7 +112,7 @@ function ScenarioThreeContent() {
             requestAnimationFrame(() => {
               const parent = scrollParentRef.current;
               if (parent) {
-                parent.scrollTo({ top: parent.scrollHeight, behavior: 'auto' });
+                parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' });
               }
             });
           }

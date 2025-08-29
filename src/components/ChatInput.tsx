@@ -107,7 +107,7 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
       }
     }
     if (parent) {
-      parent.scrollTo({ top: parent.scrollHeight, behavior: 'auto' })
+      parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' });
     } else if (containerRef.current) {
       containerRef.current.scrollIntoView({ behavior: 'auto', block: 'end' })
     }

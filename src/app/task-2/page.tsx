@@ -18,6 +18,7 @@ function Task2Content() {
   const [inputHeight, setInputHeight] = useState(0);
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
+  const messagesScrollRef = useRef<HTMLDivElement | null>(null);
 
   const model = process.env.OPENAI_MODEL;
   const hasMessages = messages.length > 0;
@@ -29,25 +30,9 @@ function Task2Content() {
   }), [inputHeight]);
 
   useEffect(() => {
-    const getOverflowY = (el: HTMLElement) => {
-      const style = window.getComputedStyle(el);
-      return style.overflowY;
-    };
-    const findScrollParent = (el: HTMLElement | null): HTMLElement | null => {
-      let node: HTMLElement | null = el;
-      while (node) {
-        const oy = getOverflowY(node);
-        if ((oy === 'auto' || oy === 'scroll') && node.scrollHeight > node.clientHeight) {
-          return node;
-        }
-        node = node.parentElement as HTMLElement | null;
-      }
-      return null;
-    };
-
-    const parent = findScrollParent(anchorRef.current);
-    scrollParentRef.current = parent;
-    const rootEl = parent ?? undefined;
+    // Use the known scrollable container explicitly
+    scrollParentRef.current = messagesScrollRef.current;
+    const rootEl = messagesScrollRef.current ?? undefined;
     if (!anchorRef.current) return;
 
     const observer = new IntersectionObserver(
@@ -140,7 +125,7 @@ function Task2Content() {
           <div className="flex flex-col h-full overflow-hidden">
             {hasMessages ? (
               <>
-                <div className="flex-1 overflow-y-auto min-h-0">
+                <div ref={messagesScrollRef} className="flex-1 overflow-y-auto min-h-0">
                   <ChatItem messages={messages} isLoading={isLoading} />
                   <div ref={anchorRef} style={{ height: Math.max(24, inputHeight-20) }} />
                 </div>

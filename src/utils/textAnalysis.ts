@@ -76,9 +76,8 @@ function countSyllables(text: string): number {
  */
 function countWordSyllables(word: string): number {
   if (!word || word.length === 0) return 0;
-  
   // Remove silent 'e' at the end
-  let processedWord = word.replace(/e$/, '');
+  const processedWord = word.replace(/e$/, '');
   
   // Count vowel groups (consonant-vowel-consonant patterns)
   const vowelGroups = processedWord.match(/[aeiouy]+/g);

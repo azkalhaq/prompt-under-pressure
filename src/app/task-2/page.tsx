@@ -49,7 +49,7 @@ function Task2Content() {
 
   // scroll-to-bottom handled inside ChatInput via refs
 
-  const handleSubmitPrompt = useCallback(async (prompt: string) => {
+  const handleSubmitPrompt = useCallback(async (prompt: string, promptingTimeMs?: number) => {
     if (sessionLoading || !sessionId || !userId) {
       console.log('Session not ready, skipping prompt submission');
       return;
@@ -73,6 +73,7 @@ function Task2Content() {
           user_id: userId,
           session_id: sessionId,
           messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
+          prompting_time_ms: promptingTimeMs,
         }),
         signal: ac.signal,
       });

@@ -27,7 +27,7 @@ export async function streamChatCompletion({
   client: OpenAI;
   model: string;
   messages: ChatMessage[];
-  onMetrics?: (m: { responseText: string; tokensInput: number; tokensOutput: number; apiCallId?: string; rawRequest?: object; rawResponse?: object }) => void;
+  onMetrics?: (m: { responseText: string; tokensInput: number; tokensOutput: number; apiCallId?: string; rawRequest?: object; rawResponse?: object; finishReason?: string | null }) => void;
 }) {
   const encoder = new TextEncoder();
 
@@ -43,11 +43,15 @@ export async function streamChatCompletion({
         const response = await client.chat.completions.create(requestPayload);
 
         let responseText = "";
+        let lastFinishReason: string | null = null;
         let metricsSent = false;
         
         for await (const chunk of (response as AsyncIterable<MinimalChunk>)) {
           const choice = chunk?.choices?.[0];
           const delta = choice?.delta?.content || "";
+          if (typeof choice?.finish_reason !== "undefined") {
+            lastFinishReason = choice.finish_reason ?? null;
+          }
           
           if (choice?.finish_reason === "stop") {
             // Construct the complete response object
@@ -74,7 +78,8 @@ export async function streamChatCompletion({
                 tokensInput: messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0), 
                 tokensOutput: Math.ceil(responseText.length / 4),
                 rawRequest: requestPayload,
-                rawResponse: completeResponse
+                rawResponse: completeResponse,
+                finishReason: lastFinishReason ?? "stop"
               });
               metricsSent = true;
             }
@@ -113,7 +118,8 @@ export async function streamChatCompletion({
             tokensInput: messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0), 
             tokensOutput: Math.ceil(responseText.length / 4),
             rawRequest: requestPayload,
-            rawResponse: completeResponse
+            rawResponse: completeResponse,
+            finishReason: lastFinishReason ?? "stop"
           });
           metricsSent = true;
           try { controller.enqueue(encoder.encode("event: done\n\n")); } catch {}

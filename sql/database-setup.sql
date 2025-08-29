@@ -3,51 +3,76 @@
 
 -- Create user_sessions table (renamed from stroop_sessions)
 CREATE TABLE IF NOT EXISTS user_sessions (
-    id SERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    session_id TEXT UNIQUE NOT NULL,
-    session_start_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    start_stroop_time TIMESTAMP WITH TIME ZONE,
-    end_time TIMESTAMP WITH TIME ZONE,
-    total_trials INTEGER DEFAULT 0,
-    total_prompts INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id BIGSERIAL PRIMARY KEY,                         -- surrogate key
+    user_id VARCHAR(128) NOT NULL,                    -- anonymised or app user id
+    session_id VARCHAR(128) UNIQUE NOT NULL,          -- session identifier
+    session_start_time TIMESTAMPTZ NOT NULL DEFAULT now(),
+    start_stroop_time TIMESTAMPTZ,                    -- when stroop test started
+    end_time TIMESTAMPTZ,                             -- when session ended
+    total_trials INTEGER DEFAULT 0,                   -- number of stroop trials completed
+    total_prompts INTEGER DEFAULT 0,                  -- number of chat interactions completed
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()     -- record creation time
 );
 
 -- Create stroop_trials table
 CREATE TABLE IF NOT EXISTS stroop_trials (
-    id SERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    session_id TEXT NOT NULL,
-    trial_number INTEGER NOT NULL,
-    instruction TEXT NOT NULL CHECK (instruction IN ('word', 'color')),
-    text TEXT NOT NULL,
-    text_color TEXT NOT NULL,
-    condition TEXT NOT NULL CHECK (condition IN ('consistent', 'inconsistent')),
-    iti INTEGER NOT NULL,
-    reaction_time INTEGER,
-    correctness BOOLEAN,
-    user_answer TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    id BIGSERIAL PRIMARY KEY,                         -- surrogate key
+    user_id VARCHAR(128) NOT NULL,                    -- anonymised or app user id
+    session_id VARCHAR(128) NOT NULL,                 -- session identifier
+    trial_number INTEGER NOT NULL,                    -- sequential trial number in session
+    instruction VARCHAR(32) NOT NULL CHECK (instruction IN ('word', 'color')),
+    text VARCHAR(64) NOT NULL,                        -- displayed word (RED, BLUE, GREEN, YELLOW)
+    text_color VARCHAR(32) NOT NULL,                  -- color of the text
+    condition VARCHAR(32) NOT NULL CHECK (condition IN ('consistent', 'inconsistent')),
+    iti INTEGER NOT NULL,                             -- inter-trial interval in milliseconds
+    reaction_time INTEGER,                            -- response time in milliseconds
+    correctness BOOLEAN,                              -- whether response was correct
+    user_answer VARCHAR(32),                          -- user's selected answer
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),    -- record creation time
     FOREIGN KEY (session_id) REFERENCES user_sessions(session_id) ON DELETE CASCADE
 );
 
 -- Create chat_interactions table
 CREATE TABLE IF NOT EXISTS chat_interactions (
-    id SERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    session_id TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
-    prompt TEXT NOT NULL,
-    response TEXT,
-    model TEXT,
-    tokens_input INTEGER,
-    tokens_output INTEGER,
-    cost_usd DECIMAL(10, 6),
-    api_call_id TEXT,
-    raw_request JSONB,
-    raw_respond JSONB,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    id BIGSERIAL PRIMARY KEY,                         -- surrogate key
+
+    -- user related data
+    user_id VARCHAR(128) NOT NULL,                    -- anonymised or app user id 
+    session_id VARCHAR(128) NOT NULL,                 -- session identifier
+
+    -- interaction specified data
+    prompting_time_ms INT,                            -- ms to compose the prompt
+    scenario VARCHAR(24) NOT NULL,                    -- 'baseline' | 'dual_task' (derived from page)
+    task_code VARCHAR(64),                            -- from ?task= query param; NULL if absent
+    prompt_index_no INT NOT NULL,                     -- order within same session (1..N)
+    prompt TEXT NOT NULL,                             -- user-entered text
+    response TEXT,                                    -- LLM response text
+
+    -- prompt metrics / quality
+    word_count INT,                                   -- number of words in prompt
+    char_count INT,                                   -- number of characters in prompt
+    vocab_count INT,                                  -- unique vocabulary count in prompt
+    readability_fk NUMERIC(6,2),                      -- Flesch–Kincaid grade (prompt)
+
+    -- OpenAI related
+    api_call_id VARCHAR(128),                         -- provider's call id (e.g., "chatcmpl-...")
+    role VARCHAR(32),                                 -- role used ('system'|'user'|'assistant'|'tool', etc.)
+    model VARCHAR(64),                                -- model name (e.g., 'gpt-4o', 'gpt-5')
+    token_input INT,                                  -- prompt_tokens from API usage
+    token_output INT,                                 -- completion_tokens from API usage
+    token_total INT GENERATED ALWAYS AS               -- computed total tokens
+                 (COALESCE(token_input,0) + COALESCE(token_output,0)) STORED,
+    cost_input NUMERIC(10,6),                         -- $ cost of input tokens
+    cost_output NUMERIC(10,6),                        -- $ cost of output tokens
+    cost_total NUMERIC(10,6) GENERATED ALWAYS AS      -- computed total cost (USD)
+                 (COALESCE(cost_input,0) + COALESCE(cost_output,0)) STORED,
+    finish_reason VARCHAR(32),                        -- API finish reason ('stop','length',...)
+    raw_response JSONB,                               -- raw JSON response from provider
+    raw_request JSONB,                                -- raw JSON request payload sent
+
+    -- timestamp related
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),    -- record creation time
+
     FOREIGN KEY (session_id) REFERENCES user_sessions(session_id) ON DELETE CASCADE
 );
 
@@ -60,6 +85,9 @@ CREATE INDEX IF NOT EXISTS idx_stroop_trials_trial_number ON stroop_trials(trial
 CREATE INDEX IF NOT EXISTS idx_chat_interactions_user_id ON chat_interactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_chat_interactions_session_id ON chat_interactions(session_id);
 CREATE INDEX IF NOT EXISTS idx_chat_interactions_created_at ON chat_interactions(created_at);
+CREATE INDEX IF NOT EXISTS idx_chat_interactions_scenario ON chat_interactions(scenario);
+CREATE INDEX IF NOT EXISTS idx_chat_interactions_task_code ON chat_interactions(task_code);
+CREATE INDEX IF NOT EXISTS idx_chat_interactions_prompt_index_no ON chat_interactions(prompt_index_no);
 
 -- Migration script for existing data (if needed)
 -- This will help migrate existing stroop_sessions to user_sessions
@@ -69,3 +97,63 @@ CREATE INDEX IF NOT EXISTS idx_chat_interactions_created_at ON chat_interactions
 -- ALTER TABLE stroop_sessions ADD COLUMN IF NOT EXISTS total_prompts INTEGER DEFAULT 0;
 -- ALTER TABLE stroop_sessions RENAME COLUMN start_time TO start_stroop_time;
 -- ALTER TABLE stroop_sessions RENAME TO user_sessions;
+
+-- Migration script for chat_interactions table (run this if you have existing data)
+-- This will migrate the old chat_interactions schema to the new one
+
+-- Step 1: Create new table with new schema
+-- CREATE TABLE chat_interactions_new (
+--     id BIGSERIAL PRIMARY KEY,
+--     user_id VARCHAR(128) NOT NULL,
+--     session_id VARCHAR(128) NOT NULL,
+--     prompting_time_ms INT,
+--     scenario VARCHAR(24) NOT NULL DEFAULT 'baseline',
+--     task_code VARCHAR(64),
+--     prompt_index_no INT NOT NULL DEFAULT 1,
+--     prompt TEXT NOT NULL,
+--     response TEXT,
+--     word_count INT,
+--     char_count INT,
+--     vocab_count INT,
+--     readability_fk NUMERIC(6,2),
+--     api_call_id VARCHAR(128),
+--     role VARCHAR(32),
+--     model VARCHAR(64),
+--     token_input INT,
+--     token_output INT,
+--     token_total INT GENERATED ALWAYS AS (COALESCE(token_input,0) + COALESCE(token_output,0)) STORED,
+--     cost_input NUMERIC(10,6),
+--     cost_output NUMERIC(10,6),
+--     cost_total NUMERIC(10,6) GENERATED ALWAYS AS (COALESCE(cost_input,0) + COALESCE(cost_output,0)) STORED,
+--     finish_reason VARCHAR(32),
+--     raw_response JSONB,
+--     raw_request JSONB,
+--     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+--     FOREIGN KEY (session_id) REFERENCES user_sessions(session_id) ON DELETE CASCADE
+-- );
+
+-- Step 2: Migrate data from old table to new table
+-- INSERT INTO chat_interactions_new (
+--     user_id, session_id, prompt, response, role, model, 
+--     token_input, token_output, cost_input, cost_output,
+--     api_call_id, raw_request, raw_response, created_at
+-- )
+-- SELECT 
+--     user_id, session_id, prompt, response, role, model,
+--     tokens_input, tokens_output, 
+--     CASE WHEN cost_usd IS NOT NULL THEN cost_usd * 0.5 ELSE NULL END as cost_input,
+--     CASE WHEN cost_usd IS NOT NULL THEN cost_usd * 0.5 ELSE NULL END as cost_output,
+--     api_call_id, raw_request, raw_respond, created_at
+-- FROM chat_interactions;
+
+-- Step 3: Drop old table and rename new table
+-- DROP TABLE chat_interactions;
+-- ALTER TABLE chat_interactions_new RENAME TO chat_interactions;
+
+-- Step 4: Recreate indexes
+-- CREATE INDEX IF NOT EXISTS idx_chat_interactions_user_id ON chat_interactions(user_id);
+-- CREATE INDEX IF NOT EXISTS idx_chat_interactions_session_id ON chat_interactions(session_id);
+-- CREATE INDEX IF NOT EXISTS idx_chat_interactions_created_at ON chat_interactions(created_at);
+-- CREATE INDEX IF NOT EXISTS idx_chat_interactions_scenario ON chat_interactions(scenario);
+-- CREATE INDEX IF NOT EXISTS idx_chat_interactions_task_code ON chat_interactions(task_code);
+-- CREATE INDEX IF NOT EXISTS idx_chat_interactions_prompt_index_no ON chat_interactions(prompt_index_no);

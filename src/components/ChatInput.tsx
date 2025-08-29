@@ -5,7 +5,7 @@ import { IoArrowDown } from 'react-icons/io5'
 // import { TbPaperclip } from 'react-icons/tb'
 
 type ChatInputProps = {
-  onSubmitPrompt?: (prompt: string) => Promise<void> | void
+  onSubmitPrompt?: (prompt: string, promptingTimeMs?: number) => Promise<void> | void
   disabled?: boolean
   showTitle?: boolean
   titleText?: string
@@ -18,6 +18,7 @@ type ChatInputProps = {
 const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollButton, scrollParentRef, onHeightChange, onAnchorRefChange }: ChatInputProps) => {
   const [prompt, setPrompt] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const firstInputTimeRef = useRef<number | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -49,6 +50,9 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (firstInputTimeRef.current === null && e.target.value.length > 0) {
+      firstInputTimeRef.current = Date.now()
+    }
     setPrompt(e.target.value)
     // Use requestAnimationFrame to prevent layout thrashing
     requestAnimationFrame(() => {
@@ -57,10 +61,13 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
   }
 
   const handleSubmit = async () => {
+    const startedAt = firstInputTimeRef.current
+    const promptingTimeMs = typeof startedAt === 'number' ? Math.max(0, Date.now() - startedAt) : undefined
     setPrompt('')
     if (!prompt || disabled) return
     try {
-      await onSubmitPrompt?.(prompt)
+      await onSubmitPrompt?.(prompt, promptingTimeMs)
+      firstInputTimeRef.current = null
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto'
       }

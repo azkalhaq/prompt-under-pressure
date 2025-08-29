@@ -3,13 +3,50 @@ import { getOpenAIClient, streamChatCompletion, type ChatMessage } from "@/lib/c
 import { getSupabaseServerClientOrNull } from "@/lib/supabase";
 import { calculateStandardTokenCost } from "@/utils/CostCalculator";
 import { insertChatInteraction, createUserSession, getUserSession, incrementSessionPrompts } from "@/lib/chat-db";
+import { calculateTextMetrics } from "@/utils/textAnalysis";
 
 export const runtime = "nodejs";
+
+/**
+ * Determine scenario based on the request path
+ */
+function determineScenario(pathname: string): 'baseline' | 'dual_task' {
+  if (pathname.includes('/task-2')) {
+    return 'dual_task';
+  }
+  return 'baseline';
+}
+
+/**
+ * Get task code from query parameters
+ */
+function getTaskCode(req: NextRequest): string | undefined {
+  return req.nextUrl.searchParams.get('task') || undefined;
+}
+
+/**
+ * Get prompt index number for the session
+ */
+async function getPromptIndexNo(sessionId: string): Promise<number> {
+  try {
+    const supabase = getSupabaseServerClientOrNull();
+    if (!supabase) return 1;
+    
+    const { count } = await supabase
+      .from('chat_interactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('session_id', sessionId);
+    
+    return (count || 0) + 1;
+  } catch (error) {
+    console.error('Error getting prompt index:', error);
+    return 1;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
     const client = getOpenAIClient();
-    const supabase = getSupabaseServerClientOrNull();
 
     const body = await req.json();
     const qpUser = req.nextUrl.searchParams.get('u') || undefined;
@@ -51,24 +88,37 @@ export async function POST(req: NextRequest) {
       client,
       model,
       messages,
-      onMetrics: async ({ responseText, tokensInput, tokensOutput, rawRequest, rawResponse }) => {
+      onMetrics: async ({ responseText, tokensInput, tokensOutput, rawRequest, rawResponse, finishReason }) => {
         try {
           const prompt = messages[messages.length - 1]?.content || "";
           const role = messages[messages.length - 1]?.role || 'user';
+          const scenario = determineScenario(req.nextUrl.pathname);
+          const taskCode = getTaskCode(req);
+          const promptIndexNo = await getPromptIndexNo(sessionId ?? 'no-session');
+          const textMetrics = calculateTextMetrics(prompt);
+          const totalCost = calculateStandardTokenCost(model, tokensInput, tokensOutput);
+          const promptingTimeMs: number | undefined = typeof body?.prompting_time_ms === 'number' ? body.prompting_time_ms : undefined;
           
           await insertChatInteraction({
             user_id: (userId ?? 'anonymous').slice(0, 100),
             session_id: sessionId ?? 'no-session',
-            role,
+            prompting_time_ms: promptingTimeMs,
+            scenario,
+            task_code: taskCode,
+            prompt_index_no: promptIndexNo,
             prompt,
-            cost_usd: calculateStandardTokenCost(model, tokensInput, tokensOutput),
             response: responseText,
+            role,
             model: (model ?? '').slice(0, 50),
-            tokens_input: tokensInput,
-            tokens_output: tokensOutput,
-            api_call_id: apiCallId.slice(0, 255),
-            raw_request: rawRequest,
-            raw_respond: rawResponse,
+            token_input: tokensInput,
+            token_output: tokensOutput,
+            cost_input: totalCost * (tokensInput / (tokensInput + tokensOutput)),
+            cost_output: totalCost * (tokensOutput / (tokensInput + tokensOutput)),
+            api_call_id: apiCallId.slice(0, 100),
+            raw_request: rawRequest as Record<string, unknown> | undefined,
+            raw_response: rawResponse as Record<string, unknown> | undefined,
+            finish_reason: typeof finishReason === 'string' ? finishReason : undefined,
+            ...textMetrics
           });
           
           // Increment total_prompts counter in user_sessions

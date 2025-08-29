@@ -1,5 +1,6 @@
 "use client"
 import React, { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import Sidebar from './Sidebar'
 
 type ShellProps = {
@@ -8,10 +9,15 @@ type ShellProps = {
 
 const Shell = ({ children }: ShellProps) => {
   const [collapsed, setCollapsed] = useState(true)
+  const pathname = usePathname()
+  
+  // Automatically disable Shell scrolling for task-2
+  const disableShellScroll = pathname.includes('/task-2')
+  
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar collapsed={collapsed} onToggleSidebar={() => setCollapsed(v => !v)} />
-      <div className="bg-white flex-1 overflow-y-auto relative [scrollbar-gutter:stable]">
+      <div className={`bg-white flex-1 relative ${!disableShellScroll ? 'overflow-y-auto [scrollbar-gutter:stable]' : ''}`}>
         {children}
       </div>
     </div>

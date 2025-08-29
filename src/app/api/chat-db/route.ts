@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
         break;
       
       case 'create_session':
-        await createUserSession(data.userId, data.sessionId);
+        await createUserSession(data.userId, data.sessionId, data.routePath);
         break;
       
       case 'update_session':

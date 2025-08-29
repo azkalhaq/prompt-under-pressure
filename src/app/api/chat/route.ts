@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getOpenAIClient, streamChatCompletion, type ChatMessage } from "@/lib/chatgpt";
 import { getSupabaseServerClientOrNull } from "@/lib/supabase";
 import { calculateStandardTokenCost } from "@/utils/CostCalculator";
-import { insertChatInteraction, createUserSession, getUserSession, incrementSessionPrompts } from "@/lib/chat-db";
+import { insertChatInteraction, createUserSession, getUserSession, incrementSessionPrompts, updateUserSession } from "@/lib/chat-db";
 import { calculateTextMetrics } from "@/utils/textAnalysis";
 
 export const runtime = "nodejs";
@@ -73,7 +73,10 @@ export async function POST(req: NextRequest) {
         const existingSession = await getUserSession(sessionId);
         if (!existingSession) {
           // Create session if it doesn't exist
-          await createUserSession(userId, sessionId);
+          const currentPath = (typeof body?.page_path === 'string' && body.page_path.trim().length > 0)
+            ? body.page_path
+            : (req.nextUrl.pathname || '/');
+          await createUserSession(userId, sessionId, currentPath);
           console.log(`Created new session: ${sessionId} for user: ${userId}`);
         } else {
           console.log(`Using existing session: ${sessionId} for user: ${userId}`);

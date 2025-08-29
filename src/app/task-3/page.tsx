@@ -1,6 +1,5 @@
 "use client"
 import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
 import { useSessionContext } from "@/contexts/SessionContext";
@@ -85,6 +84,7 @@ function ScenarioThreeContent() {
           session_id: sessionId,
           messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
           prompting_time_ms: promptingTimeMs,
+          page_path: typeof window !== 'undefined' ? window.location.pathname : '/task-3',
         }),
         signal: ac.signal,
       });

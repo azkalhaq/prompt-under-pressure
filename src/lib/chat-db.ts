@@ -40,6 +40,7 @@ export interface UserSession {
   end_time?: string;
   total_trials: number;
   total_prompts: number;
+  route_path?: string;
 }
 
 export async function insertChatInteraction(data: ChatInteractionData): Promise<void> {
@@ -78,7 +79,7 @@ export async function insertChatInteraction(data: ChatInteractionData): Promise<
   }
 }
 
-export async function createUserSession(userId: string, sessionId: string): Promise<void> {
+export async function createUserSession(userId: string, sessionId: string, routePath?: string): Promise<void> {
   const supabase = getSupabaseServerClient();
   
   const { error } = await supabase
@@ -88,7 +89,8 @@ export async function createUserSession(userId: string, sessionId: string): Prom
       session_id: sessionId,
       session_start_time: new Date().toISOString(),
       total_trials: 0,
-      total_prompts: 0
+      total_prompts: 0,
+      route_path: routePath
     });
 
   if (error) {
@@ -109,6 +111,7 @@ export async function updateUserSession(
     end_time?: string;
     total_trials?: number;
     total_prompts?: number;
+    route_path?: string;
   }
 ): Promise<void> {
   const supabase = getSupabaseServerClient();

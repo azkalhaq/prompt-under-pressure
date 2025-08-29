@@ -77,7 +77,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 action: 'create_session',
-                data: { userId, sessionId }
+                data: { userId, sessionId, routePath: window.location.pathname }
               })
             });
           } else {

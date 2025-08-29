@@ -126,6 +126,7 @@ function Task2Content() {
           session_id: sessionId,
           messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
           prompting_time_ms: promptingTimeMs,
+          page_path: typeof window !== 'undefined' ? window.location.pathname : '/task-2',
         }),
         signal: ac.signal,
       });

@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { FiCopy, FiThumbsUp, FiThumbsDown, FiCheck } from 'react-icons/fi'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Tooltip } from 'flowbite-react'
 
 type Message = {
   id: string
@@ -21,6 +23,22 @@ const ChatItem = ({ messages, isLoading }: ChatItemProps) => {
 
   const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant')
   const isAssistantTyping = Boolean(isLoading && lastAssistant && !lastAssistant.content)
+
+  const [copiedIds, setCopiedIds] = useState<Record<string, boolean>>({})
+  const [reactions, setReactions] = useState<Record<string, 'up' | 'down' | undefined>>({})
+
+  const handleCopyAll = async (id: string, text: string) => {
+    try {
+      await navigator.clipboard?.writeText(text)
+      setCopiedIds(prev => ({ ...prev, [id]: true }))
+      setTimeout(() => setCopiedIds(prev => ({ ...prev, [id]: false })), 1200)
+    } catch {}
+  }
+
+  const handleReact = (id: string, kind: 'up' | 'down') => {
+    setReactions(prev => ({ ...prev, [id]: prev[id] === kind ? undefined : kind }))
+    // TODO: optionally send feedback to backend
+  }
 
   return (
     <div className='w-full max-w-3xl mx-auto px-4 space-y-4'>
@@ -75,6 +93,46 @@ const ChatItem = ({ messages, isLoading }: ChatItemProps) => {
               </ReactMarkdown>
             ) : (
               <span className='whitespace-pre-wrap'>{m.content}</span>
+            )}
+            {m.role === 'assistant' && m.content && !(isLoading && lastAssistant?.id === m.id) && (
+              <div className='mt-2 flex items-center gap-1 text-gray-600'>
+                <Tooltip content={copiedIds[m.id] ? 'Copied!' : 'Copy'} placement="bottom">
+                  <button
+                    className='text-gray-600 hover:bg-gray-200 rounded-lg'
+                    aria-label={copiedIds[m.id] ? 'Copied' : 'Copy'}
+                    aria-pressed={copiedIds[m.id] ? 'true' : 'false'}
+                    onClick={() => handleCopyAll(m.id, m.content)}
+                  >
+                    <span className='flex items-center justify-center h-8 w-8'>
+                      {copiedIds[m.id] ? <FiCheck className='text-green-600' /> : <FiCopy />}
+                    </span>
+                  </button>
+                </Tooltip>
+                <Tooltip content={reactions[m.id] === 'up' ? 'Marked as helpful' : 'Mark as helpful'} placement="bottom">
+                  <button
+                    className={`text-gray-600 hover:bg-gray-200 rounded-lg ${reactions[m.id] === 'up' ? 'bg-green-100' : ''}`}
+                    aria-label='Good response'
+                    aria-pressed={reactions[m.id] === 'up' ? 'true' : 'false'}
+                    onClick={() => handleReact(m.id, 'up')}
+                  >
+                    <span className='flex items-center justify-center h-8 w-8'>
+                      <FiThumbsUp className={reactions[m.id] === 'up' ? 'text-green-700' : ''} />
+                    </span>
+                  </button>
+                </Tooltip>
+                <Tooltip content={reactions[m.id] === 'down' ? 'Marked as not helpful' : 'Mark as not helpful'} placement="bottom">
+                  <button
+                    className={`text-gray-600 hover:bg-gray-200 rounded-lg ${reactions[m.id] === 'down' ? 'bg-red-100' : ''}`}
+                    aria-label='Bad response'
+                    aria-pressed={reactions[m.id] === 'down' ? 'true' : 'false'}
+                    onClick={() => handleReact(m.id, 'down')}
+                  >
+                    <span className='flex items-center justify-center h-8 w-8'>
+                      <FiThumbsDown className={reactions[m.id] === 'down' ? 'text-red-700' : ''} />
+                    </span>
+                  </button>
+                </Tooltip>
+              </div>
             )}
           </div>
         </div>

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
+import StroopTest from "@/components/StroopTest";
 // removed icon import; button now inside ChatInput
 
 type UiMessage = { id: string; role: "user" | "assistant"; content: string };
@@ -126,24 +127,47 @@ export default function Home() {
   }, [messages]);
 
   return (
-    <main className="h-full flex flex-col items-center pt-10">
-      <div className={`w-full max-w-4xl mx-auto relative ${hasMessages ? 'flex flex-col gap-3 h-full' : 'flex items-center justify-center h-full px-4'}`}>
-        {hasMessages && (
-          <div className="flex-1 px-4">
-            <ChatItem messages={messages} isLoading={isLoading} />
-            <div ref={anchorRef} style={{ height: Math.max(24, inputHeight-20) }} />
+    <main className="h-screen flex flex-col pt-10">
+      <div className="w-full mx-auto px-4 flex-1">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+          {/* Chat Section */}
+          <div className="flex flex-col h-full overflow-hidden">
+            {hasMessages ? (
+              <>
+                <div className="flex-1 overflow-y-auto">
+                  <ChatItem messages={messages} isLoading={isLoading} />
+                  <div ref={anchorRef} style={{ height: Math.max(24, inputHeight-20) }} />
+                </div>
+                <div className="flex-shrink-0 w-full flex justify-center">
+                  <ChatInput
+                    onSubmitPrompt={handleSubmitPrompt}
+                    disabled={isLoading}
+                    showTitle={false}
+                    titleText="What can I help with?"
+                    showScrollButton={showScrollToBottom}
+                    scrollParentRef={scrollParentRef}
+                    onHeightChange={setInputHeight}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <ChatInput
+                  onSubmitPrompt={handleSubmitPrompt}
+                  disabled={isLoading}
+                  showTitle={true}
+                  titleText="What can I help with?"
+                  showScrollButton={false}
+                  scrollParentRef={scrollParentRef}
+                  onHeightChange={setInputHeight}
+                />
+              </div>
+            )}
           </div>
-        )}
-        <div className={`${hasMessages ? 'sticky bottom-0' : ''} w-full flex justify-center px-4`}>
-          <ChatInput
-            onSubmitPrompt={handleSubmitPrompt}
-            disabled={isLoading}
-            showTitle={!hasMessages}
-            titleText="What can I help with?"
-            showScrollButton={hasMessages && showScrollToBottom}
-            scrollParentRef={scrollParentRef}
-            onHeightChange={setInputHeight}
-          />
+          {/* Stroop Test Section */}
+          <div className="h-full overflow-hidden">
+            <StroopTest userId={userId} />
+          </div>
         </div>
       </div>
     </main>

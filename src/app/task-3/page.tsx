@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "rea
 import { useSearchParams } from "next/navigation";
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
-import { useSessionContext } from "@/app/contexts/SessionContext";
+import { useSessionContext } from "@/contexts/SessionContext";
 
 type UiMessage = { id: string; role: "user" | "assistant"; content: string };
 

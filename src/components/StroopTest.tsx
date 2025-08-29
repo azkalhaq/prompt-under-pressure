@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { type StroopTrialData } from '@/app/lib/stroop-db';
+import { type StroopTrialData } from '@/lib/stroop-db';
 
 interface StroopConfig {
   iti: number;

@@ -5,7 +5,7 @@ import {
   updateUserSession, 
   getUserSession,
   incrementSessionPrompts 
-} from '@/app/lib/chat-db';
+} from '@/lib/chat-db';
 
 export async function POST(req: NextRequest) {
   try {

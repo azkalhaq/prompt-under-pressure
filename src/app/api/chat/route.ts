@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
-import { getOpenAIClient, streamChatCompletion, type ChatMessage } from "@/app/lib/chatgpt";
-import { getSupabaseServerClientOrNull } from "@/app/lib/supabase";
+import { getOpenAIClient, streamChatCompletion, type ChatMessage } from "@/lib/chatgpt";
+import { getSupabaseServerClientOrNull } from "@/lib/supabase";
 import { calculateStandardTokenCost } from "@/app/utils/CostCalculator";
-import { insertChatInteraction, createUserSession, getUserSession, incrementSessionPrompts } from "@/app/lib/chat-db";
+import { insertChatInteraction, createUserSession, getUserSession, incrementSessionPrompts } from "@/lib/chat-db";
 
 export const runtime = "nodejs";
 

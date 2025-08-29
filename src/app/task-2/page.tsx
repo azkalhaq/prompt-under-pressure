@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
 import StroopTest from "@/components/StroopTest";
-import { useSessionContext } from "@/app/contexts/SessionContext";
+import { useSessionContext } from "@/contexts/SessionContext";
 // removed icon import; button now inside ChatInput
 
 type UiMessage = { id: string; role: "user" | "assistant"; content: string };

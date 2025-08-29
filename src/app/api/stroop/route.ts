@@ -1,24 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { insertStroopTrial, createStroopSession, updateStroopSession, type StroopTrialData } from '@/app/lib/stroop-db';
+import { insertStroopTrial, type StroopTrialData } from '@/app/lib/stroop-db';
+import { incrementSessionTrials } from '@/app/lib/chat-db';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { action, data } = body;
+    
+    console.log(`Stroop API called with action: ${action}, sessionId: ${data?.session_id}`);
 
     switch (action) {
       case 'insert_trial':
         await insertStroopTrial(data as StroopTrialData);
-        return NextResponse.json({ success: true });
-
-      case 'create_session':
-        const { userId, sessionId } = data;
-        await createStroopSession(userId, sessionId);
-        return NextResponse.json({ success: true });
-
-      case 'update_session':
-        const { sessionId: updateSessionId, totalTrials, endTime } = data;
-        await updateStroopSession(updateSessionId, totalTrials, endTime);
+        
+        // Increment total_trials counter in user_sessions
+        try {
+          await incrementSessionTrials(data.session_id);
+          console.log(`Incremented total_trials for session: ${data.session_id}`);
+        } catch (error) {
+          console.error('Error incrementing session trials:', error);
+        }
+        
         return NextResponse.json({ success: true });
 
       default:

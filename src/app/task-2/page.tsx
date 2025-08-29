@@ -4,13 +4,13 @@ import { useSearchParams } from "next/navigation";
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
 import StroopTest from "@/components/StroopTest";
+import { useSessionContext } from "@/app/contexts/SessionContext";
 // removed icon import; button now inside ChatInput
 
 type UiMessage = { id: string; role: "user" | "assistant"; content: string };
 
 function Task2Content() {
-  const searchParams = useSearchParams();
-  const userId = (searchParams.get('u') || 'anonymous').slice(0, 100);
+  const { sessionId, userId, isLoading: sessionLoading } = useSessionContext();
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -65,6 +65,11 @@ function Task2Content() {
   // scroll-to-bottom handled inside ChatInput via refs
 
   const handleSubmitPrompt = useCallback(async (prompt: string) => {
+    if (sessionLoading || !sessionId || !userId) {
+      console.log('Session not ready, skipping prompt submission');
+      return;
+    }
+    
     const userMsg: UiMessage = { id: crypto.randomUUID(), role: "user", content: prompt };
     const assistantMsg: UiMessage = { id: crypto.randomUUID(), role: "assistant", content: "" };
     setMessages(prev => [...prev, userMsg, assistantMsg]);
@@ -81,6 +86,7 @@ function Task2Content() {
         body: JSON.stringify({
           model,
           user_id: userId,
+          session_id: sessionId,
           messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
         }),
         signal: ac.signal,
@@ -124,7 +130,7 @@ function Task2Content() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, userId, model]);
+  }, [messages, userId, model, sessionLoading, sessionId]);
 
   return (
     <main className="h-screen flex flex-col pt-10">
@@ -141,7 +147,7 @@ function Task2Content() {
                 <div className="flex-shrink-0 w-full flex justify-center">
                   <ChatInput
                     onSubmitPrompt={handleSubmitPrompt}
-                    disabled={isLoading}
+                    disabled={isLoading || sessionLoading}
                     showTitle={false}
                     titleText="What can I help with?"
                     showScrollButton={showScrollToBottom}
@@ -154,7 +160,7 @@ function Task2Content() {
               <div className="flex items-center justify-center h-full">
                 <ChatInput
                   onSubmitPrompt={handleSubmitPrompt}
-                  disabled={isLoading}
+                  disabled={isLoading || sessionLoading}
                   showTitle={true}
                   titleText="What can I help with?"
                   showScrollButton={false}
@@ -166,7 +172,16 @@ function Task2Content() {
           </div>
           {/* Stroop Test Section */}
           <div className="h-full overflow-hidden">
-            <StroopTest userId={userId} />
+            {sessionLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading session...</p>
+                </div>
+              </div>
+            ) : (
+              sessionId && userId && <StroopTest userId={userId} sessionId={sessionId} />
+            )}
           </div>
         </div>
       </div>

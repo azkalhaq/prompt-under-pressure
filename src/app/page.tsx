@@ -3,13 +3,13 @@ import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "rea
 import { useSearchParams } from "next/navigation";
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
+import { useSessionContext } from "@/app/contexts/SessionContext";
 // removed icon import; button now inside ChatInput
 
 type UiMessage = { id: string; role: "user" | "assistant"; content: string };
 
 function HomeContent() {
-  const searchParams = useSearchParams();
-  const userId = (searchParams.get('u') || 'anonymous').slice(0, 100);
+  const { sessionId, userId, isLoading: sessionLoading } = useSessionContext();
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -64,6 +64,11 @@ function HomeContent() {
   // scroll-to-bottom handled inside ChatInput via refs
 
   const handleSubmitPrompt = useCallback(async (prompt: string) => {
+    if (sessionLoading || !sessionId || !userId) {
+      console.log('Session not ready, skipping prompt submission');
+      return;
+    }
+    
     const userMsg: UiMessage = { id: crypto.randomUUID(), role: "user", content: prompt };
     const assistantMsg: UiMessage = { id: crypto.randomUUID(), role: "assistant", content: "" };
     setMessages(prev => [...prev, userMsg, assistantMsg]);
@@ -80,6 +85,7 @@ function HomeContent() {
         body: JSON.stringify({
           model,
           user_id: userId,
+          session_id: sessionId,
           messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
         }),
         signal: ac.signal,
@@ -126,7 +132,7 @@ function HomeContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, userId, model]);
+  }, [messages, userId, model, sessionLoading, sessionId]);
 
   return (
     <main className="h-full flex flex-col items-center pt-10">
@@ -140,7 +146,7 @@ function HomeContent() {
         <div className={`${hasMessages ? 'sticky bottom-0' : ''} w-full flex justify-center px-4`}>
           <ChatInput
             onSubmitPrompt={handleSubmitPrompt}
-            disabled={isLoading}
+            disabled={isLoading || sessionLoading}
             showTitle={!hasMessages}
             titleText="What can I help with?"
             showScrollButton={hasMessages && showScrollToBottom}

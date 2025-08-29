@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getOpenAIClient, streamChatCompletion, type ChatMessage } from "@/app/lib/chatgpt";
 import { getSupabaseServerClientOrNull } from "@/app/lib/supabase";
 import { calculateStandardTokenCost } from "@/app/utils/CostCalculator";
+import { insertChatInteraction, createUserSession, getUserSession, incrementSessionPrompts } from "@/app/lib/chat-db";
 
 export const runtime = "nodejs";
 
@@ -26,36 +27,61 @@ export async function POST(req: NextRequest) {
     }
 
     const apiCallId = crypto.randomUUID();
+    
+    console.log(`Chat API called with sessionId: ${sessionId}, userId: ${userId}`);
+
+    // Ensure session exists in user_sessions table
+    if (sessionId) {
+      try {
+        const existingSession = await getUserSession(sessionId);
+        if (!existingSession) {
+          // Create session if it doesn't exist
+          await createUserSession(userId, sessionId);
+          console.log(`Created new session: ${sessionId} for user: ${userId}`);
+        } else {
+          console.log(`Using existing session: ${sessionId} for user: ${userId}`);
+        }
+      } catch (error) {
+        // If session creation fails, continue with the request
+        console.error('Error ensuring session exists:', error);
+      }
+    }
 
     const stream = await streamChatCompletion({
       client,
       model,
       messages,
       onMetrics: async ({ responseText, tokensInput, tokensOutput, rawRequest, rawResponse }) => {
-        if (!supabase) return;
         try {
           const prompt = messages[messages.length - 1]?.content || "";
           const role = messages[messages.length - 1]?.role || 'user';
-          console.log("messages", messages);
-          await supabase
-            .schema('public')
-            .from('chat_interactions')
-            .insert({
-              user_id: (userId ?? 'anonymous').slice(0, 100),
-              session_id: sessionId ?? null,
-              role,
-              prompt,
-              cost_usd: calculateStandardTokenCost(model, tokensInput, tokensOutput),
-              response: responseText,
-              model: (model ?? '').slice(0, 50),
-              tokens_input: tokensInput,
-              tokens_output: tokensOutput,
-              api_call_id: apiCallId.slice(0, 255),
-              raw_request: rawRequest,
-              raw_respond: rawResponse,
-            });
+          
+          await insertChatInteraction({
+            user_id: (userId ?? 'anonymous').slice(0, 100),
+            session_id: sessionId ?? 'no-session',
+            role,
+            prompt,
+            cost_usd: calculateStandardTokenCost(model, tokensInput, tokensOutput),
+            response: responseText,
+            model: (model ?? '').slice(0, 50),
+            tokens_input: tokensInput,
+            tokens_output: tokensOutput,
+            api_call_id: apiCallId.slice(0, 255),
+            raw_request: rawRequest,
+            raw_respond: rawResponse,
+          });
+          
+          // Increment total_prompts counter in user_sessions
+          if (sessionId) {
+            try {
+              await incrementSessionPrompts(sessionId);
+              console.log(`Incremented total_prompts for session: ${sessionId}`);
+            } catch (error) {
+              console.error('Error incrementing session prompts:', error);
+            }
+          }
         } catch (e) {
-          console.error('Supabase insert exception', e);
+          console.error('Chat interaction insert exception', e);
         }
       },
     });

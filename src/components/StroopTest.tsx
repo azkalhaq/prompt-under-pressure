@@ -20,8 +20,7 @@ interface StroopTrial {
 const COLORS = ['red', 'blue', 'green', 'yellow'];
 const COLOR_WORDS = ['RED', 'BLUE', 'GREEN', 'YELLOW'];
 
-export default function StroopTest({ userId }: { userId: string }) {
-  const [sessionId] = useState(() => crypto.randomUUID());
+export default function StroopTest({ userId, sessionId }: { userId: string; sessionId: string }) {
   const [currentTrial, setCurrentTrial] = useState(1);
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -222,39 +221,47 @@ export default function StroopTest({ userId }: { userId: string }) {
   // Start session
   const startSession = useCallback(async () => {
     try {
-      await fetch('/api/stroop', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'create_session',
-          data: { userId, sessionId }
-        })
-      });
-      startTrial(instruction);
-    } catch (error) {
-      console.error('Failed to create session:', error);
-    }
-  }, [userId, sessionId, startTrial, instruction]);
-
-  // End session
-  const endSession = useCallback(async () => {
-    try {
-      await fetch('/api/stroop', {
+      // Update session with stroop start time
+      await fetch('/api/chat-db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'update_session',
           data: { 
             sessionId, 
-            totalTrials: currentTrial - 1, 
-            endTime: new Date().toISOString() 
+            updates: { start_stroop_time: new Date().toISOString() }
+          }
+        })
+      });
+      
+      startTrial(instruction);
+    } catch (error) {
+      console.error('Failed to update session with stroop start time:', error);
+      // Continue with the trial even if session update fails
+      startTrial(instruction);
+    }
+  }, [userId, sessionId, startTrial, instruction]);
+
+  // End session
+  const endSession = useCallback(async () => {
+    try {
+      await fetch('/api/chat-db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_session',
+          data: { 
+            sessionId, 
+            updates: {
+              end_time: new Date().toISOString() 
+            }
           }
         })
       });
     } catch (error) {
       console.error('Failed to end session:', error);
     }
-  }, [sessionId, currentTrial]);
+  }, [sessionId]);
 
   // Cleanup timers on unmount
   useEffect(() => {

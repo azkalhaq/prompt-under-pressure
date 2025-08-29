@@ -17,7 +17,7 @@ export interface StroopTrialData {
 export interface StroopSession {
   user_id: string;
   session_id: string;
-  start_time: string;
+  start_stroop_time: string;
   end_time?: string;
   total_trials: number;
 }
@@ -52,12 +52,13 @@ export async function createStroopSession(userId: string, sessionId: string): Pr
   const supabase = getSupabaseServerClient();
   
   const { error } = await supabase
-    .from('stroop_sessions')
+    .from('user_sessions')
     .insert({
       user_id: userId,
       session_id: sessionId,
-      start_time: new Date().toISOString(),
-      total_trials: 0
+      start_stroop_time: new Date().toISOString(),
+      total_trials: 0,
+      total_prompts: 0
     });
 
   if (error) {
@@ -75,7 +76,7 @@ export async function updateStroopSession(sessionId: string, totalTrials: number
   }
 
   const { error } = await supabase
-    .from('stroop_sessions')
+    .from('user_sessions')
     .update(updateData)
     .eq('session_id', sessionId);
 

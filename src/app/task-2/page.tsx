@@ -1,5 +1,5 @@
 "use client"
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
@@ -8,7 +8,7 @@ import StroopTest from "@/components/StroopTest";
 
 type UiMessage = { id: string; role: "user" | "assistant"; content: string };
 
-export default function Home() {
+function Task2Content() {
   const searchParams = useSearchParams();
   const userId = (searchParams.get('u') || 'anonymous').slice(0, 100);
   const [messages, setMessages] = useState<UiMessage[]>([]);
@@ -170,6 +170,33 @@ export default function Home() {
           </div>
         </div>
       </div>
-    </main>
+         </main>
+   );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <main className="h-screen flex flex-col pt-10">
+        <div className="w-full mx-auto px-4 flex-1">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+            <div className="flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading...</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    }>
+      <Task2Content />
+    </Suspense>
   );
 }

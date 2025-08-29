@@ -133,14 +133,14 @@ function Task2Content() {
   }, [messages, userId, model, sessionLoading, sessionId]);
 
   return (
-    <main className="h-screen flex flex-col pt-10">
-      <div className="w-full mx-auto px-4 flex-1">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+    <main className="h-screen overflow-hidden flex flex-col pt-10">
+      <div className="w-full mx-auto px-4 flex-1 flex min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full h-full min-h-0">
           {/* Chat Section */}
           <div className="flex flex-col h-full overflow-hidden">
             {hasMessages ? (
               <>
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto min-h-0">
                   <ChatItem messages={messages} isLoading={isLoading} />
                   <div ref={anchorRef} style={{ height: Math.max(24, inputHeight-20) }} />
                 </div>
@@ -170,8 +170,8 @@ function Task2Content() {
               </div>
             )}
           </div>
-          {/* Stroop Test Section */}
-          <div className="h-full overflow-hidden">
+          {/* Stroop Test Section - Fixed height and position */}
+          <div className="h-full overflow-hidden flex items-center justify-center min-h-0">
             {sessionLoading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
@@ -180,21 +180,25 @@ function Task2Content() {
                 </div>
               </div>
             ) : (
-              sessionId && userId && <StroopTest userId={userId} sessionId={sessionId} />
+              sessionId && userId && (
+                <div className="w-full h-full items-center justify-center overflow-hidden">
+                  <StroopTest userId={userId} sessionId={sessionId} />
+                </div>
+              )
             )}
           </div>
         </div>
       </div>
-         </main>
-   );
+    </main>
+  );
 }
 
 export default function Home() {
   return (
     <Suspense fallback={
       <main className="h-screen flex flex-col pt-10">
-        <div className="w-full mx-auto px-4 flex-1">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+        <div className="w-full mx-auto px-4 flex-1 flex">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full h-full">
             <div className="flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>

@@ -16,26 +16,56 @@ type ChatItemProps = {
 }
 
 // User Message Component
-const UserMessage = ({ content }: { content: string }) => {
+const UserMessage = ({ content, onCopy, copiedIds }: {
+  content: string
+  onCopy: (id: string, text: string) => void
+  copiedIds: Record<string, boolean>
+}) => {
+  const [isHovered, setIsHovered] = useState(false)
+  const messageId = `user-${content.slice(0, 10)}` // Simple ID for user messages
+
   return (
-    <div className='flex justify-end'>
-      <div className='px-4 py-2 rounded-2xl text-sm md:text-base break-words max-w-[75%] bg-gray-100 whitespace-pre-wrap'>
+    <div
+      className='grid grid-cols-1'
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className='px-4 py-2 rounded-2xl text-sm md:text-base break-words max-w-[75%] bg-gray-100 whitespace-pre-wrap justify-self-end'>
         <span className='whitespace-pre-wrap'>{content}</span>
+      </div>
+      {/* Action buttons - positioned to the right of the message */}
+      <div className='mt-2 flex items-center gap-1 justify-self-end' style={{ height: '32px'}}>
+        {isHovered && (
+          <div className='flex items-center gap-1 text-gray-600 ml-2 justify-self-end'>
+            <Tooltip content={copiedIds[messageId] ? 'Copied!' : 'Copy'} placement="bottom">
+              <button
+                className='text-gray-600 hover:bg-gray-200 rounded-lg'
+                aria-label={copiedIds[messageId] ? 'Copied' : 'Copy'}
+                aria-pressed={copiedIds[messageId] ? 'true' : 'false'}
+                onClick={() => onCopy(messageId, content)}
+              >
+                <span className='flex items-center justify-center h-8 w-8'>
+                  {copiedIds[messageId] ? <FiCheck className='text-green-600' /> : <FiCopy />}
+                </span>
+              </button>
+            </Tooltip>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 // Assistant Message Component
-const AssistantMessage = ({ 
-  content, 
-  messageId, 
+const AssistantMessage = ({
+  content,
+  messageId,
   isTyping = false,
   onCopy,
   onReact,
   copiedIds,
   reactions
-}: { 
+}: {
   content: string
   messageId: string
   isTyping?: boolean
@@ -92,7 +122,7 @@ const AssistantMessage = ({
         >
           {content}
         </ReactMarkdown>
-        
+
         {/* Action buttons - only show when not typing and content exists */}
         {content && !isTyping && (
           <div className='mt-2 flex items-center gap-1 text-gray-600'>
@@ -172,7 +202,7 @@ const ChatItem = ({ messages, isLoading }: ChatItemProps) => {
       await navigator.clipboard?.writeText(text)
       setCopiedIds(prev => ({ ...prev, [id]: true }))
       setTimeout(() => setCopiedIds(prev => ({ ...prev, [id]: false })), 1200)
-    } catch {}
+    } catch { }
   }
 
   const handleReact = (id: string, kind: 'up' | 'down') => {
@@ -185,7 +215,11 @@ const ChatItem = ({ messages, isLoading }: ChatItemProps) => {
       {messages.map((m) => (
         <div key={m.id}>
           {m.role === 'user' ? (
-            <UserMessage content={m.content} />
+            <UserMessage
+              content={m.content}
+              onCopy={handleCopyAll}
+              copiedIds={copiedIds}
+            />
           ) : (
             <AssistantMessage
               content={m.content}
@@ -199,9 +233,9 @@ const ChatItem = ({ messages, isLoading }: ChatItemProps) => {
           )}
         </div>
       ))}
-      
+
       {isAssistantTyping && <TypingIndicator />}
-      
+
       <div ref={endRef} />
     </div>
   )
@@ -215,7 +249,7 @@ function CopyButton({ text }: { text: string }) {
       await navigator.clipboard?.writeText(text)
       setCopied(true)
       setTimeout(() => setCopied(false), 1200)
-    } catch {}
+    } catch { }
   }
   return (
     <button

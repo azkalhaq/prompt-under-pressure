@@ -34,7 +34,6 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
   const [isSessionComplete] = useState(false);
 
   // Refs for timers
-  const trialTimerRef = useRef<NodeJS.Timeout | null>(null);
   const itiTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -94,20 +93,8 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
     // Start trial countdown if timer is set
     if (config.trialTimer > 0) {
       setTrialCountdown(config.trialTimer / 1000);
-      trialTimerRef.current = setTimeout(() => {
-        // Handle trial timeout inline to avoid circular dependencies
-        if (currentTrialData) {
-          const endTime = Date.now();
-          const rt = trialStartTime ? endTime - trialStartTime : null;
-          saveTrialData(rt, null, null); // null for user answer when timeout occurs
-          setFeedback('incorrect');
-          setTimeout(() => {
-            nextTrial();
-          }, 1000);
-        }
-      }, config.trialTimer);
     }
-  }, [config.trialTimer]);
+  }, [config.trialTimer, instruction]);
 
   // Handle user response
   const handleResponse = useCallback((selectedAnswer: string) => {
@@ -132,11 +119,8 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
     setFeedback(isCorrect ? 'correct' : 'incorrect');
     setIsActive(false);
     
-    // Clear trial timer
-    if (trialTimerRef.current) {
-      clearTimeout(trialTimerRef.current);
-      trialTimerRef.current = null;
-    }
+    // Clear trial countdown
+    setTrialCountdown(0);
     
     // Save trial data
     saveTrialData(rt, isCorrect, selectedAnswer);
@@ -200,6 +184,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
       setInstruction(nextInstruction);
     }
     
+    console.log(`Advancing from trial ${currentTrial} to trial ${currentTrial + 1}`);
     setCurrentTrial(prev => prev + 1);
     setIsActive(false);
     setIsPaused(false);
@@ -266,7 +251,6 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
   // Cleanup timers on unmount
   useEffect(() => {
     return () => {
-      if (trialTimerRef.current) clearTimeout(trialTimerRef.current);
       if (itiTimerRef.current) clearTimeout(itiTimerRef.current);
       if (countdownTimerRef.current) clearTimeout(countdownTimerRef.current);
     };
@@ -285,10 +269,29 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
   useEffect(() => {
     if (trialCountdown > 0 && isActive) {
       countdownTimerRef.current = setTimeout(() => {
-        setTrialCountdown(prev => prev - 1);
+        setTrialCountdown(prev => {
+          const newCountdown = prev - 1;
+          return newCountdown;
+        });
       }, 1000);
     }
   }, [trialCountdown, isActive]);
+
+  // Handle trial timeout when countdown reaches 0
+  useEffect(() => {
+    if (trialCountdown === 0 && isActive && currentTrialData && trialStartTime && !feedback) {
+      // Trial has timed out, handle it (only if no feedback yet)
+      console.log('Trial timeout detected - advancing to next trial');
+      const endTime = Date.now();
+      const rt = endTime - trialStartTime;
+      saveTrialData(rt, null, null); // null for user answer when timeout occurs
+      setFeedback('incorrect');
+      setIsActive(false); // Stop the trial
+      setTimeout(() => {
+        nextTrial();
+      }, 1000);
+    }
+  }, [trialCountdown, isActive, currentTrialData, trialStartTime, saveTrialData, nextTrial, feedback]);
 
   // End session when complete
   useEffect(() => {

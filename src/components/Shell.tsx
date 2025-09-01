@@ -8,7 +8,8 @@ type ShellProps = {
 }
 
 const Shell = ({ children }: ShellProps) => {
-  const [collapsed, setCollapsed] = useState(true)
+  //Initial state of the sidebar
+  const [collapsed, setCollapsed] = useState(false)
   const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
   

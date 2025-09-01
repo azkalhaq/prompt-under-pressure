@@ -1,5 +1,5 @@
 "use client"
-import React from 'react'
+import React, { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -12,6 +12,18 @@ type SidebarProps = {
 
 const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
   const pathname = usePathname()
+  const [showSubmit, setShowSubmit] = useState(false)
+
+  // TODO: Implement get started functionality
+  const handleGetStarted = () => {
+    setShowSubmit(true)
+  }
+
+  // TODO: Implement submit functionality
+  const handleSubmit = () => {
+    // TODO: Add submit logic here
+    console.log('Submit button clicked')
+  }
 
   const scenarioContent: Record<string, { markdown: string }> = {
     '/': {
@@ -76,7 +88,7 @@ const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
         </div>
         
         {/* Content area */}
-        <div className='p-6 text-sm text-gray-700 overflow-y-auto flex-1 h-[calc(100%-5rem)]'>
+        <div className='p-6 text-sm text-gray-700 overflow-y-auto flex-1 h-[calc(100%-10rem)]'>
           <div className='prose prose-sm max-w-none'>
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]} 
@@ -101,11 +113,23 @@ const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
         </div>
         
         {/* Footer area for additional actions */}
-        <div className='p-6 border-t border-gray-100 bg-gray-50'>
+        <div className='absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100 bg-gray-50'>
           <div className='flex gap-3'>
-            <button className='flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200'>
-              Get Started
-            </button>
+            {!showSubmit ? (
+              <button 
+                onClick={handleGetStarted}
+                className='flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200'
+              >
+                Get Started
+              </button>
+            ) : (
+              <button 
+                onClick={handleSubmit}
+                className='flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200'
+              >
+                Submit
+              </button>
+            )}
           </div>
         </div>
       </div>

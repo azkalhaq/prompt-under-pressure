@@ -137,7 +137,7 @@ function HomeContent() {
   }, [messages, userId, model, sessionLoading, sessionId]);
 
   return (
-    <main className="h-full flex flex-col items-center pt-10">
+    <main className="h-full flex flex-col items-center">
       <div className={`w-full max-w-4xl mx-auto relative ${hasMessages ? 'flex flex-col gap-3 h-full' : 'flex items-center justify-center h-full px-4'}`}>
         {hasMessages && (
           <div className="flex-1 px-4">

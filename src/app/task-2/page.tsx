@@ -172,7 +172,7 @@ function Task2Content() {
   }, [messages, userId, model, sessionLoading, sessionId]);
 
   return (
-    <main className="h-screen overflow-hidden flex flex-col pt-10">
+    <main className="h-screen overflow-hidden flex flex-col">
       <div className="w-full mx-auto px-4 flex-1 flex min-h-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full h-full min-h-0">
           {/* Chat Section */}

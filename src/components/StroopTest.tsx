@@ -302,7 +302,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
 
   if (!currentTrialData && !isSessionComplete) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-lg shadow-lg">
+      <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-lg shadow-lg ">
         <h2 className="text-2xl font-bold mb-4">Stroop Test</h2>
         <p className="text-gray-600 mb-6 text-center">
           Click the button below to start the Stroop test session.
@@ -328,7 +328,11 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-lg shadow-lg">
+    <div className={`flex flex-col items-center justify-center h-full p-6 rounded-lg shadow-lg transition-all duration-300 ${
+      feedback === 'correct' ? 'bg-green-100' :
+      feedback === 'incorrect' ? 'bg-red-100' :
+      'bg-white'
+    }`}>
       {/* Header */}
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold mb-2">Stroop Test</h2>
@@ -354,11 +358,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
           {/* Stimulus */}
           <div className="mb-8">
             <div 
-              className={`text-6xl font-bold mb-8 transition-all duration-300 ${
-                feedback === 'correct' ? 'bg-green-100 text-green-800' :
-                feedback === 'incorrect' ? 'bg-red-100 text-red-800' :
-                'bg-gray-50'
-              }`}
+              className="text-6xl font-bold mb-8 transition-all duration-300 bg-gray-50"
               style={{ 
                 color: currentTrialData.textColor,
                 padding: '2rem',
@@ -419,7 +419,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
 
           {/* Trial info */}
           <div className="mt-6 text-sm text-gray-500">
-            <p>Condition: {currentTrialData.condition}</p>
+            {/* <p>Condition: {currentTrialData.condition}</p> */}
             {reactionTime && <p>Reaction time: {reactionTime}ms</p>}
           </div>
         </div>

@@ -41,6 +41,9 @@ export interface UserSession {
   total_trials: number;
   total_prompts: number;
   route_path?: string;
+  submitted_result?: string;
+  confidence?: number;
+  submit_time?: string;
 }
 
 export async function insertChatInteraction(data: ChatInteractionData): Promise<void> {
@@ -112,6 +115,9 @@ export async function updateUserSession(
     total_trials?: number;
     total_prompts?: number;
     route_path?: string;
+    submitted_result?: string;
+    confidence?: number;
+    submit_time?: string;
   }
 ): Promise<void> {
   const supabase = getSupabaseServerClient();

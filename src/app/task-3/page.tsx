@@ -129,7 +129,7 @@ function ScenarioThreeContent() {
     <main className="h-full flex flex-col items-center pt-10">
       <div className={`w-full max-w-4xl mx-auto relative ${hasMessages ? 'flex flex-col gap-3 h-full' : 'flex items-center justify-center h-full px-4'}`}>
         {hasMessages && (
-          <div className="flex-1 px-4">
+          <div className="flex-1 px-4 pt-10">
             <ChatItem messages={messages} isLoading={isLoading} />
             <div ref={anchorRef} style={{ height: Math.max(24, inputHeight-20) }} />
           </div>

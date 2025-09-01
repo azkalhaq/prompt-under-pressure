@@ -17,6 +17,7 @@ const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
   const pathname = usePathname()
   const [showSubmit, setShowSubmit] = useState(false)
   const [showSubmissionForm, setShowSubmissionForm] = useState(false)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const { sessionId, userId } = useSessionContext()
 
   // TODO: Implement get started functionality
@@ -61,9 +62,37 @@ const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
     setShowSubmissionForm(true)
   }
 
-  const handleSubmissionFormSubmit = (data: { content: string; confidence: number }) => {
+  const handleSubmissionFormSubmit = async (data: { content: string; confidence: number }) => {
     console.log('Submission data:', data)
-    // TODO: Handle the submission data (save to database, etc.)
+    
+    try {
+      // Save submission data to user_sessions table
+      if (sessionId && userId) {
+        await fetch('/api/chat-db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update_session',
+            data: { 
+              sessionId, 
+              updates: { 
+                submitted_result: data.content,
+                confidence: data.confidence,
+                submit_time: new Date().toISOString(), // Record when submission was made
+              }
+            }
+          })
+        })
+        console.log('Submission data saved successfully')
+        
+        // Show success message
+        setShowSuccessMessage(true)
+        setTimeout(() => setShowSuccessMessage(false), 3000) // Hide after 3 seconds
+      }
+    } catch (error) {
+      console.error('Failed to save submission data:', error)
+    }
+    
     setShowSubmissionForm(false)
   }
 
@@ -248,6 +277,18 @@ Think carefully about how to design the best possible GPT prompt to gather this 
           onSubmit={handleSubmissionFormSubmit}
           onClose={handleSubmissionFormClose}
         />
+      )}
+
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span>Submission saved successfully!</span>
+          </div>
+        </div>
       )}
     </>
   )

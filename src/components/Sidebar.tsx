@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { RxQuestionMark, RxCross2 } from 'react-icons/rx'
 import { useSessionContext } from '../contexts/SessionContext'
+import SubmissionForm from './SubmissionForm'
 
 type SidebarProps = {
   collapsed: boolean
@@ -14,6 +15,7 @@ type SidebarProps = {
 const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
   const pathname = usePathname()
   const [showSubmit, setShowSubmit] = useState(false)
+  const [showSubmissionForm, setShowSubmissionForm] = useState(false)
   const { sessionId, userId } = useSessionContext()
 
   // TODO: Implement get started functionality
@@ -51,8 +53,21 @@ const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
 
   // TODO: Implement submit functionality
   const handleSubmit = () => {
-    // TODO: Add submit logic here
-    console.log('Submit button clicked')
+    // Collapse the sidebar when showing the modal
+    if (onToggleSidebar) {
+      onToggleSidebar()
+    }
+    setShowSubmissionForm(true)
+  }
+
+  const handleSubmissionFormSubmit = (data: { content: string; confidence: number }) => {
+    console.log('Submission data:', data)
+    // TODO: Handle the submission data (save to database, etc.)
+    setShowSubmissionForm(false)
+  }
+
+  const handleSubmissionFormClose = () => {
+    setShowSubmissionForm(false)
   }
 
   const scenarioContent: Record<string, { markdown: string }> = {
@@ -163,6 +178,15 @@ const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
           </div>
         </div>
       </div>
+
+      {/* Submission Form Modal */}
+      {showSubmissionForm && (
+        <SubmissionForm
+          isOpen={showSubmissionForm}
+          onSubmit={handleSubmissionFormSubmit}
+          onClose={handleSubmissionFormClose}
+        />
+      )}
     </>
   )
 }

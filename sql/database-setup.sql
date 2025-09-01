@@ -6,13 +6,15 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     id BIGSERIAL PRIMARY KEY,                         -- surrogate key
     user_id VARCHAR(128) NOT NULL,                    -- anonymised or app user id
     session_id VARCHAR(128) UNIQUE NOT NULL,          -- session identifier
+    route_path TEXT,                                  -- route path accessed (e.g., '/', '/task-2')
     session_start_time TIMESTAMPTZ NOT NULL DEFAULT now(),
     task_start_time TIMESTAMPTZ,                      -- when scenario started (Get Started button clicked)
     start_stroop_time TIMESTAMPTZ,                    -- when stroop test startedf
     end_time TIMESTAMPTZ,                             -- when session ended
     total_trials INTEGER DEFAULT 0,                   -- number of stroop trials completed
     total_prompts INTEGER DEFAULT 0,                  -- number of chat interactions completed
-    route_path TEXT,                                  -- route path accessed (e.g., '/', '/task-2')
+    submitted_result TEXT,                            -- final text submitted by the user
+    confidence INTEGER,                               -- confidence level of the user's submission
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()     -- record creation time
 );
 

@@ -10,7 +10,7 @@ interface SubmissionFormProps {
 
 const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
   const [content, setContent] = useState('')
-  const [confidence, setConfidence] = useState(5) // Default to middle value (5)
+  const [confidence, setConfidence] = useState(4) // Default to middle value (5)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,12 +53,7 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
           {/* Form Content */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Email-like composition area */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
-                <span className="font-medium">From:</span>
-                <span className="text-gray-800">Your Analysis</span>
-              </div>
-              
+            <div className="space-y-4">              
               <div className="flex items-center space-x-4 text-sm text-gray-600">
                 <span className="font-medium">To:</span>
                 <span className="text-gray-800">Manager</span>
@@ -79,7 +74,7 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Write your competitor analysis here..."
+                placeholder="Write your analysis result here..."
                 className="w-full h-48 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />

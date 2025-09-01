@@ -174,7 +174,7 @@ function Task2Content() {
   return (
     <main className="h-screen overflow-hidden flex flex-col pt-10">
       <div className="w-full mx-auto px-4 flex-1 flex min-h-0">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full h-full min-h-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full h-full min-h-0">
           {/* Chat Section */}
           <div className="flex flex-col h-full overflow-hidden">
             {hasMessages ? (

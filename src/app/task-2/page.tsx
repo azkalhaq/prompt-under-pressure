@@ -179,7 +179,7 @@ function Task2Content() {
           <div className="flex flex-col h-full overflow-hidden">
             {hasMessages ? (
               <>
-                <div ref={messagesScrollRef} className="flex-1 overflow-y-auto min-h-0">
+                <div ref={messagesScrollRef} className="flex-1 overflow-y-auto min-h-0 pt-10">
                   <ChatItem messages={messages} isLoading={isLoading} />
                   <div ref={anchorRef} style={{ height: Math.max(24, inputHeight-20) }} />
                 </div>

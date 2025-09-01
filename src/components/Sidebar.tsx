@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { RxQuestionMark, RxCross2 } from 'react-icons/rx'
+import { useSessionContext } from '../contexts/SessionContext'
 
 type SidebarProps = {
   collapsed: boolean
@@ -13,10 +14,39 @@ type SidebarProps = {
 const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
   const pathname = usePathname()
   const [showSubmit, setShowSubmit] = useState(false)
+  const { sessionId, userId } = useSessionContext()
 
   // TODO: Implement get started functionality
-  const handleGetStarted = () => {
-    setShowSubmit(true)
+  const handleGetStarted = async () => {
+    try {
+      // 1. Collapse the sidebar
+      if (onToggleSidebar) {
+        onToggleSidebar()
+      }
+      
+      // 2. Set showSubmit to true
+      setShowSubmit(true)
+      
+      // 3. Record task_start_time timestamp in user_sessions table
+      if (sessionId && userId) {
+        await fetch('/api/chat-db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update_session',
+            data: { 
+              sessionId, 
+              updates: { 
+                task_start_time: new Date().toISOString() 
+              }
+            }
+          })
+        })
+        console.log('Task start time recorded successfully')
+      }
+    } catch (error) {
+      console.error('Error in handleGetStarted:', error)
+    }
   }
 
   // TODO: Implement submit functionality

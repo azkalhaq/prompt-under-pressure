@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { collectBrowserFingerprint } from '@/utils/browserFingerprint';
 
 interface SessionContextType {
   sessionId: string | null;
@@ -72,12 +73,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           // Only create session if it doesn't exist
           if (!sessionData.session) {
             console.log(`Creating new session in database: ${sessionId} for user: ${userId}`);
+            
+            // Collect browser fingerprinting data
+            const browserData = collectBrowserFingerprint();
+            
             await fetch('/api/chat-db', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 action: 'create_session',
-                data: { userId, sessionId, routePath: window.location.pathname }
+                data: { 
+                  userId, 
+                  sessionId, 
+                  routePath: window.location.pathname,
+                  browserData
+                }
               })
             });
           } else {

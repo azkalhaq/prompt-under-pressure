@@ -48,7 +48,19 @@ export async function insertStroopTrial(data: StroopTrialData): Promise<void> {
   }
 }
 
-export async function createStroopSession(userId: string, sessionId: string): Promise<void> {
+export async function createStroopSession(
+  userId: string, 
+  sessionId: string,
+  browserData?: {
+    user_agent?: string;
+    language?: string;
+    platform?: string;
+    screen_width?: number;
+    screen_height?: number;
+    timezone?: string;
+    query_params?: string;
+  }
+): Promise<void> {
   const supabase = getSupabaseServerClient();
   
   const { error } = await supabase
@@ -58,7 +70,14 @@ export async function createStroopSession(userId: string, sessionId: string): Pr
       session_id: sessionId,
       start_stroop_time: new Date().toISOString(),
       total_trials: 0,
-      total_prompts: 0
+      total_prompts: 0,
+      user_agent: browserData?.user_agent,
+      language: browserData?.language,
+      platform: browserData?.platform,
+      screen_width: browserData?.screen_width,
+      screen_height: browserData?.screen_height,
+      timezone: browserData?.timezone,
+      query_params: browserData?.query_params
     });
 
   if (error) {

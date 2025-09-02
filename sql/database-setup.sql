@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     user_id VARCHAR(128) NOT NULL,                    -- anonymised or app user id
     session_id VARCHAR(128) UNIQUE NOT NULL,          -- session identifier
     route_path TEXT,                                  -- route path accessed (e.g., '/', '/task-2')
+    query_params TEXT,                                 -- query params accessed (e.g., '?audio=1')
     session_start_time TIMESTAMPTZ NOT NULL DEFAULT now(),
     task_start_time TIMESTAMPTZ,                      -- when scenario started (Get Started button clicked)
     start_stroop_time TIMESTAMPTZ,                    -- when stroop test startedf
@@ -23,9 +24,8 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     platform VARCHAR(50),                             -- operating system platform
     screen_width INTEGER,                             -- screen width
     screen_height INTEGER,                            -- screen height
-    color_depth INTEGER,                              -- screen color depth
     timezone VARCHAR(50),                             -- user's timezone
-    ip_address INET                                   -- IP address (if available)
+    ip_address INET                                   -- IP address
 );
 
 -- Create stroop_trials table

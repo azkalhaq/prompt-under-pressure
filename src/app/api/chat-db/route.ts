@@ -6,6 +6,7 @@ import {
   getUserSession,
   incrementSessionPrompts 
 } from '@/lib/chat-db';
+import { collectServerSideFingerprint } from '@/utils/browserFingerprint';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,7 +19,25 @@ export async function POST(req: NextRequest) {
         break;
       
       case 'create_session':
-        await createUserSession(data.userId, data.sessionId, data.routePath);
+        // Collect browser fingerprinting data from server and merge with client data
+        const serverBrowserData = collectServerSideFingerprint(req);
+        const clientBrowserData = data.browserData || {};
+        
+        // Merge client and server data, preferring client data for client-specific fields
+        const mergedBrowserData = {
+          ...serverBrowserData,
+          ...clientBrowserData,
+          // Keep server data for fields that can't be determined client-side
+          user_agent: clientBrowserData.user_agent || serverBrowserData.user_agent,
+          language: clientBrowserData.language || serverBrowserData.language,
+          platform: clientBrowserData.platform || serverBrowserData.platform,
+          screen_width: clientBrowserData.screen_width || serverBrowserData.screen_width,
+          screen_height: clientBrowserData.screen_height || serverBrowserData.screen_height,
+          timezone: clientBrowserData.timezone || serverBrowserData.timezone,
+          query_params: clientBrowserData.query_params || serverBrowserData.query_params
+        };
+        
+        await createUserSession(data.userId, data.sessionId, data.routePath, mergedBrowserData);
         break;
       
       case 'update_session':

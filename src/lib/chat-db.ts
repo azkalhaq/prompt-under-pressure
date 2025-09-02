@@ -44,6 +44,13 @@ export interface UserSession {
   submitted_result?: string;
   confidence?: number;
   submit_time?: string;
+  user_agent?: string;
+  language?: string;
+  platform?: string;
+  screen_width?: number;
+  screen_height?: number;
+  timezone?: string;
+  query_params?: string;
 }
 
 export async function insertChatInteraction(data: ChatInteractionData): Promise<void> {
@@ -82,7 +89,20 @@ export async function insertChatInteraction(data: ChatInteractionData): Promise<
   }
 }
 
-export async function createUserSession(userId: string, sessionId: string, routePath?: string): Promise<void> {
+export async function createUserSession(
+  userId: string, 
+  sessionId: string, 
+  routePath?: string,
+  browserData?: {
+    user_agent?: string;
+    language?: string;
+    platform?: string;
+    screen_width?: number;
+    screen_height?: number;
+    timezone?: string;
+    query_params?: string;
+  }
+): Promise<void> {
   const supabase = getSupabaseServerClient();
   
   const { error } = await supabase
@@ -93,7 +113,14 @@ export async function createUserSession(userId: string, sessionId: string, route
       session_start_time: new Date().toISOString(),
       total_trials: 0,
       total_prompts: 0,
-      route_path: routePath
+      route_path: routePath,
+      user_agent: browserData?.user_agent,
+      language: browserData?.language,
+      platform: browserData?.platform,
+      screen_width: browserData?.screen_width,
+      screen_height: browserData?.screen_height,
+      timezone: browserData?.timezone,
+      query_params: browserData?.query_params
     });
 
   if (error) {

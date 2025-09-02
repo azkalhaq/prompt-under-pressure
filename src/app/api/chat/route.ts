@@ -4,6 +4,7 @@ import { getSupabaseServerClientOrNull } from "@/lib/supabase";
 import { calculateStandardTokenCost } from "@/utils/CostCalculator";
 import { insertChatInteraction, createUserSession, getUserSession, incrementSessionPrompts } from "@/lib/chat-db";
 import { calculateTextMetrics } from "@/utils/textAnalysis";
+import { collectServerSideFingerprint } from "@/utils/browserFingerprint";
 
 export const runtime = "nodejs";
 
@@ -76,7 +77,11 @@ export async function POST(req: NextRequest) {
           const currentPath = (typeof body?.page_path === 'string' && body.page_path.trim().length > 0)
             ? body.page_path
             : (req.nextUrl.pathname || '/');
-          await createUserSession(userId, sessionId, currentPath);
+          
+          // Collect browser fingerprinting data
+          const browserData = collectServerSideFingerprint(req);
+          
+          await createUserSession(userId, sessionId, currentPath, browserData);
           console.log(`Created new session: ${sessionId} for user: ${userId}`);
         } else {
           console.log(`Using existing session: ${sessionId} for user: ${userId}`);

@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm'
 import { RxQuestionMark, RxCross2 } from 'react-icons/rx'
 import { LuInfo } from 'react-icons/lu'
 import { useSessionContext } from '../contexts/SessionContext'
+import { useStroopContext } from '../contexts/StroopContext'
 import SubmissionForm from './SubmissionForm'
 
 type SidebarProps = {
@@ -19,10 +20,16 @@ const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
   const [showSubmissionForm, setShowSubmissionForm] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const { sessionId, userId } = useSessionContext()
+  const { triggerStroopStart } = useStroopContext()
+
+  // Check if we're on a page that has the StroopTest component
+  const hasStroopTest = pathname === '/task-2'
 
   // TODO: Implement get started functionality
   const handleGetStarted = async () => {
     try {
+      console.log('Get Started clicked, hasStroopTest:', hasStroopTest, 'pathname:', pathname)
+      
       // 1. Collapse the sidebar
       if (onToggleSidebar) {
         onToggleSidebar()
@@ -31,7 +38,15 @@ const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
       // 2. Set showSubmit to true
       setShowSubmit(true)
 
-      // 3. Record task_start_time timestamp in user_sessions table
+      // 3. Trigger Stroop test start if available
+      if (hasStroopTest) {
+        console.log('Triggering Stroop test start...')
+        triggerStroopStart()
+      } else {
+        console.log('No Stroop test available on this page')
+      }
+
+      // 4. Record task_start_time timestamp in user_sessions table
       if (sessionId && userId) {
         await fetch('/api/chat-db', {
           method: 'POST',

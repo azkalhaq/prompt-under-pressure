@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { type StroopTrialData } from '@/lib/stroop-db';
+import { useStroopContext } from '@/contexts/StroopContext';
 
 interface StroopConfig {
   iti: number;
@@ -32,6 +33,10 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
   const [itiCountdown, setItiCountdown] = useState(0);
   const [trialCountdown, setTrialCountdown] = useState(0);
   const [isSessionComplete] = useState(false);
+  const [autoStarted, setAutoStarted] = useState(false);
+
+  // Get Stroop context
+  const { shouldStartStroop, resetStroopTrigger } = useStroopContext();
 
   // Refs for timers
   const itiTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -300,19 +305,31 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
     }
   }, [isSessionComplete, endSession]);
 
+  // Auto-start when triggered from sidebar
+  useEffect(() => {
+    console.log('StroopTest useEffect - shouldStartStroop:', shouldStartStroop, 'autoStarted:', autoStarted, 'isActive:', isActive, 'currentTrialData:', !!currentTrialData)
+    
+    if (shouldStartStroop && !autoStarted && !isActive && !currentTrialData) {
+      console.log('Auto-starting Stroop test from sidebar trigger...')
+      setAutoStarted(true);
+      resetStroopTrigger();
+      startSession();
+    }
+  }, [shouldStartStroop, autoStarted, isActive, currentTrialData, startSession, resetStroopTrigger]);
+
   if (!currentTrialData && !isSessionComplete) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-lg shadow-lg ">
-        <h2 className="text-2xl font-bold mb-4">Stroop Test</h2>
+        <h2 className="text-2xl font-bold mb-4">Task 2: Stroop Task</h2>
         <p className="text-gray-600 mb-6 text-center">
-          Click the button below to start the Stroop test session.
+          Click the button to start the session.
         </p>
-        <button
+        {/* <button
           onClick={startSession}
           className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           Start Test
-        </button>
+        </button> */}
       </div>
     );
   }

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Shell from "@/components/Shell";
 import { SessionProvider } from "@/contexts/SessionContext";
+import { StroopProvider } from "@/contexts/StroopContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,9 +31,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SessionProvider>
-          <Shell>
-            {children}
-          </Shell>
+          <StroopProvider>
+            <Shell>
+              {children}
+            </Shell>
+          </StroopProvider>
         </SessionProvider>
       </body>
     </html>

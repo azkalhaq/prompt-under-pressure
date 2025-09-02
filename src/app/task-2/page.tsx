@@ -71,7 +71,7 @@ function Task2Content() {
     }
 
     if (!audioRef.current) {
-      const audio = new Audio('/audio/sounds-of-distraction.mp3');
+      const audio = new Audio('/audio/crowd-waiting.wav');
       audio.loop = true;
       audio.preload = 'auto';
       audio.volume = 0.3;

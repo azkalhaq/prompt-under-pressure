@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { insertStroopTrial, type StroopTrialData } from '@/lib/stroop-db';
-import { incrementSessionTrials } from '@/lib/chat-db';
+import { incrementSessionTrials } from '@/lib/user-sessions';
 
 export async function POST(request: NextRequest) {
   try {

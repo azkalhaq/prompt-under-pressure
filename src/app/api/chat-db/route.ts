@@ -1,11 +1,6 @@
 import { NextRequest } from 'next/server';
-import { 
-  insertChatInteraction, 
-  createUserSession, 
-  updateUserSession, 
-  getUserSession,
-  incrementSessionPrompts 
-} from '@/lib/chat-db';
+import { insertChatInteraction } from '@/lib/chat-interactions';
+import { createUserSession, updateUserSession, getUserSession, incrementSessionPrompts } from '@/lib/user-sessions';
 import { collectServerSideFingerprint } from '@/utils/browserFingerprint';
 
 export async function POST(req: NextRequest) {

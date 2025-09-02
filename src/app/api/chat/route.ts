@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import { getOpenAIClient, streamChatCompletion, type ChatMessage } from "@/lib/chatgpt";
 import { getSupabaseServerClientOrNull } from "@/lib/supabase";
 import { calculateStandardTokenCost } from "@/utils/CostCalculator";
-import { insertChatInteraction, createUserSession, getUserSession, incrementSessionPrompts } from "@/lib/chat-db";
+import { insertChatInteraction } from "@/lib/chat-interactions";
+import { createUserSession, getUserSession, incrementSessionPrompts } from "@/lib/user-sessions";
 import { calculateTextMetrics } from "@/utils/textAnalysis";
 import { collectServerSideFingerprint } from "@/utils/browserFingerprint";
 

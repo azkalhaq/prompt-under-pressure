@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import { collectBrowserFingerprint } from '@/utils/browserFingerprint';
 
 interface SessionContextType {
@@ -17,40 +18,35 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [sessionEnsured, setSessionEnsured] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Try to get session ID from cookie first
-    const getCookie = (name: string) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(';').shift();
-      return null;
-    };
-
     const getUserId = () => {
       const urlParams = new URLSearchParams(window.location.search);
       return (urlParams.get('u') || 'anonymous').slice(0, 100);
     };
 
-    const cookieSessionId = getCookie('sid');
     const currentUserId = getUserId();
     setUserId(currentUserId);
 
-    if (cookieSessionId) {
-      console.log(`Found existing session ID in cookie: ${cookieSessionId}`);
-      setSessionId(cookieSessionId);
-    } else {
-      // Generate new session ID if none exists
-      const newSessionId = crypto.randomUUID();
-      console.log(`Generated new session ID: ${newSessionId}`);
-      setSessionId(newSessionId);
-      
-      // Set cookie (removed HttpOnly since we need to read it client-side)
-      document.cookie = `sid=${newSessionId}; Path=/; SameSite=Lax; Max-Age=15552000`;
-    }
+    // Always create a fresh session on first load
+    const newSessionId = crypto.randomUUID();
+    console.log(`Generated new session ID on load: ${newSessionId}`);
+    setSessionId(newSessionId);
+    document.cookie = `sid=${newSessionId}; Path=/; SameSite=Lax; Max-Age=15552000`;
     
     setIsLoading(false);
   }, []);
+
+  // Create a fresh session when route changes
+  useEffect(() => {
+    if (!pathname) return;
+    const newSessionId = crypto.randomUUID();
+    console.log(`Generated new session ID on route change (${pathname}): ${newSessionId}`);
+    setSessionEnsured(false);
+    setSessionId(newSessionId);
+    document.cookie = `sid=${newSessionId}; Path=/; SameSite=Lax; Max-Age=15552000`;
+  }, [pathname]);
 
   // Create session when sessionId and userId are available
   useEffect(() => {
@@ -58,44 +54,30 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const ensureSession = async () => {
         setIsCreatingSession(true);
         try {
-          // First check if session already exists
-          const sessionResponse = await fetch('/api/chat-db', {
+          console.log(`Creating (or ensuring) session in database: ${sessionId} for user: ${userId}`);
+          const browserData = collectBrowserFingerprint();
+          const resp = await fetch('/api/chat-db', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              action: 'get_session',
-              data: { sessionId }
+              action: 'create_session',
+              data: {
+                userId,
+                sessionId,
+                routePath: window.location.pathname,
+                browserData
+              }
             })
           });
-          
-          const sessionData = await sessionResponse.json();
-          
-          // Only create session if it doesn't exist
-          if (!sessionData.session) {
-            console.log(`Creating new session in database: ${sessionId} for user: ${userId}`);
-            
-            // Collect browser fingerprinting data
-            const browserData = collectBrowserFingerprint();
-            
-            await fetch('/api/chat-db', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                action: 'create_session',
-                data: { 
-                  userId, 
-                  sessionId, 
-                  routePath: window.location.pathname,
-                  browserData
-                }
-              })
-            });
+          if (!resp.ok) {
+            const text = await resp.text();
+            console.error('Create session failed:', resp.status, text);
           } else {
-            console.log(`Session already exists in database: ${sessionId} for user: ${userId}`);
+            console.log('Create session OK');
           }
           setSessionEnsured(true);
         } catch (error) {
-          console.error('Failed to ensure session exists:', error);
+          console.error('Failed to create session on load:', error);
         } finally {
           setIsCreatingSession(false);
         }

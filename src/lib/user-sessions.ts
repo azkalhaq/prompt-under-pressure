@@ -39,7 +39,7 @@ export async function createUserSession(
   
   const { error } = await supabase
     .from('user_sessions')
-    .insert({
+    .upsert({
       user_id: userId,
       session_id: sessionId,
       session_start_time: new Date().toISOString(),
@@ -53,13 +53,9 @@ export async function createUserSession(
       screen_height: browserData?.screen_height,
       timezone: browserData?.timezone,
       query_params: browserData?.query_params
-    });
+    }, { onConflict: 'session_id' });
 
   if (error) {
-    if (error.code === '23505') {
-      console.log(`Session ${sessionId} already exists, skipping creation`);
-      return;
-    }
     console.error('Error creating user session:', error);
     throw new Error(`Failed to create user session: ${error.message}`);
   }

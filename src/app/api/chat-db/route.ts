@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { action, data } = body;
+    console.log('[chat-db API] action:', action);
 
     switch (action) {
       case 'insert_interaction':
@@ -14,6 +15,11 @@ export async function POST(req: NextRequest) {
         break;
       
       case 'create_session':
+        console.log('[chat-db API] create_session payload:', {
+          userId: data?.userId,
+          sessionId: data?.sessionId,
+          routePath: data?.routePath,
+        });
         // Collect browser fingerprinting data from server and merge with client data
         const serverBrowserData = collectServerSideFingerprint(req);
         const clientBrowserData = data.browserData || {};
@@ -33,6 +39,7 @@ export async function POST(req: NextRequest) {
         };
         
         await createUserSession(data.userId, data.sessionId, data.routePath, mergedBrowserData);
+        console.log('[chat-db API] create_session success for sessionId:', data.sessionId);
         break;
       
       case 'update_session':

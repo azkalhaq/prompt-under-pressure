@@ -1,25 +1,13 @@
 "use client"
 import React from 'react';
-import { useRouter } from 'next/navigation';
-import { LuCheck, LuArrowLeft, LuRefreshCw } from 'react-icons/lu';
+import { LuCheck} from 'react-icons/lu';
 
 interface ThankYouProps {
-  sessionId: string;
-  userId: string;
+  sessionId?: string | null;
+  userId?: string | null;
 }
 
 export default function ThankYou({ sessionId, userId }: ThankYouProps) {
-  const router = useRouter();
-
-  const handleGoHome = () => {
-    router.push('/');
-  };
-
-  const handleNewSession = () => {
-    // Clear session cookie and redirect to home
-    document.cookie = 'sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    router.push('/');
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -41,8 +29,8 @@ export default function ThankYou({ sessionId, userId }: ThankYouProps) {
         <div className="bg-gray-50 rounded-lg p-4 mb-8">
           <h3 className="text-sm font-medium text-gray-700 mb-2">Session Information</h3>
           <div className="text-xs text-gray-500 space-y-1">
-            <p>Session ID: {sessionId.slice(0, 8)}...</p>
-            <p>User ID: {userId}</p>
+            <p>Session ID: {sessionId ? `${String(sessionId).slice(0, 8)}...` : 'N/A'}</p>
+            <p>User ID: {userId ?? 'N/A'}</p>
             <p>Submission Time: {new Date().toLocaleString()}</p>
           </div>
         </div>
@@ -57,21 +45,7 @@ export default function ThankYou({ sessionId, userId }: ThankYouProps) {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            onClick={handleGoHome}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
-          >
-            <LuArrowLeft className="w-4 h-4" />
-            Go to Home
-          </button>
           
-          <button
-            onClick={handleNewSession}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-medium"
-          >
-            <LuRefreshCw className="w-4 h-4" />
-            Start New Session
-          </button>
         </div>
         
         <div className="mt-8 pt-6 border-t border-gray-200">

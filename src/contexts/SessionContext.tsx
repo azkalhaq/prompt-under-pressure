@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { collectBrowserFingerprint } from '@/utils/browserFingerprint';
+import { hasSubmittedForPath } from '@/utils/submissionCookies';
 
 interface SessionContextType {
   sessionId: string | null;
@@ -54,6 +55,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const ensureSession = async () => {
         setIsCreatingSession(true);
         try {
+          // Never create a DB session on the Thank You page
+          if (typeof window !== 'undefined' && window.location.pathname === '/thank-you') {
+            console.log('Skipping create_session on /thank-you route');
+            setSessionEnsured(true);
+            return;
+          }
+          // Skip creating DB record if user already submitted for this path
+          if (typeof window !== 'undefined' && hasSubmittedForPath(window.location.pathname)) {
+            console.log('Skipping create_session due to submission cookie for this path');
+            setSessionEnsured(true);
+            return;
+          }
           console.log(`Creating (or ensuring) session in database: ${sessionId} for user: ${userId}`);
           const browserData = collectBrowserFingerprint();
           const resp = await fetch('/api/chat-db', {

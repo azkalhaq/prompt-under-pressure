@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { RxQuestionMark, RxCross2 } from 'react-icons/rx'
@@ -8,6 +8,7 @@ import { LuInfo } from 'react-icons/lu'
 import { useSessionContext } from '../contexts/SessionContext'
 import { useStroopContext } from '../contexts/StroopContext'
 import SubmissionForm from './SubmissionForm'
+import { hasSubmittedForPath, markSubmittedForPath } from '@/utils/submissionCookies'
 
 type SidebarProps = {
   collapsed: boolean
@@ -16,6 +17,7 @@ type SidebarProps = {
 
 const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
   const pathname = usePathname()
+  const router = useRouter()
   const [showSubmit, setShowSubmit] = useState(false)
   const [showSubmissionForm, setShowSubmissionForm] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
@@ -109,6 +111,11 @@ const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
     }
     
     setShowSubmissionForm(false)
+    // Mark cookie for this scenario and redirect to Thank You
+    try {
+      markSubmittedForPath(pathname)
+    } catch {}
+    router.push('/thank-you')
   }
 
   const handleSubmissionFormClose = () => {
@@ -146,7 +153,7 @@ Think carefully about how to design the best possible GPT prompt to gather this 
   return (
     <>
       {/* Help button - only show when sidebar is collapsed */}
-      {collapsed && (
+      {collapsed && !hasSubmittedForPath(pathname) && (
         <button
           aria-label='Show scenario instructions'
           onClick={onToggleSidebar}
@@ -162,7 +169,7 @@ Think carefully about how to design the best possible GPT prompt to gather this 
       )}
 
       {/* Overlay - only show when sidebar is open */}
-      {!collapsed && (
+      {!collapsed && !hasSubmittedForPath(pathname) && (
         <div
           className={`fixed inset-0 z-10 transition-opacity duration-300 ${showSubmit ? 'bg-black/50 cursor-pointer' : 'bg-black/50 cursor-not-allowed'
             }`}

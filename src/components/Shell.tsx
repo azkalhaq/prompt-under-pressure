@@ -20,10 +20,13 @@ const Shell = ({ children }: ShellProps) => {
   
   // Automatically disable Shell scrolling for task-2
   const disableShellScroll = pathname.includes('/task-2')
+  const hideChrome = pathname === '/thank-you'
   
   return (
     <div className="h-screen overflow-hidden relative">
-      <Sidebar key={mounted ? 'mounted' : 'unmounted'} collapsed={mounted ? collapsed : true} onToggleSidebar={() => setCollapsed(v => !v)} />
+      {!hideChrome && (
+        <Sidebar key={mounted ? 'mounted' : 'unmounted'} collapsed={mounted ? collapsed : true} onToggleSidebar={() => setCollapsed(v => !v)} />
+      )}
       <div className={`bg-white w-full h-full relative ${!disableShellScroll ? 'overflow-y-auto [scrollbar-gutter:stable]' : ''}`}>
         {children}
       </div>

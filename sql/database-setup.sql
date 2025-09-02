@@ -16,7 +16,17 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     submitted_result TEXT,                            -- final text submitted by the user
     confidence INTEGER,                               -- confidence level of the user's submission
     submit_time TIMESTAMPTZ,                          -- when submission was made
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()     -- record creation time
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),     -- record creation time
+    -- Browser fingerprinting fields for duplicate detection
+    user_agent TEXT,                                  -- browser user agent string
+    language VARCHAR(10),                             -- browser language
+    platform VARCHAR(50),                             -- operating system platform
+    screen_width INTEGER,                             -- screen width
+    screen_height INTEGER,                            -- screen height
+    color_depth INTEGER,                              -- screen color depth
+    timezone VARCHAR(50),                             -- user's timezone
+    browser_fingerprint TEXT,                         -- canvas fingerprint hash
+    ip_address INET,                                  -- IP address (if available)
 );
 
 -- Create stroop_trials table
@@ -61,7 +71,7 @@ CREATE TABLE IF NOT EXISTS chat_interactions (
 
     -- OpenAI related
     api_call_id VARCHAR(128),                         -- provider's call id (e.g., "chatcmpl-...")
-    role VARCHAR(32),                                 -- role used ('system'|'user'|'assistant'|'tool', etc.)
+    role_used VARCHAR(32),                                 -- role used ('system'|'user'|'assistant'|'tool', etc.)
     model VARCHAR(64),                                -- model name (e.g., 'gpt-4o', 'gpt-5')
     token_input INT,                                  -- prompt_tokens from API usage
     token_output INT,                                 -- completion_tokens from API usage

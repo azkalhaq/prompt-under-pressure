@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
       onMetrics: async ({ responseText, tokensInput, tokensOutput, rawRequest, rawResponse, finishReason }) => {
         try {
           const prompt = messages[messages.length - 1]?.content || "";
-          const role = messages[messages.length - 1]?.role || 'user';
+          const role_used = messages[messages.length - 1]?.role || 'user';
           const scenario = determineScenario(req.nextUrl.pathname);
           const taskCode = getTaskCode(req);
           const promptIndexNo = await getPromptIndexNo(sessionId ?? 'no-session');
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
             prompt_index_no: promptIndexNo,
             prompt,
             response: responseText,
-            role,
+            role_used,
             model: (model ?? '').slice(0, 50),
             token_input: tokensInput,
             token_output: tokensOutput,

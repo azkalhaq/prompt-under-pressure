@@ -21,7 +21,7 @@ export interface ChatInteractionData {
   
   // OpenAI related
   api_call_id?: string;
-  role: 'system' | 'user' | 'assistant' | 'tool';
+  role_used: 'system' | 'user' | 'assistant' | 'tool';
   model?: string;
   token_input?: number;
   token_output?: number;
@@ -65,7 +65,7 @@ export async function insertChatInteraction(data: ChatInteractionData): Promise<
       vocab_count: data.vocab_count,
       readability_fk: data.readability_fk,
       api_call_id: data.api_call_id,
-      role: data.role,
+      role_used: data.role_used,
       model: data.model,
       token_input: data.token_input,
       token_output: data.token_output,

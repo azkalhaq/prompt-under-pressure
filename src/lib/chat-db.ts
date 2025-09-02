@@ -140,7 +140,7 @@ export async function getUserSession(sessionId: string): Promise<UserSession | n
     .from('user_sessions')
     .select('*')
     .eq('session_id', sessionId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error getting user session:', error);

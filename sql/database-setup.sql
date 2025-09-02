@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     color_depth INTEGER,                              -- screen color depth
     timezone VARCHAR(50),                             -- user's timezone
     browser_fingerprint TEXT,                         -- canvas fingerprint hash
-    ip_address INET,                                  -- IP address (if available)
+    ip_address INET                                  -- IP address (if available)
 );
 
 -- Create stroop_trials table

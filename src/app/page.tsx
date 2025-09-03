@@ -5,6 +5,7 @@ import { hasSubmittedForPath } from '@/utils/submissionCookies';
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
 import { useSessionContext } from "@/contexts/SessionContext";
+import { useAudio } from "@/hooks/useAudio";
 // removed icon import; button now inside ChatInput
 
 type UiMessage = { id: string; role: "user" | "assistant"; content: string };
@@ -12,6 +13,7 @@ type UiMessage = { id: string; role: "user" | "assistant"; content: string };
 function HomeContent() {
   const { sessionId, userId, isLoading: sessionLoading } = useSessionContext();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -19,6 +21,9 @@ function HomeContent() {
   const [inputHeight, setInputHeight] = useState(0);
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
+  
+  // Audio functionality
+  const { isAudioEnabled, markUserInteraction } = useAudio(searchParams);
 
   const model = process.env.OPENAI_MODEL;
   const hasMessages = messages.length > 0;

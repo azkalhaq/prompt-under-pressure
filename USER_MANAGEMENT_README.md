@@ -258,6 +258,24 @@ Visit `/test-users` to test the user management functionality:
 
 To set up the database, run the SQL commands in `sql/database-setup.sql`. The users table will be created automatically when the application starts.
 
+### Updated Schema
+
+The `user_sessions` table now includes additional fields for enhanced tracking:
+
+```sql
+-- New columns added to user_sessions table
+utm_source VARCHAR(255),                           -- UTM source parameter for tracking
+audio BOOLEAN DEFAULT FALSE,                       -- audio parameter (true if audio=1 in query)
+```
+
+### Query Parameter Handling
+
+The system now automatically captures and stores:
+- **UTM Source**: `?utm_source=value` for campaign tracking
+- **Audio Flag**: `?audio=1` to enable background audio
+- **User ID**: `?u=value` for user identification
+- **All Query Params**: Stored as text for complete tracking
+
 ## Environment Variables
 
 Ensure the following environment variables are set:
@@ -275,6 +293,33 @@ The system uses the following dependencies:
 - `next` - Next.js framework
 - `react` - React library
 - `typescript` - TypeScript support
+
+## Audio Functionality
+
+The system now includes background audio capabilities that activate after user interaction:
+
+### Features
+- **Query Parameter Control**: Enable with `?audio=1` in URL
+- **User Interaction Required**: Audio only starts after clicking "Get Started" button
+- **Cross-Page Support**: Works on all pages except `/thank-you`
+- **Automatic Cleanup**: Audio stops when navigating away or disabling
+
+### Usage
+```typescript
+import { useAudio } from '@/hooks/useAudio';
+
+// In your component
+const { isAudioEnabled, markUserInteraction } = useAudio(searchParams);
+
+// Audio will automatically start after user interaction
+// when the Sidebar's "Get Started" button is clicked
+```
+
+### Implementation Details
+- Uses custom `audioActivation` event for cross-component communication
+- Integrates with existing session management system
+- Automatically handles browser autoplay restrictions
+- Configurable audio file, volume, and loop settings
 
 ## Future Enhancements
 

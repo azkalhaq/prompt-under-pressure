@@ -38,7 +38,14 @@ export async function POST(req: NextRequest) {
           query_params: clientBrowserData.query_params || serverBrowserData.query_params
         };
         
-        await createUserSession(data.userId, data.sessionId, data.routePath, mergedBrowserData);
+        // Extract query parameters from the request
+        const queryParams = {
+          utm_source: data.utm_source,
+          audio: data.audio,
+          query_params: data.query_params,
+        };
+        
+        await createUserSession(data.userId, data.sessionId, data.routePath, mergedBrowserData, queryParams);
         console.log('[chat-db API] create_session success for sessionId:', data.sessionId);
         break;
       

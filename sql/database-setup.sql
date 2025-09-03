@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     session_id VARCHAR(128) UNIQUE NOT NULL,          -- session identifier
     route_path TEXT,                                  -- route path accessed (e.g., '/', '/task-2')
     query_params TEXT,                                 -- query params accessed (e.g., '?audio=1')
+    utm_source VARCHAR(255),                           -- UTM source parameter for tracking
+    audio BOOLEAN DEFAULT FALSE,                       -- audio parameter (true if audio=1 in query)
     session_start_time TIMESTAMPTZ NOT NULL DEFAULT now(),
     task_start_time TIMESTAMPTZ,                      -- when scenario started (Get Started button clicked)
     start_stroop_time TIMESTAMPTZ,                    -- when stroop test startedf
@@ -107,6 +109,8 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_session_id ON user_sessions(session_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_utm_source ON user_sessions(utm_source);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_audio ON user_sessions(audio);
 CREATE INDEX IF NOT EXISTS idx_stroop_trials_user_id ON stroop_trials(user_id);
 CREATE INDEX IF NOT EXISTS idx_stroop_trials_session_id ON stroop_trials(session_id);
 CREATE INDEX IF NOT EXISTS idx_stroop_trials_trial_number ON stroop_trials(trial_number);

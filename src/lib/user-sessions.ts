@@ -19,6 +19,8 @@ export interface UserSession {
   screen_height?: number;
   timezone?: string;
   query_params?: string;
+  utm_source?: string;
+  audio?: boolean;
 }
 
 export async function createUserSession(
@@ -32,6 +34,11 @@ export async function createUserSession(
     screen_width?: number;
     screen_height?: number;
     timezone?: string;
+    query_params?: string;
+  },
+  queryParams?: {
+    utm_source?: string;
+    audio?: boolean;
     query_params?: string;
   }
 ): Promise<void> {
@@ -52,7 +59,9 @@ export async function createUserSession(
       screen_width: browserData?.screen_width,
       screen_height: browserData?.screen_height,
       timezone: browserData?.timezone,
-      query_params: browserData?.query_params
+      query_params: queryParams?.query_params || browserData?.query_params,
+      utm_source: queryParams?.utm_source,
+      audio: queryParams?.audio || false
     }, { onConflict: 'session_id' });
 
   if (error) {

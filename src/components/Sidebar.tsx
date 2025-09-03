@@ -9,6 +9,8 @@ import { useSessionContext } from '../contexts/SessionContext'
 import { useStroopContext } from '../contexts/StroopContext'
 import SubmissionForm from './SubmissionForm'
 import { hasSubmittedForPath, markSubmittedForPath } from '@/utils/submissionCookies'
+import { useSearchParams } from 'next/navigation'
+import { shouldEnableAudio } from '@/utils/queryParams'
 
 type SidebarProps = {
   collapsed: boolean
@@ -18,11 +20,15 @@ type SidebarProps = {
 const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
   const pathname = usePathname()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [showSubmit, setShowSubmit] = useState(false)
   const [showSubmissionForm, setShowSubmissionForm] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const { sessionId, userId } = useSessionContext()
   const { triggerStroopStart } = useStroopContext()
+  
+  // Check if audio should be enabled
+  const isAudioEnabled = shouldEnableAudio(searchParams)
 
   // Check if we're on a page that has the StroopTest component
   const hasStroopTest = pathname === '/task-2'
@@ -64,6 +70,17 @@ const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
           })
         })
         console.log('Task start time recorded successfully')
+      }
+
+      // 5. Trigger audio activation if enabled
+      if (isAudioEnabled) {
+        console.log('🎵 Audio enabled, triggering audio activation')
+        // Dispatch custom event to notify pages that audio should start
+        const audioEvent = new CustomEvent('audioActivation', { detail: { enabled: true } })
+        window.dispatchEvent(audioEvent)
+        console.log('🎵 Audio activation event dispatched:', audioEvent)
+      } else {
+        console.log('🎵 Audio not enabled for this session')
       }
     } catch (error) {
       console.error('Error in handleGetStarted:', error)

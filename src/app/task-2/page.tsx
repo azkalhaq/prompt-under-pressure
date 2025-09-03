@@ -6,6 +6,7 @@ import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
 import StroopTest from "@/components/StroopTest";
 import { useSessionContext } from "@/contexts/SessionContext";
+import { useAudio } from "@/hooks/useAudio";
 // removed icon import; button now inside ChatInput
 
 type UiMessage = { id: string; role: "user" | "assistant"; content: string };
@@ -21,11 +22,13 @@ function Task2Content() {
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
   const messagesScrollRef = useRef<HTMLDivElement | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const searchParams = useSearchParams();
 
   const model = process.env.OPENAI_MODEL;
   const hasMessages = messages.length > 0;
+  
+  // Audio functionality
+  const { isAudioEnabled, markUserInteraction } = useAudio(searchParams);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && hasSubmittedForPath('/task-2')) {
@@ -59,55 +62,7 @@ function Task2Content() {
 
   // scroll-to-bottom handled inside ChatInput via refs
 
-  // Background audio playback when ?audio=1
-  useEffect(() => {
-    const shouldPlayAudio = searchParams.get('audio') === '1';
-
-    if (!shouldPlayAudio) {
-      if (audioRef.current) {
-        try { audioRef.current.pause(); } catch {}
-      }
-      return;
-    }
-
-    if (!audioRef.current) {
-      const audio = new Audio('/audio/crowd-waiting.wav');
-      audio.loop = true;
-      audio.preload = 'auto';
-      audio.volume = 0.3;
-      audioRef.current = audio;
-    }
-
-    let resumed = false;
-    const tryPlay = async () => {
-      if (!audioRef.current) return;
-      try {
-        await audioRef.current.play();
-        resumed = true;
-      } catch {
-        // Autoplay likely blocked; wait for user interaction
-      }
-    };
-
-    const onFirstInteraction = async () => {
-      if (resumed) return;
-      await tryPlay();
-      window.removeEventListener('pointerdown', onFirstInteraction);
-      window.removeEventListener('keydown', onFirstInteraction);
-    };
-
-    void tryPlay();
-    window.addEventListener('pointerdown', onFirstInteraction, { once: true });
-    window.addEventListener('keydown', onFirstInteraction, { once: true });
-
-    return () => {
-      window.removeEventListener('pointerdown', onFirstInteraction);
-      window.removeEventListener('keydown', onFirstInteraction);
-      if (audioRef.current) {
-        try { audioRef.current.pause(); } catch {}
-      }
-    };
-  }, [searchParams]);
+  // Audio functionality is now handled by the useAudio hook
 
   const handleSubmitPrompt = useCallback(async (prompt: string, promptingTimeMs?: number) => {
     if (sessionLoading || !sessionId || !userId) {

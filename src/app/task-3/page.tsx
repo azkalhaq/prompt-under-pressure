@@ -1,16 +1,18 @@
 "use client"
 import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "react";
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { hasSubmittedForPath } from '@/utils/submissionCookies'
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
 import { useSessionContext } from "@/contexts/SessionContext";
+import { useAudio } from "@/hooks/useAudio";
 
 type UiMessage = { id: string; role: "user" | "assistant"; content: string };
 
 function ScenarioThreeContent() {
   const { sessionId, userId, isLoading: sessionLoading } = useSessionContext();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -18,6 +20,9 @@ function ScenarioThreeContent() {
   const [inputHeight, setInputHeight] = useState(0);
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
+  
+  // Audio functionality
+  const { isAudioEnabled, markUserInteraction } = useAudio(searchParams);
 
   const model = process.env.OPENAI_MODEL;
   const hasMessages = messages.length > 0;

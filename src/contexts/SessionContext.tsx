@@ -1,9 +1,10 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { collectBrowserFingerprint } from '@/utils/browserFingerprint';
 import { hasSubmittedForPath } from '@/utils/submissionCookies';
+import { getUserIdentifier, getQueryParamsForDatabase } from '@/utils/queryParams';
 
 interface SessionContextType {
   sessionId: string | null;
@@ -20,14 +21,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [sessionEnsured, setSessionEnsured] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const getUserId = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      return (urlParams.get('u') || 'anonymous').slice(0, 100);
-    };
-
-    const currentUserId = getUserId();
+    const currentUserId = getUserIdentifier(searchParams).slice(0, 100);
     setUserId(currentUserId);
 
     // Always create a fresh session on first load
@@ -69,6 +66,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           }
           console.log(`Creating (or ensuring) session in database: ${sessionId} for user: ${userId}`);
           const browserData = collectBrowserFingerprint();
+          const queryParams = getQueryParamsForDatabase(searchParams);
           const resp = await fetch('/api/chat-db', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -78,7 +76,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
                 userId,
                 sessionId,
                 routePath: window.location.pathname,
-                browserData
+                browserData,
+                ...queryParams
               }
             })
           });

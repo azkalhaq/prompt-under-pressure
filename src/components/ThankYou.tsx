@@ -40,7 +40,7 @@ export default function ThankYou({ sessionId, userId }: ThankYouProps) {
           <ul className="text-sm text-blue-700 space-y-1">
             <li>• Your responses have been recorded for research purposes</li>
             <li>• All data is anonymized and used only for academic research</li>
-            <li>• You may close this browser tab or start a new session</li>
+            <li>• You may close this tab and continue the survey</li>
           </ul>
         </div>
         

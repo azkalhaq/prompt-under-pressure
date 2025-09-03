@@ -99,42 +99,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
     if (config.trialTimer > 0) {
       setTrialCountdown(config.trialTimer / 1000);
     }
-  }, [config.trialTimer, instruction]);
-
-  // Handle user response
-  const handleResponse = useCallback((selectedAnswer: string) => {
-    if (!currentTrialData || !isActive || isPaused) return;
-    
-    const endTime = Date.now();
-    const rt = trialStartTime ? endTime - trialStartTime : null;
-    const isCorrect = selectedAnswer === currentTrialData.correctAnswer;
-    
-    // Debug logging
-    console.log('Stroop Debug:', {
-      instruction: currentTrialData.instruction,
-      text: currentTrialData.text,
-      textColor: currentTrialData.textColor,
-      condition: currentTrialData.condition,
-      correctAnswer: currentTrialData.correctAnswer,
-      selectedAnswer,
-      isCorrect
-    });
-    
-    setReactionTime(rt);
-    setFeedback(isCorrect ? 'correct' : 'incorrect');
-    setIsActive(false);
-    
-    // Clear trial countdown
-    setTrialCountdown(0);
-    
-    // Save trial data
-    saveTrialData(rt, isCorrect, selectedAnswer);
-    
-    // Show feedback and move to next trial
-    setTimeout(() => {
-      nextTrial();
-    }, 1000);
-  }, [currentTrialData, isActive, isPaused, trialStartTime]);
+  }, [config.trialTimer, instruction, currentTrial]);
 
   // Save trial data to database
   const saveTrialData = useCallback(async (rt: number | null, correctness: boolean | null, userAnswer: string | null) => {
@@ -208,6 +173,41 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
     }
   }, [currentTrial, config.instructionSwitchTrials, config.iti, startTrial, instruction]);
 
+  // Handle user response
+  const handleResponse = useCallback((selectedAnswer: string) => {
+    if (!currentTrialData || !isActive || isPaused) return;
+    
+    const endTime = Date.now();
+    const rt = trialStartTime ? endTime - trialStartTime : null;
+    const isCorrect = selectedAnswer === currentTrialData.correctAnswer;
+    
+    // Debug logging
+    console.log('Stroop Debug:', {
+      instruction: currentTrialData.instruction,
+      text: currentTrialData.text,
+      textColor: currentTrialData.textColor,
+      condition: currentTrialData.condition,
+      correctAnswer: currentTrialData.correctAnswer,
+      selectedAnswer,
+      isCorrect
+    });
+    
+    setReactionTime(rt);
+    setFeedback(isCorrect ? 'correct' : 'incorrect');
+    setIsActive(false);
+    
+    // Clear trial countdown
+    setTrialCountdown(0);
+    
+    // Save trial data
+    saveTrialData(rt, isCorrect, selectedAnswer);
+    
+    // Show feedback and move to next trial
+    setTimeout(() => {
+      nextTrial();
+    }, 1000);
+  }, [currentTrialData, isActive, isPaused, trialStartTime, saveTrialData, nextTrial]);
+
   // Start session
   const startSession = useCallback(async () => {
     try {
@@ -230,7 +230,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
       // Continue with the trial even if session update fails
       startTrial(instruction);
     }
-  }, [userId, sessionId, startTrial, instruction]);
+  }, [sessionId, startTrial, instruction]);
 
   // End session
   const endSession = useCallback(async () => {

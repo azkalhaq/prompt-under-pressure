@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { collectBrowserFingerprint } from '@/utils/browserFingerprint';
 import { hasSubmittedForPath } from '@/utils/submissionCookies';
@@ -14,7 +14,7 @@ interface SessionContextType {
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
-export function SessionProvider({ children }: { children: ReactNode }) {
+function SessionProviderContent({ children }: { children: ReactNode }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +34,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     document.cookie = `sid=${newSessionId}; Path=/; SameSite=Lax; Max-Age=15552000`;
     
     setIsLoading(false);
-  }, []);
+  }, [searchParams]);
 
   // Create a fresh session when route changes
   useEffect(() => {
@@ -97,7 +97,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
       ensureSession();
     }
-  }, [sessionId, userId, sessionEnsured, isCreatingSession]);
+  }, [sessionId, userId, sessionEnsured, isCreatingSession, searchParams]);
 
   // Handle browser close/refresh to update session end time
   useEffect(() => {
@@ -147,6 +147,23 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     <SessionContext.Provider value={{ sessionId, userId, isLoading }}>
       {children}
     </SessionContext.Provider>
+  );
+}
+
+export function SessionProvider({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading session...</p>
+        </div>
+      </div>
+    }>
+      <SessionProviderContent>
+        {children}
+      </SessionProviderContent>
+    </Suspense>
   );
 }
 

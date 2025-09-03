@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -17,7 +17,7 @@ type SidebarProps = {
   onToggleSidebar?: () => void
 }
 
-const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
+function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -330,6 +330,14 @@ Think carefully about how to design the best possible GPT prompt to gather this 
         </div>
       )}
     </>
+  )
+}
+
+const Sidebar = ({ collapsed, onToggleSidebar }: SidebarProps) => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SidebarContent collapsed={collapsed} onToggleSidebar={onToggleSidebar} />
+    </Suspense>
   )
 }
 

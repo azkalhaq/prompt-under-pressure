@@ -21,8 +21,8 @@ function ScenarioThreeContent() {
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
   
-  // Audio functionality
-  const { isAudioEnabled, markUserInteraction } = useAudio(searchParams);
+  // Audio functionality - removed unused variables
+  useAudio(searchParams);
 
   const model = process.env.OPENAI_MODEL;
   const hasMessages = messages.length > 0;

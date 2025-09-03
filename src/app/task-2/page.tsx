@@ -27,8 +27,8 @@ function Task2Content() {
   const model = process.env.OPENAI_MODEL;
   const hasMessages = messages.length > 0;
   
-  // Audio functionality
-  const { isAudioEnabled, markUserInteraction } = useAudio(searchParams);
+  // Audio functionality - removed unused variables
+  useAudio(searchParams);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && hasSubmittedForPath('/task-2')) {

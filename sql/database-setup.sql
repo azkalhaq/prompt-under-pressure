@@ -1,6 +1,17 @@
 -- Database setup for Next.js Pup Project
 -- This file sets up the unified session system for both Stroop tests and Chat interactions
 
+-- Create users table
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,                         -- surrogate key
+    user_id VARCHAR(128) UNIQUE NOT NULL,             -- unique user identifier (generated unique id based on n alphanumeric char - configurable)
+    email VARCHAR(255) UNIQUE,                        -- user's email address
+    username VARCHAR(255) UNIQUE,                     -- username (optional, default value use email)
+    name VARCHAR(255),                                -- fullname
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),    -- record creation time
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()     -- record update time
+);
+
 -- Create user_sessions table (renamed from stroop_sessions)
 CREATE TABLE IF NOT EXISTS user_sessions (
     id BIGSERIAL PRIMARY KEY,                         -- surrogate key
@@ -91,6 +102,9 @@ CREATE TABLE IF NOT EXISTS chat_interactions (
 );
 
 -- Add indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_users_user_id ON users(user_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_session_id ON user_sessions(session_id);
 CREATE INDEX IF NOT EXISTS idx_stroop_trials_user_id ON stroop_trials(user_id);

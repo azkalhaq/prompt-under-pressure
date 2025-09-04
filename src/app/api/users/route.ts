@@ -7,6 +7,39 @@ import type { CreateUserRequest } from '../../../types/user';
  */
 export async function POST(request: NextRequest) {
   try {
+    // HTTP Basic Auth protection
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+    const user = process.env.ADMIN_BASIC_USER;
+    const pass = process.env.ADMIN_BASIC_PASS;
+    const unauthorized = () => new NextResponse(
+      JSON.stringify({ success: false, error: 'Unauthorized' }),
+      {
+        status: 401,
+        headers: { 'WWW-Authenticate': 'Basic realm="admin", charset="UTF-8"', 'Content-Type': 'application/json' }
+      }
+    );
+
+    if (!user || !pass) {
+      return unauthorized();
+    }
+
+    if (!authHeader || !authHeader.startsWith('Basic ')) {
+      return unauthorized();
+    }
+
+    try {
+      const base64 = authHeader.slice('Basic '.length).trim();
+      const decoded = Buffer.from(base64, 'base64').toString('utf8');
+      const idx = decoded.indexOf(':');
+      const providedUser = idx >= 0 ? decoded.slice(0, idx) : '';
+      const providedPass = idx >= 0 ? decoded.slice(idx + 1) : '';
+      if (providedUser !== user || providedPass !== pass) {
+        return unauthorized();
+      }
+    } catch {
+      return unauthorized();
+    }
+
     const body: CreateUserRequest = await request.json();
     
     // Validate required fields

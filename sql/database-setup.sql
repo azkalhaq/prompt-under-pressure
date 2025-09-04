@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS chat_interactions (
 
     -- interaction specified data
     prompting_time_ms INT,                            -- ms to compose the prompt
-    scenario VARCHAR(24) NOT NULL,                    -- 'baseline' | 'dual_task' (derived from page)
+    scenario VARCHAR(24) NOT NULL,                    -- 'baseline' | 'dual_task' | 'under_stress' | 'time_pressure' | 'cognitive_load' (derived from page)
     task_code VARCHAR(64),                            -- from ?task= query param; NULL if absent
     prompt_index_no INT NOT NULL,                     -- order within same session (1..N)
     prompt TEXT NOT NULL,                             -- user-entered text

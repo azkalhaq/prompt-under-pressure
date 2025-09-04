@@ -7,11 +7,11 @@ export interface ChatInteractionData {
   
   // interaction specified data
   prompting_time_ms?: number;
-  scenario: 'baseline' | 'dual_task';
+  scenario: 'baseline' | 'dual_task' | 'under_stress' | 'time_pressure' | 'cognitive_load';
   task_code?: string;
   prompt_index_no: number;
   prompt: string;
-  response?: string;
+  response?: string | null;
   
   // prompt metrics / quality
   word_count?: number;
@@ -43,13 +43,13 @@ export interface ChatInteractionData {
   api_call_id?: string;
   role_used: 'system' | 'user' | 'assistant' | 'tool';
   model?: string;
-  token_input?: number;
-  token_output?: number;
-  cost_input?: number;
-  cost_output?: number;
-  finish_reason?: string;
-  raw_response?: Record<string, unknown>;
-  raw_request?: Record<string, unknown>;
+  token_input?: number | null;
+  token_output?: number | null;
+  cost_input?: number | null;
+  cost_output?: number | null;
+  finish_reason?: string | null;
+  raw_response?: Record<string, unknown> | null;
+  raw_request?: Record<string, unknown> | null;
 }
 
 export async function insertChatInteraction(data: ChatInteractionData): Promise<void> {

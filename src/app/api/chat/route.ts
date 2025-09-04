@@ -10,12 +10,41 @@ import { collectServerSideFingerprint } from "@/utils/browserFingerprint";
 export const runtime = "nodejs";
 
 /**
+ * Available scenario types
+ * Add new scenarios here as needed
+ */
+export type ScenarioType = 'baseline' | 'dual_task' | 'under_stress' | 'time_pressure' | 'cognitive_load';
+
+/**
+ * Configuration for path-to-scenario mapping
+ * Easy to modify for future changes
+ */
+const SCENARIO_CONFIG: Record<string, ScenarioType> = {
+  '/task-1': 'baseline',
+  '/task-2': 'dual_task', 
+  '/task-3': 'baseline',  // Change this to any scenario type as needed
+  '/task-4': 'under_stress',  // Example: new task with stress scenario
+  '/task-5': 'time_pressure', // Example: new task with time pressure
+  '/': 'baseline',
+};
+
+/**
  * Determine scenario based on the request path
  */
-function determineScenario(pathname: string): 'baseline' | 'dual_task' {
-  if (pathname.includes('/task-2')) {
-    return 'dual_task';
+function determineScenario(pathname: string): ScenarioType {
+  // Check for exact matches first
+  if (pathname in SCENARIO_CONFIG) {
+    return SCENARIO_CONFIG[pathname];
   }
+  
+  // Fallback: check if pathname includes any configured paths
+  for (const [path, scenario] of Object.entries(SCENARIO_CONFIG)) {
+    if (pathname.includes(path)) {
+      return scenario;
+    }
+  }
+  
+  // Default fallback
   return 'baseline';
 }
 
@@ -96,7 +125,12 @@ export async function POST(req: NextRequest) {
     // Record the prompt immediately so it appears in the database right away
     const prompt = messages[messages.length - 1]?.content || "";
     const role_used = messages[messages.length - 1]?.role || 'user';
-    const scenario = determineScenario(req.nextUrl.pathname);
+    // Use page_path from request body, fallback to nextUrl.pathname
+    const currentPath = (typeof body?.page_path === 'string' && body.page_path.trim().length > 0)
+      ? body.page_path
+      : req.nextUrl.pathname;
+    const scenario = determineScenario(currentPath);
+    console.log(`[Chat API] Pathname: ${currentPath}, Scenario: ${scenario}`);
     const taskCode = getTaskCode(req);
     const promptIndexNo = await getPromptIndexNo(sessionId ?? 'no-session');
     const textMetrics = calculateTextMetrics(prompt);

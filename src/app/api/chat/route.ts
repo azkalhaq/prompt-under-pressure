@@ -93,56 +93,94 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Record the prompt immediately so it appears in the database right away
+    const prompt = messages[messages.length - 1]?.content || "";
+    const role_used = messages[messages.length - 1]?.role || 'user';
+    const scenario = determineScenario(req.nextUrl.pathname);
+    const taskCode = getTaskCode(req);
+    const promptIndexNo = await getPromptIndexNo(sessionId ?? 'no-session');
+    const textMetrics = calculateTextMetrics(prompt);
+    const careMetrics = calculateCareMetrics(prompt);
+    const promptingTimeMs: number | undefined = typeof body?.prompting_time_ms === 'number' ? body.prompting_time_ms : undefined;
+    
+    console.log(`[Chat API] Recording prompt immediately for api_call_id: ${apiCallId}`);
+    console.log(`[Chat API] Prompt: ${prompt.slice(0, 100)}...`);
+    
+    // Insert initial record with prompt data immediately
+    await insertChatInteraction({
+      user_id: (userId ?? 'anonymous').slice(0, 100),
+      session_id: sessionId ?? 'no-session',
+      prompting_time_ms: promptingTimeMs,
+      scenario,
+      task_code: taskCode,
+      prompt_index_no: promptIndexNo,
+      prompt,
+      response: null, // Will be updated when response is complete
+      role_used,
+      model: (model ?? '').slice(0, 50),
+      token_input: null, // Will be updated when response is complete
+      token_output: null, // Will be updated when response is complete
+      cost_input: null, // Will be updated when response is complete
+      cost_output: null, // Will be updated when response is complete
+      api_call_id: apiCallId.slice(0, 100),
+      raw_request: null, // Will be updated when response is complete
+      raw_response: null, // Will be updated when response is complete
+      finish_reason: null, // Will be updated when response is complete
+      ...textMetrics,
+      ...careMetrics
+    });
+    
+    console.log(`[Chat API] Successfully recorded prompt immediately`);
+    
+    // Increment total_prompts counter in user_sessions
+    if (sessionId) {
+      try {
+        await incrementSessionPrompts(sessionId);
+        console.log(`Incremented total_prompts for session: ${sessionId}`);
+      } catch (error) {
+        console.error('Error incrementing session prompts:', error);
+      }
+    }
+
     const stream = await streamChatCompletion({
       client,
       model,
       messages,
       onMetrics: async ({ responseText, tokensInput, tokensOutput, rawRequest, rawResponse, finishReason }) => {
         try {
-          const prompt = messages[messages.length - 1]?.content || "";
-          const role_used = messages[messages.length - 1]?.role || 'user';
-          const scenario = determineScenario(req.nextUrl.pathname);
-          const taskCode = getTaskCode(req);
-          const promptIndexNo = await getPromptIndexNo(sessionId ?? 'no-session');
-          const textMetrics = calculateTextMetrics(prompt);
-          const careMetrics = calculateCareMetrics(prompt);
           const totalCost = calculateStandardTokenCost(model, tokensInput, tokensOutput);
-          const promptingTimeMs: number | undefined = typeof body?.prompting_time_ms === 'number' ? body.prompting_time_ms : undefined;
           
-          await insertChatInteraction({
-            user_id: (userId ?? 'anonymous').slice(0, 100),
-            session_id: sessionId ?? 'no-session',
-            prompting_time_ms: promptingTimeMs,
-            scenario,
-            task_code: taskCode,
-            prompt_index_no: promptIndexNo,
-            prompt,
-            response: responseText,
-            role_used,
-            model: (model ?? '').slice(0, 50),
-            token_input: tokensInput,
-            token_output: tokensOutput,
-            cost_input: totalCost * (tokensInput / (tokensInput + tokensOutput)),
-            cost_output: totalCost * (tokensOutput / (tokensInput + tokensOutput)),
-            api_call_id: apiCallId.slice(0, 100),
-            raw_request: rawRequest as Record<string, unknown> | undefined,
-            raw_response: rawResponse as Record<string, unknown> | undefined,
-            finish_reason: typeof finishReason === 'string' ? finishReason : undefined,
-            ...textMetrics,
-            ...careMetrics
-          });
+          console.log(`[Chat API] Updating response for api_call_id: ${apiCallId}`);
+          console.log(`[Chat API] Response text length: ${responseText?.length || 0}`);
+          console.log(`[Chat API] Tokens input: ${tokensInput}, output: ${tokensOutput}`);
           
-          // Increment total_prompts counter in user_sessions
-          if (sessionId) {
-            try {
-              await incrementSessionPrompts(sessionId);
-              console.log(`Incremented total_prompts for session: ${sessionId}`);
-            } catch (error) {
-              console.error('Error incrementing session prompts:', error);
+          // Update the existing record with response data
+          const supabase = getSupabaseServerClientOrNull();
+          if (supabase) {
+            const { error } = await supabase
+              .from('chat_interactions')
+              .update({
+                response: responseText,
+                token_input: tokensInput,
+                token_output: tokensOutput,
+                cost_input: totalCost * (tokensInput / (tokensInput + tokensOutput)),
+                cost_output: totalCost * (tokensOutput / (tokensInput + tokensOutput)),
+                raw_request: rawRequest as Record<string, unknown> | undefined,
+                raw_response: rawResponse as Record<string, unknown> | undefined,
+                finish_reason: typeof finishReason === 'string' ? finishReason : undefined,
+              })
+              .eq('api_call_id', apiCallId);
+              
+            if (error) {
+              console.error('[Chat API] Update error:', error);
+            } else {
+              console.log('[Chat API] Successfully updated response data');
             }
+          } else {
+            console.error('[Chat API] Supabase client is null');
           }
         } catch (e) {
-          console.error('Chat interaction insert exception', e);
+          console.error('Chat interaction update exception', e);
         }
       },
     });

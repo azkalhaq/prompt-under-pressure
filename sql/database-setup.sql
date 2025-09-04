@@ -89,7 +89,8 @@ CREATE TABLE IF NOT EXISTS chat_interactions (
     linsear_write_formula NUMERIC(6,2),               -- Linsear Write Formula (prompt)
     gunning_fog NUMERIC(6,2),                         -- Gunning Fog Index (prompt)
 
-    
+    -- user reaction
+    reaction VARCHAR(8) CHECK (reaction IN ('up','down')),
 
     -- OpenAI related
     api_call_id VARCHAR(128),                         -- provider's call id (e.g., "chatcmpl-...")
@@ -130,6 +131,10 @@ CREATE INDEX IF NOT EXISTS idx_chat_interactions_created_at ON chat_interactions
 CREATE INDEX IF NOT EXISTS idx_chat_interactions_scenario ON chat_interactions(scenario);
 CREATE INDEX IF NOT EXISTS idx_chat_interactions_task_code ON chat_interactions(task_code);
 CREATE INDEX IF NOT EXISTS idx_chat_interactions_prompt_index_no ON chat_interactions(prompt_index_no);
+
+-- Migration: add reaction column if missing
+ALTER TABLE IF EXISTS chat_interactions
+  ADD COLUMN IF NOT EXISTS reaction VARCHAR(8) CHECK (reaction IN ('up','down'));
 
 -- Migration script for existing data (if needed)
 -- This will help migrate existing stroop_sessions to user_sessions

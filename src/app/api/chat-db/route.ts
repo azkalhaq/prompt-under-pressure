@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { insertChatInteraction } from '@/lib/chat-interactions';
+import { getSupabaseServerClient } from '@/lib/supabase';
 import { createUserSession, updateUserSession, getUserSession, incrementSessionPrompts } from '@/lib/user-sessions';
 import { collectServerSideFingerprint } from '@/utils/browserFingerprint';
 
@@ -60,6 +61,37 @@ export async function POST(req: NextRequest) {
       case 'increment_prompts':
         await incrementSessionPrompts(data.sessionId);
         break;
+      
+      case 'set_reaction': {
+        const supabase = getSupabaseServerClient();
+        const sessionId: string = data?.sessionId;
+        const reaction: 'up' | 'down' = data?.reaction;
+        if (!sessionId || !reaction || !['up','down'].includes(reaction)) {
+          return Response.json({ error: 'sessionId and reaction are required' }, { status: 400 });
+        }
+        // Find latest interaction for this session
+        const { data: rows, error: selErr } = await supabase
+          .from('chat_interactions')
+          .select('id')
+          .eq('session_id', sessionId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (selErr) {
+          throw new Error(selErr.message);
+        }
+        const latestId = rows && rows[0]?.id;
+        if (!latestId) {
+          return Response.json({ error: 'No interaction found for session' }, { status: 404 });
+        }
+        const { error: updErr } = await supabase
+          .from('chat_interactions')
+          .update({ reaction })
+          .eq('id', latestId);
+        if (updErr) {
+          throw new Error(updErr.message);
+        }
+        break;
+      }
       
       default:
         return Response.json({ error: 'Invalid action' }, { status: 400 });

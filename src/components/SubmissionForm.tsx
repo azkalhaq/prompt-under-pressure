@@ -30,18 +30,18 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
 
   return (
     <>
-      {/* Modal Overlay */}
+      {/* Overlay */}
       <div 
-        className="fixed inset-0 bg-black/50 z-50 transition-opacity duration-300"
+        className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
         onClick={handleClose}
       />
-      
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+
+      {/* Right slide-over panel */}
+      <div className="fixed inset-y-0 right-0 z-50 flex w-full sm:w-[520px] md:w-1/2">
+        <div className="flex flex-col w-full h-full bg-white shadow-2xl border-l border-gray-200">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-xl font-semibold text-gray-900">Submit Your Result</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 className="text-lg font-semibold text-gray-900">Submit Your Result</h2>
             <button
               onClick={handleClose}
               className="p-2 rounded-lg hover:bg-gray-200 transition-colors duration-200"
@@ -51,20 +51,7 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
           </div>
 
           {/* Form Content */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Email-like composition area */}
-            <div className="space-y-4">              
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
-                <span className="font-medium">To:</span>
-                <span className="text-gray-800">Manager</span>
-              </div>
-              
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
-                <span className="font-medium">Subject:</span>
-                <span className="text-gray-800">Competitor Analysis Report</span>
-              </div>
-            </div>
-
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Content textarea */}
             <div>
               <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
@@ -75,7 +62,7 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Write your analysis result here..."
-                className="w-full h-48 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full h-48 min-h-32 max-h-[70vh] p-4 border border-gray-300 rounded-lg resize-y focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
@@ -113,24 +100,25 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
                 <span className="text-sm text-gray-500">Very confident</span>
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
-              >
-                Submit
-              </button>
-            </div>
           </form>
+
+          {/* Footer Actions */}
+          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              onClick={handleSubmit as unknown as React.MouseEventHandler<HTMLButtonElement>}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+            >
+              Submit
+            </button>
+          </div>
         </div>
       </div>
     </>

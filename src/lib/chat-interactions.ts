@@ -25,6 +25,19 @@ export interface ChatInteractionData {
   difficult_words?: number;
   linsear_write_formula?: number;
   gunning_fog?: number;
+  // CARE metrics
+  care_context_score?: number;
+  care_ask_score?: number;
+  care_rules_score?: number;
+  care_examples_score?: number;
+  care_specificity_score?: number;
+  care_measurability_score?: number;
+  care_verifiability_score?: number;
+  care_ambiguity_count?: number;
+  care_output_format_specified?: boolean;
+  care_role_specified?: boolean;
+  care_quantity_specified?: boolean;
+  care_has_citations?: boolean;
   
   // OpenAI related
   api_call_id?: string;
@@ -64,6 +77,18 @@ export async function insertChatInteraction(data: ChatInteractionData): Promise<
       difficult_words: data.difficult_words,
       linsear_write_formula: data.linsear_write_formula,
       gunning_fog: data.gunning_fog,
+      care_context_score: data.care_context_score,
+      care_ask_score: data.care_ask_score,
+      care_rules_score: data.care_rules_score,
+      care_examples_score: data.care_examples_score,
+      care_specificity_score: data.care_specificity_score,
+      care_measurability_score: data.care_measurability_score,
+      care_verifiability_score: data.care_verifiability_score,
+      care_ambiguity_count: data.care_ambiguity_count,
+      care_output_format_specified: data.care_output_format_specified,
+      care_role_specified: data.care_role_specified,
+      care_quantity_specified: data.care_quantity_specified,
+      care_has_citations: data.care_has_citations,
       api_call_id: data.api_call_id,
       role_used: data.role_used,
       model: data.model,

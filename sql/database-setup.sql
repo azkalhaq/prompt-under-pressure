@@ -92,6 +92,20 @@ CREATE TABLE IF NOT EXISTS chat_interactions (
     -- user reaction
     reaction VARCHAR(8) CHECK (reaction IN ('up','down')),
 
+    -- CARE prompt quality metrics (heuristic 0-2 unless noted)
+    care_context_score SMALLINT,                      -- presence/quality of Context
+    care_ask_score SMALLINT,                          -- presence/quality of Ask
+    care_rules_score SMALLINT,                        -- presence/quality of Rules
+    care_examples_score SMALLINT,                     -- presence/quality of Examples
+    care_specificity_score SMALLINT,                  -- specificity of constraints
+    care_measurability_score SMALLINT,                -- measurable criteria provided
+    care_verifiability_score SMALLINT,                -- output verifiable via schema/rubric
+    care_ambiguity_count INT,                         -- count of vague terms detected (lower is better)
+    care_output_format_specified BOOLEAN,             -- explicit output format/schema provided
+    care_role_specified BOOLEAN,                      -- role/persona specified
+    care_quantity_specified BOOLEAN,                  -- number of outputs/options specified
+    care_has_citations BOOLEAN,                       -- contains URLs/citation requirement
+    
     -- OpenAI related
     api_call_id VARCHAR(128),                         -- provider's call id (e.g., "chatcmpl-...")
     role_used VARCHAR(32),                                 -- role used ('system'|'user'|'assistant'|'tool', etc.)

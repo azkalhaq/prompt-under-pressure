@@ -4,7 +4,7 @@ import { getSupabaseServerClientOrNull } from "@/lib/supabase";
 import { calculateStandardTokenCost } from "@/utils/CostCalculator";
 import { insertChatInteraction } from "@/lib/chat-interactions";
 import { createUserSession, getUserSession, incrementSessionPrompts } from "@/lib/user-sessions";
-import { calculateTextMetrics } from "@/utils/textAnalysis";
+import { calculateTextMetrics, calculateCareMetrics } from "@/utils/textAnalysis";
 import { collectServerSideFingerprint } from "@/utils/browserFingerprint";
 
 export const runtime = "nodejs";
@@ -105,6 +105,7 @@ export async function POST(req: NextRequest) {
           const taskCode = getTaskCode(req);
           const promptIndexNo = await getPromptIndexNo(sessionId ?? 'no-session');
           const textMetrics = calculateTextMetrics(prompt);
+          const careMetrics = calculateCareMetrics(prompt);
           const totalCost = calculateStandardTokenCost(model, tokensInput, tokensOutput);
           const promptingTimeMs: number | undefined = typeof body?.prompting_time_ms === 'number' ? body.prompting_time_ms : undefined;
           
@@ -127,7 +128,8 @@ export async function POST(req: NextRequest) {
             raw_request: rawRequest as Record<string, unknown> | undefined,
             raw_response: rawResponse as Record<string, unknown> | undefined,
             finish_reason: typeof finishReason === 'string' ? finishReason : undefined,
-            ...textMetrics
+            ...textMetrics,
+            ...careMetrics
           });
           
           // Increment total_prompts counter in user_sessions

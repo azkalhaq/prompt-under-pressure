@@ -89,3 +89,108 @@ export function calculateTextMetrics(text: string) {
     gunning_fog
   };
 }
+
+/**
+ * Heuristic CARE prompt-quality metrics based on NN/g CARE framework
+ * CARE: Context, Ask, Rules, Examples
+ * Returns discrete scores (0-2) for core dimensions and supporting booleans/counters.
+ */
+export function calculateCareMetrics(text: string) {
+  if (!text || typeof text !== 'string') {
+    return {
+      care_context_score: 0,
+      care_ask_score: 0,
+      care_rules_score: 0,
+      care_examples_score: 0,
+      care_specificity_score: 0,
+      care_measurability_score: 0,
+      care_verifiability_score: 0,
+      care_ambiguity_count: 0,
+      care_output_format_specified: false,
+      care_role_specified: false,
+      care_quantity_specified: false,
+      care_has_citations: false,
+    };
+  }
+
+  const lower = text.toLowerCase();
+
+  // Context signals
+  const contextSignals = [
+    'user', 'audience', 'customer', 'persona', 'based in', 'locale', 'working on', 'project',
+    'platform', 'web', 'mobile', 'app', 'ecommerce', 'login', 'screen', 'domain', 'industry', 'goal', 'success', 'background', 'context'
+  ];
+  const contextHits = contextSignals.filter(s => lower.includes(s)).length;
+  const care_context_score = contextHits >= 5 ? 2 : contextHits >= 2 ? 1 : 0;
+
+  // Ask signals (role, outputs, steps, format)
+  const askSignals = [
+    'generate', 'write', 'create', 'produce', 'return', 'provide', 'follow these steps', 'steps:', 'format:', 'present', 'rank'
+  ];
+  const askHits = askSignals.filter(s => lower.includes(s)).length;
+  const care_ask_score = askHits >= 4 ? 2 : askHits >= 2 ? 1 : 0;
+
+  // Rules signals
+  const rulesSignals = [
+    'guidelines', "don't", 'do not', 'avoid', 'must', 'should', 'tone', 'style', 'no more than', 'max', 'limit', 'constraints'
+  ];
+  const rulesHits = rulesSignals.filter(s => lower.includes(s)).length;
+  const care_rules_score = rulesHits >= 4 ? 2 : rulesHits >= 2 ? 1 : 0;
+
+  // Examples signals
+  const examplesSignals = ['examples:', 'example:', 'good example', 'bad example', 'avoid ... like'];
+  const examplesHits = examplesSignals.filter(s => lower.includes(s)).length;
+  const care_examples_score = examplesHits >= 2 ? 2 : examplesHits >= 1 ? 1 : 0;
+
+  // Specificity: presence of concrete nouns and constraints (numbers, exact targets)
+  const numberMatches = lower.match(/\b\d+\b/g) || [];
+  const constraintSignals = ['exact', 'specific', 'table', 'json', 'columns', 'fields', 'schema', 'section'];
+  const specificityHits = numberMatches.length + constraintSignals.filter(s => lower.includes(s)).length;
+  const care_specificity_score = specificityHits >= 4 ? 2 : specificityHits >= 2 ? 1 : 0;
+
+  // Measurability: explicit measurable constraints
+  const measSignals = ['no more than', 'at most', 'at least', 'characters', 'sentences', '<=', '>=', '<', '>', 'limit to'];
+  const measHits = measSignals.filter(s => lower.includes(s)).length + numberMatches.length;
+  const care_measurability_score = measHits >= 5 ? 2 : measHits >= 2 ? 1 : 0;
+
+  // Verifiability: schema/format or rubric present
+  const verifSignals = ['json', 'schema', 'table', 'markdown table', 'columns', 'fields', 'validate', 'rubric'];
+  const verifHits = verifSignals.filter(s => lower.includes(s)).length;
+  const care_verifiability_score = verifHits >= 3 ? 2 : verifHits >= 1 ? 1 : 0;
+
+  // Ambiguity: count vague terms
+  const vagueTerms = [
+    'optimize', 'improve', 'nice', 'good', 'bad', 'better', 'best', 'simple', 'easily', 'quickly', 'sufficient', 'robust', 'intuitive'
+  ];
+  const care_ambiguity_count = vagueTerms.reduce((count, term) => count + ((lower.match(new RegExp(`\\b${term}\\b`, 'g')) || []).length), 0);
+
+  // Output format specified
+  const care_output_format_specified = verifSignals.some(s => lower.includes(s));
+
+  // Role specified
+  const roleSignals = ['you are a', 'act as', "you're a", 'role:', 'Your role'];
+  const care_role_specified = roleSignals.some(s => lower.includes(s));
+
+  // Quantity specified
+  const quantitySignals = ['options', 'variations', 'list', 'top', 'rank'];
+  const qtyNumbers = numberMatches.length;
+  const care_quantity_specified = qtyNumbers > 0 && quantitySignals.some(s => lower.includes(s));
+
+  // Citations or URLs present
+  const care_has_citations = /(https?:\/\/)/.test(text);
+
+  return {
+    care_context_score,
+    care_ask_score,
+    care_rules_score,
+    care_examples_score,
+    care_specificity_score,
+    care_measurability_score,
+    care_verifiability_score,
+    care_ambiguity_count,
+    care_output_format_specified,
+    care_role_specified,
+    care_quantity_specified,
+    care_has_citations,
+  };
+}

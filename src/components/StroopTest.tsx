@@ -284,7 +284,8 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
 
   // Handle trial timeout when countdown reaches 0
   useEffect(() => {
-    if (trialCountdown === 0 && isActive && currentTrialData && trialStartTime && !feedback) {
+    // Only treat countdown reaching 0 as a timeout if a trial timer is configured (> 0)
+    if (config.trialTimer > 0 && trialCountdown === 0 && isActive && currentTrialData && trialStartTime && !feedback) {
       // Trial has timed out, handle it (only if no feedback yet)
       console.log('Trial timeout detected - advancing to next trial');
       const endTime = Date.now();
@@ -296,7 +297,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
         nextTrial();
       }, 1000);
     }
-  }, [trialCountdown, isActive, currentTrialData, trialStartTime, saveTrialData, nextTrial, feedback]);
+  }, [trialCountdown, isActive, currentTrialData, trialStartTime, saveTrialData, nextTrial, feedback, config.trialTimer]);
 
   // End session when complete
   useEffect(() => {

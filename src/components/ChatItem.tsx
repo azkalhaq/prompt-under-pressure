@@ -13,6 +13,7 @@ type Message = {
 type ChatItemProps = {
   messages: Message[]
   isLoading?: boolean
+  canReact?: boolean
 }
 
 // User Message Component
@@ -126,8 +127,9 @@ const AssistantMessage = ({
         </ReactMarkdown>
 
         {/* Action buttons - only show when not typing and content exists */}
-        {content && !isTyping && canReact && (
+        {content && !isTyping && (
           <div className='mt-2 flex items-center gap-1 text-gray-600'>
+            {/* Copy button - always shown */}
             <Tooltip content={copiedIds[messageId] ? 'Copied!' : 'Copy'} placement="bottom">
               <button
                 className='text-gray-600 hover:bg-gray-200 rounded-lg'
@@ -140,33 +142,39 @@ const AssistantMessage = ({
                 </span>
               </button>
             </Tooltip>
-            {(!reactions[messageId] || reactions[messageId] === 'up') && (
-              <Tooltip content={reactions[messageId] === 'up' ? 'Marked as helpful' : 'Mark as helpful'} placement="bottom">
-                <button
-                  className={`text-gray-600 hover:bg-gray-200 rounded-lg ${reactions[messageId] === 'up' ? 'bg-green-100' : ''}`}
-                  aria-label='Good response'
-                  aria-pressed={reactions[messageId] === 'up' ? 'true' : 'false'}
-                  onClick={() => onReact(messageId, 'up')}
-                >
-                  <span className='flex items-center justify-center h-8 w-8'>
-                    <FiThumbsUp className={reactions[messageId] === 'up' ? 'text-green-700' : ''} />
-                  </span>
-                </button>
-              </Tooltip>
-            )}
-            {(!reactions[messageId] || reactions[messageId] === 'down') && (
-              <Tooltip content={reactions[messageId] === 'down' ? 'Marked as not helpful' : 'Mark as not helpful'} placement="bottom">
-                <button
-                  className={`text-gray-600 hover:bg-gray-200 rounded-lg ${reactions[messageId] === 'down' ? 'bg-red-100' : ''}`}
-                  aria-label='Bad response'
-                  aria-pressed={reactions[messageId] === 'down' ? 'true' : 'false'}
-                  onClick={() => onReact(messageId, 'down')}
-                >
-                  <span className='flex items-center justify-center h-8 w-8'>
-                    <FiThumbsDown className={reactions[messageId] === 'down' ? 'text-red-700' : ''} />
-                  </span>
-                </button>
-              </Tooltip>
+            
+            {/* Reaction buttons - only shown when canReact is true */}
+            {canReact && (
+              <>
+                {(!reactions[messageId] || reactions[messageId] === 'up') && (
+                  <Tooltip content={reactions[messageId] === 'up' ? 'Marked as helpful' : 'Mark as helpful'} placement="bottom">
+                    <button
+                      className={`text-gray-600 hover:bg-gray-200 rounded-lg ${reactions[messageId] === 'up' ? 'bg-green-100' : ''}`}
+                      aria-label='Good response'
+                      aria-pressed={reactions[messageId] === 'up' ? 'true' : 'false'}
+                      onClick={() => onReact(messageId, 'up')}
+                    >
+                      <span className='flex items-center justify-center h-8 w-8'>
+                        <FiThumbsUp className={reactions[messageId] === 'up' ? 'text-green-700' : ''} />
+                      </span>
+                    </button>
+                  </Tooltip>
+                )}
+                {(!reactions[messageId] || reactions[messageId] === 'down') && (
+                  <Tooltip content={reactions[messageId] === 'down' ? 'Marked as not helpful' : 'Mark as not helpful'} placement="bottom">
+                    <button
+                      className={`text-gray-600 hover:bg-gray-200 rounded-lg ${reactions[messageId] === 'down' ? 'bg-red-100' : ''}`}
+                      aria-label='Bad response'
+                      aria-pressed={reactions[messageId] === 'down' ? 'true' : 'false'}
+                      onClick={() => onReact(messageId, 'down')}
+                    >
+                      <span className='flex items-center justify-center h-8 w-8'>
+                        <FiThumbsDown className={reactions[messageId] === 'down' ? 'text-red-700' : ''} />
+                      </span>
+                    </button>
+                  </Tooltip>
+                )}
+              </>
             )}
           </div>
         )}
@@ -191,7 +199,7 @@ const TypingIndicator = () => {
 }
 
 // Main ChatItem Component
-const ChatItem = ({ messages, isLoading }: ChatItemProps) => {
+const ChatItem = ({ messages, isLoading, canReact = true }: ChatItemProps) => {
   const endRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -246,7 +254,7 @@ const ChatItem = ({ messages, isLoading }: ChatItemProps) => {
               onReact={handleReact}
               copiedIds={copiedIds}
               reactions={reactions}
-              canReact={idx === messages.length - 1}
+              canReact={canReact && idx === messages.length - 1}
             />
           )}
         </div>

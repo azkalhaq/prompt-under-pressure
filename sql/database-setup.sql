@@ -146,10 +146,6 @@ CREATE INDEX IF NOT EXISTS idx_chat_interactions_scenario ON chat_interactions(s
 CREATE INDEX IF NOT EXISTS idx_chat_interactions_task_code ON chat_interactions(task_code);
 CREATE INDEX IF NOT EXISTS idx_chat_interactions_prompt_index_no ON chat_interactions(prompt_index_no);
 
--- Migration: add reaction column if missing
-ALTER TABLE IF EXISTS chat_interactions
-  ADD COLUMN IF NOT EXISTS reaction VARCHAR(8) CHECK (reaction IN ('up','down'));
-
 -- Migration script for existing data (if needed)
 -- This will help migrate existing stroop_sessions to user_sessions
 -- Run this only if you have existing data to migrate

@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { RxCross2 } from 'react-icons/rx'
 
 interface SubmissionFormProps {
@@ -11,6 +11,8 @@ interface SubmissionFormProps {
 const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
   const [content, setContent] = useState('')
   const [confidence, setConfidence] = useState(4) // Default to middle value (5)
+  const [animateIn, setAnimateIn] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,8 +25,23 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
   const handleClose = () => {
     setContent('')
     setConfidence(5)
-    onClose()
+    setIsClosing(true)
+    setAnimateIn(false)
+    setTimeout(() => {
+      onClose()
+    }, 300)
   }
+
+  useEffect(() => {
+    if (!isOpen) return
+    // Start enter animations on next frame
+    const id = requestAnimationFrame(() => setAnimateIn(true))
+    return () => {
+      cancelAnimationFrame(id)
+      setAnimateIn(false)
+      setIsClosing(false)
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -32,12 +49,12 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
     <>
       {/* Overlay */}
       <div 
-        className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
+        className={`fixed inset-0 z-40 transition-opacity duration-300 ${animateIn && !isClosing ? 'bg-black/50 opacity-100' : 'bg-black/50 opacity-0'}`}
         onClick={handleClose}
       />
 
       {/* Right slide-over panel */}
-      <div className="fixed inset-y-0 right-0 z-50 flex w-full sm:w-[520px] md:w-1/2">
+      <div className={`fixed inset-y-0 right-0 z-50 flex w-full sm:w-[520px] md:w-1/2 transform transition-transform duration-300 ease-in-out ${animateIn && !isClosing ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex flex-col w-full h-full bg-white shadow-2xl border-l border-gray-200">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
@@ -51,9 +68,9 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
           </div>
 
           {/* Form Content */}
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 min-h-0">
             {/* Content textarea */}
-            <div>
+            <div className="flex-1 min-h-0 flex flex-col">
               <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
                 Your Analysis:
               </label>
@@ -62,7 +79,7 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Write your analysis result here..."
-                className="w-full h-48 min-h-32 max-h-[70vh] p-4 border border-gray-300 rounded-lg resize-y focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full flex-1 min-h-64 max-h-none p-4 border border-gray-300 rounded-lg resize-y focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>

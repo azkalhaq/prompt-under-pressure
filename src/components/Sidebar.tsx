@@ -138,7 +138,19 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
 
   const scenarioContent: Record<string, { markdown: string }> = {
     '/': {
-      markdown: '## Scenario\nNo scenario configured for this page.'
+      markdown:
+        `### User Scenario / Task
+
+**Constraint**
+---
+No constraints.
+
+**Task**
+---
+You are a **junior marketing analyst** at a large consulting firm, currently in your 3-month probation period.  
+Your manager has asked you to prepare a **comprehensive competitor analysis report** on the **top 3 e-commerce brands in Australia**.  
+
+Think carefully about how to design the best possible GPT prompt to gather this information **accurately** and in a **well-structured format**.`
     },
     '/task-2': {
       markdown:
@@ -146,7 +158,7 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
 
 **Constraint**
 ---
-You must **prompt the AI while completing the Stroop Task** shown on the right side of the screen at the same time.
+You must **prompt the AI while performing the Stroop Task** shown on the right side of the screen at the same time.
 
 **Task**
 ---
@@ -158,7 +170,19 @@ Think carefully about how to design the best possible GPT prompt to gather this 
 
     ,
     '/task-3': {
-      markdown: '### User Scenario / Task\n\n_Add task details here._'
+      markdown:
+        `### User Scenario / Task
+
+**Constraint**
+---
+You must **prompt the AI while performing the Stroop Task** shown on the right side of the screen at the same time.
+
+**Task**
+---
+You are a **junior marketing analyst** at a large consulting firm, currently in your 3-month probation period.  
+Your manager has asked you to prepare a **comprehensive competitor analysis report** on the **top 3 e-commerce brands in Australia**.  
+
+Think carefully about how to design the best possible GPT prompt to gather this information **accurately** and in a **well-structured format**.`
     },
   }
 

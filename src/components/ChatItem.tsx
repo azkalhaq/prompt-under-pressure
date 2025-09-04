@@ -237,7 +237,7 @@ const ChatItem = ({ messages, isLoading, canReact = true }: ChatItemProps) => {
 
   return (
     <div className='w-full max-w-3xl mx-auto px-4 space-y-4'>
-      {messages.map((m, idx) => (
+      {messages.map((m) => (
         <div key={m.id}>
           {m.role === 'user' ? (
             <UserMessage
@@ -254,7 +254,7 @@ const ChatItem = ({ messages, isLoading, canReact = true }: ChatItemProps) => {
               onReact={handleReact}
               copiedIds={copiedIds}
               reactions={reactions}
-              canReact={canReact && idx === messages.length - 1}
+              canReact={canReact}
             />
           )}
         </div>

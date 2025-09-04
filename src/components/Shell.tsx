@@ -17,6 +17,14 @@ const Shell = ({ children }: ShellProps) => {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Ensure sidebar is visible when entering task pages (e.g., after re-login)
+  useEffect(() => {
+    if (!mounted) return
+    if (pathname.startsWith('/task-')) {
+      setCollapsed(false)
+    }
+  }, [pathname, mounted])
   
   // Automatically disable Shell scrolling for task-2
   const disableShellScroll = pathname.includes('/task-2')

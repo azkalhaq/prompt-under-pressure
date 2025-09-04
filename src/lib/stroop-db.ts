@@ -48,6 +48,32 @@ export async function insertStroopTrial(data: StroopTrialData): Promise<void> {
   }
 }
 
+export async function markLastTrialInactive(userId: string, sessionId: string): Promise<void> {
+  const supabase = getSupabaseServerClient();
+  // Update the most recent trial for this session to flag inactivity via user_answer='inactive'
+  const { data: latest, error: selErr } = await supabase
+    .from('stroop_trials')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('session_id', sessionId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (selErr) {
+    console.error('Error selecting last trial for inactivity:', selErr);
+    throw new Error(`Failed to select last trial: ${selErr.message}`);
+  }
+  if (!latest?.id) return;
+  const { error: updErr } = await supabase
+    .from('stroop_trials')
+    .update({ user_answer: 'inactive' })
+    .eq('id', latest.id);
+  if (updErr) {
+    console.error('Error marking last trial inactive:', updErr);
+    throw new Error(`Failed to mark trial inactive: ${updErr.message}`);
+  }
+}
+
 export async function createStroopSession(
   userId: string, 
   sessionId: string,

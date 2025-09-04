@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { type StroopTrialData } from '@/lib/stroop-db';
+import { useInactivity } from '@/contexts/InactivityContext';
 import { useStroopContext } from '@/contexts/StroopContext';
 
 interface StroopConfig {
@@ -37,6 +38,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
 
   // Get Stroop context
   const { shouldStartStroop, resetStroopTrigger } = useStroopContext();
+  const { isPaused: isGloballyPaused } = useInactivity();
 
   // Refs for timers
   const itiTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -104,6 +106,8 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
   // Save trial data to database
   const saveTrialData = useCallback(async (rt: number | null, correctness: boolean | null, userAnswer: string | null) => {
     if (!currentTrialData) return;
+    // Do not record when paused, except for explicit 'inactive' marker
+    if (isGloballyPaused && userAnswer !== 'inactive') return;
     
     const trialData: StroopTrialData = {
       user_id: userId,
@@ -131,7 +135,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
     } catch (error) {
       console.error('Failed to save trial data:', error);
     }
-  }, [currentTrialData, userId, sessionId, currentTrial, config.iti]);
+  }, [currentTrialData, userId, sessionId, currentTrial, config.iti, isGloballyPaused]);
 
   // Move to next trial
   const nextTrial = useCallback(() => {
@@ -175,7 +179,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
 
   // Handle user response
   const handleResponse = useCallback((selectedAnswer: string) => {
-    if (!currentTrialData || !isActive || isPaused) return;
+    if (!currentTrialData || !isActive || isPaused || isGloballyPaused) return;
     
     const endTime = Date.now();
     const rt = trialStartTime ? endTime - trialStartTime : null;
@@ -206,7 +210,33 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
     setTimeout(() => {
       nextTrial();
     }, 1000);
-  }, [currentTrialData, isActive, isPaused, trialStartTime, saveTrialData, nextTrial]);
+  }, [currentTrialData, isActive, isPaused, isGloballyPaused, trialStartTime, saveTrialData, nextTrial]);
+
+  // When inactivity warning fires, record current trial as inactive (once)
+  useEffect(() => {
+    const onWarn = () => {
+      if (!currentTrialData) return
+      // Persist inactive status via API to update last row reliably
+      try {
+        fetch('/api/stroop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'mark_last_inactive',
+            data: { user_id: userId, session_id: sessionId }
+          })
+        }).catch(() => {})
+      } catch {}
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('session-timeout-warning', onWarn as EventListener)
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('session-timeout-warning', onWarn as EventListener)
+      }
+    }
+  }, [currentTrialData, userId, sessionId])
 
   // Start session
   const startSession = useCallback(async () => {

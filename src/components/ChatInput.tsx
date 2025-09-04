@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, KeyboardEvent, FormEvent, useRef, MouseEvent, useCallback, useEffect } from 'react'
+import { useInactivity } from '@/contexts/InactivityContext'
 import { ImArrowUpRight2 } from 'react-icons/im'
 import { IoArrowDown } from 'react-icons/io5'
 // import { TbPaperclip } from 'react-icons/tb'
@@ -16,6 +17,7 @@ type ChatInputProps = {
 }
 
 const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollButton, scrollParentRef, onHeightChange, onAnchorRefChange }: ChatInputProps) => {
+  const { isPaused } = useInactivity()
   const [prompt, setPrompt] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const firstInputTimeRef = useRef<number | null>(null)
@@ -64,7 +66,7 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
     const startedAt = firstInputTimeRef.current
     const promptingTimeMs = typeof startedAt === 'number' ? Math.max(0, Date.now() - startedAt) : undefined
     setPrompt('')
-    if (!prompt || disabled) return
+    if (!prompt || disabled || isPaused) return
     try {
       await onSubmitPrompt?.(prompt, promptingTimeMs)
       firstInputTimeRef.current = null
@@ -183,7 +185,7 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
           />
         </label>
         <div className='absolute bottom-3 right-3 mt-auto flex justify-end'>
-          <button type='submit' disabled={!prompt || disabled} aria-label='Send prompt' className='bg-black text-white disabled:bg-gray-300 disabled:text-gray-600 relative h-9 w-9 rounded-full p-0 transition-colors hover:opacity-80 disabled:hover:opacity-100 flex items-center justify-center'>
+          <button type='submit' disabled={!prompt || disabled || isPaused} aria-label='Send prompt' className='bg-black text-white disabled:bg-gray-300 disabled:text-gray-600 relative h-9 w-9 rounded-full p-0 transition-colors hover:opacity-80 disabled:hover:opacity-100 flex items-center justify-center'>
             <ImArrowUpRight2 className='-rotate-45' />
           </button>
         </div>

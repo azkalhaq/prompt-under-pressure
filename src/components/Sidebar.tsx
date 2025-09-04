@@ -2,6 +2,7 @@
 import React, { useState, Suspense } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
+import { useInactivity } from '@/contexts/InactivityContext'
 import remarkGfm from 'remark-gfm'
 import { RxQuestionMark, RxCross2 } from 'react-icons/rx'
 import { LuInfo } from 'react-icons/lu'
@@ -21,6 +22,7 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { isPaused } = useInactivity()
   const [showSubmit, setShowSubmit] = useState(false)
   const [showSubmissionForm, setShowSubmissionForm] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
@@ -321,7 +323,8 @@ Think carefully about how to design the best possible GPT prompt to gather this 
             {!showSubmit && (
               <button
                 onClick={handleGetStarted}
-                className='flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200'
+                disabled={isPaused}
+                className={`flex-1 font-medium py-2 px-4 rounded-lg transition-colors duration-200 ${isPaused ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
               >
                 Get Started
               </button>

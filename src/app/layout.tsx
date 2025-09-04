@@ -4,6 +4,7 @@ import "./globals.css";
 import Shell from "@/components/Shell";
 import { SessionProvider } from "@/contexts/SessionContext";
 import { StroopProvider } from "@/contexts/StroopContext";
+import { InactivityProvider } from "@/contexts/InactivityContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,9 +33,11 @@ export default function RootLayout({
       >
         <SessionProvider>
           <StroopProvider>
-            <Shell>
-              {children}
-            </Shell>
+            <InactivityProvider warningDuration={process.env.SESSION_TIMEOUT_WARNING} logoutDuration={process.env.SESSION_TIMEOUT_LOGOUT}>
+              <Shell>
+                {children}
+              </Shell>
+            </InactivityProvider>
           </StroopProvider>
         </SessionProvider>
       </body>

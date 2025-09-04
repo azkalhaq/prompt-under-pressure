@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { insertStroopTrial, type StroopTrialData } from '@/lib/stroop-db';
+import { insertStroopTrial, markLastTrialInactive, type StroopTrialData } from '@/lib/stroop-db';
 import { incrementSessionTrials } from '@/lib/user-sessions';
 
 export async function POST(request: NextRequest) {
@@ -22,6 +22,13 @@ export async function POST(request: NextRequest) {
         }
         
         return NextResponse.json({ success: true });
+
+      case 'mark_last_inactive':
+        if (!data?.session_id || !data?.user_id) {
+          return NextResponse.json({ error: 'Missing identifiers' }, { status: 400 })
+        }
+        await markLastTrialInactive(data.user_id as string, data.session_id as string)
+        return NextResponse.json({ success: true })
 
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

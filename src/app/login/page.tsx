@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function LoginPage() {
@@ -41,6 +41,12 @@ export default function LoginPage() {
 			setLoading(false);
 		}
 	}, [userId, redirectPath, router]);
+
+	// Prefill support from ?u=
+	useEffect(() => {
+		const viaU = searchParams.get('u');
+		if (viaU) setUserId(viaU);
+	}, [searchParams])
 
 	return (
 		<div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center px-4 py-12">

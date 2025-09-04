@@ -8,7 +8,7 @@ import { LuInfo } from 'react-icons/lu'
 import { useSessionContext } from '../contexts/SessionContext'
 import { useStroopContext } from '../contexts/StroopContext'
 import SubmissionForm from './SubmissionForm'
-import { hasSubmittedForPath, markSubmittedForPath } from '@/utils/submissionCookies'
+ 
 import { useSearchParams } from 'next/navigation'
 import { shouldEnableAudio } from '@/utils/queryParams'
 
@@ -128,10 +128,7 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
     }
     
     setShowSubmissionForm(false)
-    // Mark cookie for this scenario and redirect to Thank You
-    try {
-      markSubmittedForPath(pathname)
-    } catch {}
+    // Redirect to Thank You
     router.push('/thank-you')
   }
 
@@ -170,7 +167,7 @@ Think carefully about how to design the best possible GPT prompt to gather this 
   return (
     <>
       {/* Help button - only show when sidebar is collapsed */}
-      {collapsed && !hasSubmittedForPath(pathname) && (
+      {collapsed && (
         <button
           aria-label='Show scenario instructions'
           onClick={onToggleSidebar}
@@ -186,7 +183,7 @@ Think carefully about how to design the best possible GPT prompt to gather this 
       )}
 
       {/* Overlay - only show when sidebar is open */}
-      {!collapsed && !hasSubmittedForPath(pathname) && (
+      {!collapsed && (
         <div
           className={`fixed inset-0 z-10 transition-opacity duration-300 ${showSubmit ? 'bg-black/50 cursor-pointer' : 'bg-black/50 cursor-not-allowed'
             }`}

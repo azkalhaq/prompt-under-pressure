@@ -1,7 +1,6 @@
 "use client"
 import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { hasSubmittedForPath } from '@/utils/submissionCookies';
+import { useSearchParams } from "next/navigation";
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
 import StroopTest from "@/components/StroopTest";
@@ -13,7 +12,6 @@ type UiMessage = { id: string; role: "user" | "assistant"; content: string };
 
 function Task2Content() {
   const { sessionId, userId, isLoading: sessionLoading } = useSessionContext();
-  const router = useRouter();
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -30,11 +28,7 @@ function Task2Content() {
   // Audio functionality - removed unused variables
   useAudio(searchParams);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && hasSubmittedForPath('/task-2')) {
-      router.replace('/thank-you');
-    }
-  }, [router]);
+  
 
   // Use useMemo to create stable references and prevent unnecessary re-renders
   const observerConfig = useMemo(() => ({

@@ -1,7 +1,7 @@
 "use client"
 import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { hasSubmittedForPath } from '@/utils/submissionCookies';
+import { useSearchParams } from "next/navigation";
+ 
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
 import { useSessionContext } from "@/contexts/SessionContext";
@@ -11,7 +11,6 @@ type UiMessage = { id: string; role: "user" | "assistant"; content: string };
 
 function HomeContent() {
   const { sessionId, userId, isLoading: sessionLoading } = useSessionContext();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,11 +26,7 @@ function HomeContent() {
   const model = process.env.OPENAI_MODEL;
   const hasMessages = messages.length > 0;
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && hasSubmittedForPath('/task-1')) {
-      router.replace('/thank-you');
-    }
-  }, [router]);
+  
 
   // Use useMemo to create stable references and prevent unnecessary re-renders
   const observerConfig = useMemo(() => ({

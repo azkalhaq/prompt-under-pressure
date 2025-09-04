@@ -1,5 +1,5 @@
 "use client"
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { LuCheck} from 'react-icons/lu';
 
 interface ThankYouProps {
@@ -8,6 +8,11 @@ interface ThankYouProps {
 }
 
 export default function ThankYou({ sessionId, userId }: ThankYouProps) {
+	const [submittedAt, setSubmittedAt] = useState<string>('');
+
+	useEffect(() => {
+		setSubmittedAt(new Date().toLocaleString());
+	}, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -31,7 +36,12 @@ export default function ThankYou({ sessionId, userId }: ThankYouProps) {
           <div className="text-xs text-gray-500 space-y-1">
             <p>Session ID: {sessionId ? `${String(sessionId).slice(0, 8)}...` : 'N/A'}</p>
             <p>User ID: {userId ?? 'N/A'}</p>
-            <p>Submission Time: {new Date().toLocaleString()}</p>
+            <p>
+              Submission Time: 
+              <span suppressHydrationWarning>
+                {submittedAt || ''}
+              </span>
+            </p>
           </div>
         </div>
         

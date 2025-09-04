@@ -1,7 +1,6 @@
 "use client"
 import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from 'next/navigation'
-import { hasSubmittedForPath } from '@/utils/submissionCookies'
 import ChatItem from "@/components/ChatItem";
 import ChatInput from "@/components/ChatInput";
 import { useSessionContext } from "@/contexts/SessionContext";
@@ -26,12 +25,6 @@ function ScenarioThreeContent() {
 
   const model = process.env.OPENAI_MODEL;
   const hasMessages = messages.length > 0;
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && hasSubmittedForPath('/task-3')) {
-      router.replace('/thank-you');
-    }
-  }, [router]);
 
   // Use useMemo to create stable references and prevent unnecessary re-renders
   const observerConfig = useMemo(() => ({

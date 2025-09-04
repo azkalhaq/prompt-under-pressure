@@ -20,7 +20,7 @@ const Shell = ({ children }: ShellProps) => {
   
   // Automatically disable Shell scrolling for task-2
   const disableShellScroll = pathname.includes('/task-2')
-  const hideChrome = pathname === '/thank-you' || (mounted && pathname === '/')
+  const hideChrome = pathname === '/thank-you' || pathname === '/login' || (mounted && pathname === '/')
   
   return (
     <div className="h-screen overflow-hidden relative">

@@ -1,9 +1,8 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, Suspense } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, Suspense, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { collectBrowserFingerprint } from '@/utils/browserFingerprint';
-import { hasSubmittedForPath } from '@/utils/submissionCookies';
 import { getUserIdentifier, getQueryParamsForDatabase } from '@/utils/queryParams';
 
 interface SessionContextType {
@@ -36,14 +35,50 @@ function SessionProviderContent({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, [searchParams]);
 
-  // Create a fresh session when route changes
+  // Track previous session and route to record end_time on SPA navigations
+  const previousSessionIdRef = useRef<string | null>(null);
+  const previousPathnameRef = useRef<string | null>(null);
+
+  // Create a fresh session when route changes and close the previous one with end_time
   useEffect(() => {
     if (!pathname) return;
-    const newSessionId = crypto.randomUUID();
-    console.log(`Generated new session ID on route change (${pathname}): ${newSessionId}`);
-    setSessionEnsured(false);
-    setSessionId(newSessionId);
-    document.cookie = `sid=${newSessionId}; Path=/; SameSite=Lax; Max-Age=15552000`;
+
+    const closePreviousAndStartNew = async () => {
+      const prevSessionId = previousSessionIdRef.current ?? sessionId;
+      const prevPath = previousPathnameRef.current;
+      // If there is a previous session (same-page subsequent navigations or initial), close it
+      if (prevSessionId && prevPath !== pathname) {
+        try {
+          await fetch('/api/chat-db', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'update_session',
+              data: {
+                sessionId: prevSessionId,
+                updates: { end_time: new Date().toISOString() }
+              }
+            })
+          });
+          console.log('Recorded end_time for previous session on route change:', prevSessionId);
+        } catch (error) {
+          console.error('Failed to record end_time on route change:', error);
+        }
+      }
+
+      // Start a new session id for the new route
+      const newSessionId = crypto.randomUUID();
+      console.log(`Generated new session ID on route change (${pathname}): ${newSessionId}`);
+      setSessionEnsured(false);
+      setSessionId(newSessionId);
+      document.cookie = `sid=${newSessionId}; Path=/; SameSite=Lax; Max-Age=15552000`;
+
+      // Update refs for next navigation
+      previousSessionIdRef.current = newSessionId;
+      previousPathnameRef.current = pathname;
+    };
+
+    closePreviousAndStartNew();
   }, [pathname]);
 
   // Create session when sessionId and userId are available
@@ -58,12 +93,7 @@ function SessionProviderContent({ children }: { children: ReactNode }) {
             setSessionEnsured(true);
             return;
           }
-          // Skip creating DB record if user already submitted for this path
-          if (typeof window !== 'undefined' && hasSubmittedForPath(window.location.pathname)) {
-            console.log('Skipping create_session due to submission cookie for this path');
-            setSessionEnsured(true);
-            return;
-          }
+          // Middleware now handles submission checks; always allow session creation here
           console.log(`Creating (or ensuring) session in database: ${sessionId} for user: ${userId}`);
           const browserData = collectBrowserFingerprint();
           const queryParams = getQueryParamsForDatabase(searchParams);

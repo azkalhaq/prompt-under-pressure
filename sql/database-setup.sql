@@ -79,7 +79,17 @@ CREATE TABLE IF NOT EXISTS chat_interactions (
     word_count INT,                                   -- number of words in prompt
     char_count INT,                                   -- number of characters in prompt
     vocab_count INT,                                  -- unique vocabulary count in prompt
-    readability_fk NUMERIC(6,2),                      -- Flesch–Kincaid grade (prompt)
+    -- prompt readability metrics
+    flesch_reading_ease NUMERIC(6,2),                 -- Flesch Reading Ease (prompt)
+    flesch_kincaid_grade NUMERIC(6,2),                -- Flesch–Kincaid Grade (prompt)
+    coleman_liau_index NUMERIC(6,2),                  -- Coleman-Liau Index (prompt)
+    automated_readability_index NUMERIC(6,2),         -- Automated Readability Index (prompt)
+    dale_chall_readability_score NUMERIC(6,2),        -- Dale-Chall Readability Score (prompt)
+    difficult_words INT,                              -- Difficult words count (prompt)
+    linsear_write_formula NUMERIC(6,2),               -- Linsear Write Formula (prompt)
+    gunning_fog NUMERIC(6,2),                         -- Gunning Fog Index (prompt)
+
+    
 
     -- OpenAI related
     api_call_id VARCHAR(128),                         -- provider's call id (e.g., "chatcmpl-...")

@@ -17,7 +17,14 @@ export interface ChatInteractionData {
   word_count?: number;
   char_count?: number;
   vocab_count?: number;
-  readability_fk?: number;
+  flesch_reading_ease?: number;
+  flesch_kincaid_grade?: number;
+  coleman_liau_index?: number;
+  automated_readability_index?: number;
+  dale_chall_readability_score?: number;
+  difficult_words?: number;
+  linsear_write_formula?: number;
+  gunning_fog?: number;
   
   // OpenAI related
   api_call_id?: string;
@@ -49,7 +56,14 @@ export async function insertChatInteraction(data: ChatInteractionData): Promise<
       word_count: data.word_count,
       char_count: data.char_count,
       vocab_count: data.vocab_count,
-      readability_fk: data.readability_fk,
+      flesch_reading_ease: data.flesch_reading_ease,
+      flesch_kincaid_grade: data.flesch_kincaid_grade,
+      coleman_liau_index: data.coleman_liau_index,
+      automated_readability_index: data.automated_readability_index,
+      dale_chall_readability_score: data.dale_chall_readability_score,
+      difficult_words: data.difficult_words,
+      linsear_write_formula: data.linsear_write_formula,
+      gunning_fog: data.gunning_fog,
       api_call_id: data.api_call_id,
       role_used: data.role_used,
       model: data.model,

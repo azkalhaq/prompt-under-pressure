@@ -1,5 +1,5 @@
 import { getSupabaseServerClient } from './supabase';
-import { generateUserId, generateUsernameFromEmail, isValidEmail, sanitizeInput } from '../utils/userUtils';
+import { generateUserId, generateUsernameFromEmail, generatePasscode, isValidEmail, sanitizeInput } from '../utils/userUtils';
 import type { User, CreateUserRequest, CreateUserResponse, UserExistsResponse } from '../types/user';
 
 /**
@@ -55,16 +55,32 @@ export async function createUser(userData: CreateUserRequest): Promise<CreateUse
       }
     } while (await getUserById(user_id));
     
+    // Generate unique passcode
+    let passcode: string;
+    let passcodeAttempts = 0;
+    const maxPasscodeAttempts = 10;
+    
+    do {
+      passcode = generatePasscode();
+      passcodeAttempts++;
+      
+      if (passcodeAttempts > maxPasscodeAttempts) {
+        return { success: false, error: 'Failed to generate unique passcode' };
+      }
+    } while (await getUserByPasscode(passcode));
+    
     // Insert new user
     const insertData: {
       user_id: string;
       email: string;
       username: string;
       name?: string;
+      passcode: string;
     } = {
       user_id,
       email: sanitizedData.email,
-      username: sanitizedData.username
+      username: sanitizedData.username,
+      passcode
     };
     
     // Only add name if it's provided
@@ -165,6 +181,32 @@ export async function getUserByUsername(username: string): Promise<User | null> 
     return data as User;
   } catch (error) {
     console.error('Error getting user by username:', error);
+    return null;
+  }
+}
+
+/**
+ * Gets a user by their passcode
+ * @param passcode - User's 6-digit passcode
+ * @returns Promise with user data or null
+ */
+export async function getUserByPasscode(passcode: string): Promise<User | null> {
+  try {
+    const supabase = getSupabaseServerClient();
+    
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('passcode', passcode)
+      .single();
+    
+    if (error || !data) {
+      return null;
+    }
+    
+    return data as User;
+  } catch (error) {
+    console.error('Error getting user by passcode:', error);
     return null;
   }
 }

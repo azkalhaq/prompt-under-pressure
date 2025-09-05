@@ -23,6 +23,14 @@ export function generateUserId(length: number = 5): string {
 }
 
 /**
+ * Generates a 6-digit random passcode
+ * @returns A 6-digit numeric passcode as string
+ */
+export function generatePasscode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+/**
  * Generates a username from email if no username is provided
  * @param email - User's email address
  * @returns Username derived from email

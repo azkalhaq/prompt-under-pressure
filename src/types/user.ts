@@ -8,6 +8,7 @@ export interface User {
   email: string;
   username: string;
   name: string;
+  passcode: string;
   created_at: string;
   updated_at: string;
 }

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE,                        -- user's email address
     username VARCHAR(255) UNIQUE,                     -- username (optional, default value use email)
     name VARCHAR(255),                                -- fullname
+    passcode VARCHAR(6) NOT NULL,                     -- 6-digit random passcode (auto-generated)
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),    -- record creation time
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()     -- record update time
 );
@@ -132,6 +133,7 @@ CREATE TABLE IF NOT EXISTS chat_interactions (
 CREATE INDEX IF NOT EXISTS idx_users_user_id ON users(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_passcode ON users(passcode);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_session_id ON user_sessions(session_id);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_utm_source ON user_sessions(utm_source);
@@ -154,6 +156,19 @@ CREATE INDEX IF NOT EXISTS idx_chat_interactions_prompt_index_no ON chat_interac
 -- ALTER TABLE stroop_sessions ADD COLUMN IF NOT EXISTS total_prompts INTEGER DEFAULT 0;
 -- ALTER TABLE stroop_sessions RENAME COLUMN start_time TO start_stroop_time;
 -- ALTER TABLE stroop_sessions RENAME TO user_sessions;
+
+-- Migration script to add passcode column to existing users table
+-- Run this if you have existing users without passcode
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS passcode VARCHAR(6);
+-- CREATE INDEX IF NOT EXISTS idx_users_passcode ON users(passcode);
+-- 
+-- -- Update existing users with random 6-digit passcodes
+-- UPDATE users 
+-- SET passcode = LPAD(FLOOR(RANDOM() * 1000000)::TEXT, 6, '0')
+-- WHERE passcode IS NULL;
+-- 
+-- -- Make passcode NOT NULL after populating existing records
+-- ALTER TABLE users ALTER COLUMN passcode SET NOT NULL;
 
 -- Migration script for chat_interactions table (run this if you have existing data)
 -- This will migrate the old chat_interactions schema to the new one

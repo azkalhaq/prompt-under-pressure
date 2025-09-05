@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createUser, getUserByEmail, getUserById } from '../../../lib/user-db';
+import { createUser, getUserByEmail, getUserById, getUserByUsername, getUserByPasscode } from '../../../lib/user-db';
 import type { CreateUserRequest } from '../../../types/user';
 
 /**
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/users - Get user information
- * Query parameters: email, user_id, or username
+ * Query parameters: email, user_id, username, or passcode
  */
 export async function GET(request: NextRequest) {
   try {
@@ -84,10 +84,11 @@ export async function GET(request: NextRequest) {
     const email = searchParams.get('email');
     const user_id = searchParams.get('user_id');
     const username = searchParams.get('username');
+    const passcode = searchParams.get('passcode');
     
-    if (!email && !user_id && !username) {
+    if (!email && !user_id && !username && !passcode) {
       return NextResponse.json(
-        { success: false, error: 'Must provide email, user_id, or username parameter' },
+        { success: false, error: 'Must provide email, user_id, username, or passcode parameter' },
         { status: 400 }
       );
     }
@@ -99,9 +100,9 @@ export async function GET(request: NextRequest) {
     } else if (user_id) {
       user = await getUserById(user_id);
     } else if (username) {
-      // Import the function for username lookup
-      const { getUserByUsername } = await import('../../../lib/user-db');
       user = await getUserByUsername(username);
+    } else if (passcode) {
+      user = await getUserByPasscode(passcode);
     }
     
     if (!user) {

@@ -2,6 +2,8 @@
  * Text analysis utilities for calculating prompt metrics
  */
 
+import rs from 'text-readability';
+
 /**
  * Calculate word count in a text
  */
@@ -36,14 +38,10 @@ export function calculateVocabCount(text: string): number {
  * Calculate Flesch-Kincaid Grade Level
  * Formula: 0.39 × (total words ÷ total sentences) + 11.8 × (total syllables ÷ total words) - 15.59
  */
-import rs from 'text-readability';
-
 export function calculateFleschKincaid(text: string): number {
   if (!text || typeof text !== 'string') return 0;
   try {
-    const grade = rs.fleschKincaidGrade(text);
-    if (!isFinite(grade)) return 0;
-    return Math.max(0, Math.round(grade * 100) / 100);
+    return rs.fleschKincaidGrade(text);
   } catch {
     return 0;
   }
@@ -66,14 +64,14 @@ export function calculateTextMetrics(text: string) {
   let linsear_write_formula = 0;
   let gunning_fog = 0;
 
-  try { flesch_reading_ease = Number.isFinite(rs.fleschReadingEase(text)) ? Math.round(rs.fleschReadingEase(text) * 100) / 100 : 0; } catch {}
-  try { flesch_kincaid_grade = Number.isFinite(rs.fleschKincaidGrade(text)) ? Math.round(rs.fleschKincaidGrade(text) * 100) / 100 : 0; } catch {}
-  try { coleman_liau_index = Number.isFinite(rs.colemanLiauIndex?.(text)) ? Math.round((rs.colemanLiauIndex as (t: string)=>number)(text) * 100) / 100 : 0; } catch {}
-  try { automated_readability_index = Number.isFinite(rs.automatedReadabilityIndex?.(text)) ? Math.round((rs.automatedReadabilityIndex as (t: string)=>number)(text) * 100) / 100 : 0; } catch {}
-  try { dale_chall_readability_score = Number.isFinite(rs.daleChallReadabilityScore?.(text)) ? Math.round((rs.daleChallReadabilityScore as (t: string)=>number)(text) * 100) / 100 : 0; } catch {}
-  try { difficult_words = typeof rs.difficultWords === 'function' ? rs.difficultWords(text) as number : 0; } catch {}
-  try { linsear_write_formula = Number.isFinite(rs.linsearWriteFormula?.(text)) ? Math.round((rs.linsearWriteFormula as (t: string)=>number)(text) * 100) / 100 : 0; } catch {}
-  try { gunning_fog = Number.isFinite(rs.gunningFog?.(text)) ? Math.round((rs.gunningFog as (t: string)=>number)(text) * 100) / 100 : 0; } catch {}
+  try { flesch_reading_ease = rs.fleschReadingEase(text) ?? 0; } catch {}
+  try { flesch_kincaid_grade = rs.fleschKincaidGrade(text) ?? 0; } catch {}
+  try { coleman_liau_index = rs.colemanLiauIndex?.(text) ?? 0; } catch {}
+  try { automated_readability_index = rs.automatedReadabilityIndex?.(text) ?? 0; } catch {}
+  try { dale_chall_readability_score = rs.daleChallReadabilityScore?.(text) ?? 0; } catch {}
+  try { difficult_words = rs.difficultWords?.(text) ?? 0; } catch {}
+  try { linsear_write_formula = rs.linsearWriteFormula?.(text) ?? 0; } catch {}
+  try { gunning_fog = rs.gunningFog?.(text) ?? 0; } catch {}
 
   return {
     word_count,

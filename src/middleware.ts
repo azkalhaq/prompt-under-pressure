@@ -42,7 +42,9 @@ export default async function middleware(req: NextRequest) {
 					if (sresp.ok) {
 						const sdata = await sresp.json().catch(() => null);
 						if (sdata?.success && sdata?.submitted) {
-							return NextResponse.redirect(new URL('/thank-you', req.url));
+							const thankYouUrl = new URL('/thank-you', req.url);
+							thankYouUrl.searchParams.set('u', userId);
+							return NextResponse.redirect(thankYouUrl);
 						}
 					}
 				} catch {}

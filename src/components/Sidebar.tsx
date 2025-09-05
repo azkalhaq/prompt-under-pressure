@@ -130,8 +130,12 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
     }
     
     setShowSubmissionForm(false)
-    // Redirect to Thank You
-    router.push('/thank-you')
+    // Redirect to Thank You with userId parameter
+    const thankYouUrl = new URL('/thank-you', window.location.origin);
+    if (userId) {
+      thankYouUrl.searchParams.set('u', userId);
+    }
+    router.push(thankYouUrl.pathname + '?' + thankYouUrl.searchParams.toString())
   }
 
   const handleSubmissionFormClose = () => {

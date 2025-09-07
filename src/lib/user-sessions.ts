@@ -135,4 +135,23 @@ export async function incrementSessionTrials(sessionId: string): Promise<void> {
   });
 }
 
+export async function getCompletedUserSessions(userId: string): Promise<UserSession[]> {
+  const supabase = getSupabaseServerClient();
+  
+  const { data, error } = await supabase
+    .from('user_sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .not('submitted_result', 'is', null)
+    .not('submit_time', 'is', null)
+    .order('submit_time', { ascending: false });
+
+  if (error) {
+    console.error('Error getting completed user sessions:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
 

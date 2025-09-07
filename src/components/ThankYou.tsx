@@ -1,30 +1,26 @@
 "use client"
 import React, { useEffect, useState } from 'react';
-import { LuCheck} from 'react-icons/lu';
+import { LuCheck, LuCopy } from 'react-icons/lu';
 import type { User } from '@/types/user';
+import type { UserSession } from '@/lib/user-sessions';
 
 interface ThankYouProps {
   sessionId?: string | null;
   userId?: string | null;
 }
 
-export default function ThankYou({ sessionId, userId }: ThankYouProps) {
-	const [submittedAt, setSubmittedAt] = useState<string>('');
+export default function ThankYou({ userId }: ThankYouProps) {
 	const [user, setUser] = useState<User | null>(null);
-	const [userLoading, setUserLoading] = useState(false);
-	const [userError, setUserError] = useState<string | null>(null);
-
-	useEffect(() => {
-		setSubmittedAt(new Date().toLocaleString());
-	}, []);
+	const [copied, setCopied] = useState(false);
+	const [completedSessions, setCompletedSessions] = useState<UserSession[]>([]);
+	const [sessionsLoading, setSessionsLoading] = useState(false);
+	const [sessionsError, setSessionsError] = useState<string | null>(null);
 
 	// Fetch user data to get passcode
 	useEffect(() => {
 		if (!userId) return;
 
 		const fetchUser = async () => {
-			setUserLoading(true);
-			setUserError(null);
 			try {
 				const url = new URL('/api/users', window.location.origin);
 				url.searchParams.set('user_id', userId);
@@ -42,14 +38,66 @@ export default function ThankYou({ sessionId, userId }: ThankYouProps) {
 				setUser(data.user);
 			} catch (error) {
 				console.error('Error fetching user data:', error);
-				setUserError('Failed to load user information');
-			} finally {
-				setUserLoading(false);
 			}
 		};
 
 		fetchUser();
 	}, [userId]);
+
+	// Fetch completed sessions data
+	useEffect(() => {
+		if (!userId) return;
+
+		const fetchCompletedSessions = async () => {
+			setSessionsLoading(true);
+			setSessionsError(null);
+			try {
+				const url = new URL('/api/user-sessions', window.location.origin);
+				url.searchParams.set('user_id', userId);
+				const resp = await fetch(url.toString());
+				
+				if (!resp.ok) {
+					throw new Error('Failed to fetch completed sessions');
+				}
+				
+				const data = await resp.json();
+				if (!data?.success) {
+					throw new Error('Invalid sessions data received');
+				}
+				
+				setCompletedSessions(data.sessions || []);
+			} catch (error) {
+				console.error('Error fetching completed sessions:', error);
+				setSessionsError('Failed to load session information');
+			} finally {
+				setSessionsLoading(false);
+			}
+		};
+
+		fetchCompletedSessions();
+	}, [userId]);
+
+	// Copy passcode to clipboard
+	const copyPasscode = async () => {
+		if (!user?.passcode) return;
+		
+		try {
+			await navigator.clipboard.writeText(user.passcode);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+		} catch (error) {
+			console.error('Failed to copy passcode:', error);
+			// Fallback for older browsers
+			const textArea = document.createElement('textarea');
+			textArea.value = user.passcode;
+			document.body.appendChild(textArea);
+			textArea.select();
+			document.execCommand('copy');
+			document.body.removeChild(textArea);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		}
+	};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -61,75 +109,129 @@ export default function ThankYou({ sessionId, userId }: ThankYouProps) {
         </div>
         
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Thank You for Your Participation!
+          Task Already Completed!
         </h1>
         
         <p className="text-lg text-gray-600 mb-6 leading-relaxed">
           Your interaction has been successfully recorded. We appreciate the time and effort you have put into this task.
         </p>
         
-        {/* Passcode Display Section */}
-        {user?.passcode && (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-8">
-            <h2 className="text-xl font-bold text-green-800 mb-3">Your Unique Passcode</h2>
-            <div className="flex items-center justify-center">
-              <span className="font-mono text-4xl font-bold text-green-700 bg-white px-6 py-3 rounded-lg shadow-md border-2 border-green-300">
-                {user.passcode}
-              </span>
-            </div>
-            <p className="text-sm text-green-700 mt-3 text-center">
-              Please save this passcode for your records
-            </p>
-          </div>
-        )}
+         {/* Passcode Display Section */}
+         {user?.passcode && (
+           <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-8">
+             <h2 className="text-xl font-bold text-green-800 mb-4">Your Unique Passcode</h2>
+             <div className="flex items-center justify-center">
+               <div className="flex items-center bg-white rounded-lg border border-green-300 overflow-hidden shadow-sm">
+                 <input
+                   type="text"
+                   value={user.passcode}
+                   readOnly
+                   className="font-mono text-lg font-bold text-green-700 px-3 bg-transparent border-none outline-none min-w-0"
+                 />
+                 <button
+                   onClick={copyPasscode}
+                   className="flex items-center gap-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 border-l border-green-500"
+                   title="Copy passcode to clipboard"
+                 >
+                   {copied ? (
+                     <>
+                       <LuCheck className="w-4 h-4" />
+                       <span className="text-xs font-medium">Copied!</span>
+                     </>
+                   ) : (
+                     <>
+                       <LuCopy className="w-4 h-4" />
+                       <span className="text-xs font-medium">Copy</span>
+                     </>
+                   )}
+                 </button>
+               </div>
+             </div>
+             <p className="text-sm text-green-700 mt-4 text-center">
+               Please use this passcode to continue the survey
+             </p>
+           </div>
+         )}
         
-        <div className="bg-gray-50 rounded-lg p-4 mb-8">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Session Information</h3>
-          <div className="text-xs text-gray-500 space-y-1">
-            <p>Session ID: {sessionId ? `${String(sessionId).slice(0, 8)}...` : 'N/A'}</p>
-            <p>User ID: {userId ?? 'N/A'}</p>
-            <p>
-              Submission Time: 
-              <span suppressHydrationWarning>
-                {submittedAt || ''}
-              </span>
-            </p>
-            <p>
-              Your Passcode: {
-                userLoading ? (
-                  <span className="text-blue-600">Loading...</span>
-                ) : userError ? (
-                  <span className="text-red-600">Error loading</span>
-                ) : user?.passcode ? (
-                  <span className="font-mono font-bold text-lg text-green-600 bg-green-50 px-2 py-1 rounded">
-                    {user.passcode}
-                  </span>
-                ) : (
-                  'N/A'
-                )
-              }
-            </p>
-          </div>
-        </div>
+         <div className="bg-gray-50 rounded-lg p-6 mb-8">
+           <h3 className="text-sm font-medium text-gray-700 mb-4"><b>Session Information</b></h3>
+           <div className="text-sm text-gray-600 space-y-1">
+             <div className="flex justify-between items-center">
+               <span className="font-medium">User ID:</span>
+               <span className="font-mono text-xs bg-gray-200 px-2 py-1 rounded">
+                 {userId ?? 'N/A'}
+               </span>
+             </div>
+             {sessionsLoading ? (
+               <div className="text-center py-2">
+                 <span className="text-blue-600 text-sm">Loading session data...</span>
+               </div>
+             ) : sessionsError ? (
+               <div className="text-center py-2">
+                 <span className="text-red-600 text-sm">Error loading session data</span>
+               </div>
+             ) : completedSessions.length > 0 ? (
+               <div className="space-y-2">
+                 <div className="text-xs font-medium text-gray-500 mb-2">Completed Tasks:</div>
+                 {completedSessions.map((session) => (
+                   <div key={session.session_id} className="bg-white rounded border p-2 space-y-1">
+                     <div className="flex justify-between items-center">
+                       <span className="font-medium text-xs">Task:</span>
+                       <span className="text-xs bg-blue-100 px-2 py-1 rounded">
+                         {session.route_path || 'Unknown'}
+                       </span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                       <span className="font-medium text-xs">Session ID:</span>
+                       <span className="font-mono text-xs bg-gray-200 px-2 py-1 rounded">
+                         {session.session_id.slice(0, 8)}...
+                       </span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                       <span className="font-medium text-xs">Submitted:</span>
+                       <span className="text-xs">
+                         {session.submit_time ? new Date(session.submit_time).toLocaleString() : 'N/A'}
+                       </span>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             ) : (
+               <div className="text-center py-2">
+                 <span className="text-gray-500 text-sm">No completed sessions found</span>
+               </div>
+             )}
+           </div>
+         </div>
         
-        <div className="bg-blue-50 rounded-lg p-4 mb-8 text-left">
-          <h3 className="text-sm font-medium text-blue-800 mb-2">What happens next?</h3>
-          <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Your responses have been recorded for research purposes</li>
-            <li>• All data is anonymized and used only for academic research</li>
-            <li>• You may close this tab and continue the survey</li>
-          </ul>
-        </div>
+         <div className="bg-blue-50 rounded-lg p-6 mb-8 text-left">
+           <h3 className="text-sm font-medium text-blue-800 mb-4">What happens next?</h3>
+           <ul className="text-sm text-blue-700 space-y-3">
+             <li className="flex items-start gap-3">
+               <span className="text-blue-500 text-lg leading-none mt-0.5">•</span>
+               <span className="leading-relaxed">Use your passcode to continue the survey.</span>
+             </li>
+             <li className="flex items-start gap-3">
+               <span className="text-blue-500 text-lg leading-none mt-0.5">•</span>
+               <span className="leading-relaxed">You may close this tab and return to the survey.</span>
+             </li>
+           </ul>
+         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          
-        </div>
-        
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-sm text-gray-500">
-            This research is conducted in accordance with ethical guidelines. Thank you for contributing to our understanding of human-AI interaction.
-          </p>
-        </div>
+         <div className="pt-6 border-t border-gray-200">
+           <p className="text-sm text-gray-500 text-center leading-relaxed">
+             This research is conducted in accordance with ethical guidelines.
+           </p>
+           <p className="text-sm text-gray-500 text-center mt-2">
+              If you experience any issues, please email{' '}
+             <a 
+               href="mailto:nazkalhaq@student.unimelb.edu.au" 
+               className="text-blue-600 hover:text-blue-700 underline"
+             >
+               nazkalhaq@student.unimelb.edu.au
+             </a>
+           </p>
+         </div>
       </div>
     </div>
   );

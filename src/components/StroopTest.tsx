@@ -22,6 +22,26 @@ interface StroopTrial {
 const COLORS = ['red', 'blue', 'green', 'yellow'];
 const COLOR_WORDS = ['RED', 'BLUE', 'GREEN', 'YELLOW'];
 
+// Horizontal Progress Bar Component
+const HorizontalProgress = ({ progress, color = '#3B82F6' }: {
+  progress: number; // 0-100
+  color?: string;
+}) => {
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+        <div 
+          className="h-full rounded-full transition-all duration-1000 ease-out"
+          style={{ 
+            width: `${progress}%`,
+            backgroundColor: color
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
 export default function StroopTest({ userId, sessionId }: { userId: string; sessionId: string }) {
   const [currentTrial, setCurrentTrial] = useState(1);
   const [isActive, setIsActive] = useState(false);
@@ -35,6 +55,14 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
   const [trialCountdown, setTrialCountdown] = useState(0);
   const [isSessionComplete] = useState(false);
   const [autoStarted, setAutoStarted] = useState(false);
+  
+  // Game statistics
+  const [stats, setStats] = useState({
+    totalTrials: 0,
+    correctAnswers: 0,
+    incorrectAnswers: 0,
+    skippedTrials: 0
+  });
 
   // Get Stroop context
   const { shouldStartStroop, resetStroopTrigger } = useStroopContext();
@@ -200,6 +228,14 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
     setFeedback(isCorrect ? 'correct' : 'incorrect');
     setIsActive(false);
     
+    // Update statistics
+    setStats(prev => ({
+      totalTrials: prev.totalTrials + 1,
+      correctAnswers: prev.correctAnswers + (isCorrect ? 1 : 0),
+      incorrectAnswers: prev.incorrectAnswers + (isCorrect ? 0 : 1),
+      skippedTrials: prev.skippedTrials
+    }));
+    
     // Clear trial countdown
     setTrialCountdown(0);
     
@@ -324,6 +360,15 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
       saveTrialData(rt, null, null); // null for user answer when timeout occurs
       setFeedback('incorrect');
       setIsActive(false); // Stop the trial
+      
+      // Update statistics for skipped trial
+      setStats(prev => ({
+        totalTrials: prev.totalTrials + 1,
+        correctAnswers: prev.correctAnswers,
+        incorrectAnswers: prev.incorrectAnswers,
+        skippedTrials: prev.skippedTrials + 1
+      }));
+      
       setTimeout(() => {
         nextTrial();
       }, 1000);
@@ -367,120 +412,227 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
   }
 
   if (isSessionComplete) {
+    const accuracy = stats.totalTrials > 0 ? Math.round((stats.correctAnswers / stats.totalTrials) * 100) : 0;
+    
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold mb-4 text-green-600">Session Complete!</h2>
-        <p className="text-gray-600 mb-4">You have completed the Stroop test.</p>
-        <p className="text-sm text-gray-500">Total trials: {currentTrial - 1}</p>
+      <div className="flex flex-col items-center justify-center h-full p-6 bg-gradient-to-br from-green-50 to-emerald-100 rounded-lg shadow-lg">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">🎉</div>
+          <h2 className="text-3xl font-bold mb-4 text-green-600">Session Complete!</h2>
+          <p className="text-gray-600 mb-6">You have completed the Stroop Challenge!</p>
+          
+          {/* Final Statistics */}
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <h3 className="text-xl font-bold mb-4 text-gray-800">Final Score</h3>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{stats.totalTrials}</div>
+                <div className="text-sm text-gray-600">Total Trials</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{accuracy}%</div>
+                <div className="text-sm text-gray-600">Accuracy</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="text-center">
+                <div className="font-bold text-green-600">{stats.correctAnswers}</div>
+                <div className="text-gray-600">Correct</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-red-600">{stats.incorrectAnswers}</div>
+                <div className="text-gray-600">Wrong</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-orange-600">{stats.skippedTrials}</div>
+                <div className="text-gray-600">Skipped</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Calculate progress for horizontal progress bar (countdown from 100% to 0%)
+  const getProgress = () => {
+    if (itiCountdown > 0) {
+      const totalIti = Math.ceil(config.iti / 1000);
+      return (itiCountdown / totalIti) * 100;
+    }
+    if (trialCountdown > 0 && isActive) {
+      const totalTrial = Math.ceil(config.trialTimer / 1000);
+      return (trialCountdown / totalTrial) * 100;
+    }
+    return 0;
+  };
+
+  const getProgressColor = () => {
+    if (itiCountdown > 0) return '#3B82F6'; // Blue for ITI
+    if (trialCountdown > 0 && isActive) return '#EF4444'; // Red for trial countdown
+    return '#3B82F6';
+  };
+
   return (
-    <div className={`flex flex-col items-center justify-center h-full p-6 rounded-lg shadow-lg transition-all duration-300 ${
-      feedback === 'correct' ? 'bg-green-100' :
-      feedback === 'incorrect' ? 'bg-red-100' :
-      'bg-white'
+    <div className={`flex flex-col h-full p-6 rounded-lg shadow-lg transition-all duration-300 ${
+      feedback === 'correct' ? 'bg-gradient-to-br from-green-50 to-green-100' :
+      feedback === 'incorrect' ? 'bg-gradient-to-br from-red-50 to-red-100' :
+      'bg-gradient-to-br from-blue-50 to-indigo-100'
     }`}>
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold mb-2">Stroop Test</h2>
-        <p className="text-gray-600">Trial {currentTrial}</p>
-        {itiCountdown > 0 && (
-          <p className="text-blue-600 font-semibold">Next trial in: {itiCountdown}s</p>
-        )}
-        {trialCountdown > 0 && isActive && (
-          <p className="text-red-600 font-semibold">Time remaining: {trialCountdown}s</p>
-        )}
+      {/* Game Header with Stats */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center space-x-4">
+          <div className="bg-white rounded-lg px-4 py-2 shadow-md">
+            <h2 className="text-xl font-bold text-gray-800">🎮 Stroop Task</h2>
+          </div>
+          <div className="bg-white rounded-lg px-3 py-2 shadow-md">
+            <span className="text-sm text-gray-600">Trial </span>
+            <span className="font-bold text-lg text-blue-600">{currentTrial}</span>
+          </div>
+        </div>
+        
+        {/* Game Statistics */}
+        <div className="flex space-x-3">
+          <div className="bg-white rounded-lg px-3 py-2 shadow-md text-center min-w-[60px]">
+            <div className="text-xs text-gray-500">Total</div>
+            <div className="font-bold text-lg text-gray-800">{stats.totalTrials}</div>
+          </div>
+          <div className="bg-white rounded-lg px-3 py-2 shadow-md text-center min-w-[60px]">
+            <div className="text-xs text-green-600">✓ Correct</div>
+            <div className="font-bold text-lg text-green-600">{stats.correctAnswers}</div>
+          </div>
+          <div className="bg-white rounded-lg px-3 py-2 shadow-md text-center min-w-[60px]">
+            <div className="text-xs text-red-600">✗ Wrong</div>
+            <div className="font-bold text-lg text-red-600">{stats.incorrectAnswers}</div>
+          </div>
+          <div className="bg-white rounded-lg px-3 py-2 shadow-md text-center min-w-[60px]">
+            <div className="text-xs text-orange-600">⏭ Skip</div>
+            <div className="font-bold text-lg text-orange-600">{stats.skippedTrials}</div>
+          </div>
+        </div>
       </div>
 
-      {/* Main trial area */}
-      {currentTrialData && !itiCountdown && (
-        <div className="text-center">
-          {/* Instruction */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-2">
-              {instruction === 'word' ? 'Choose the WORD' : 'Choose the COLOR'}
-            </h3>
-          </div>
-
-          {/* Stimulus */}
-          <div className="mb-8">
-            <div 
-              className="text-6xl font-bold mb-8 transition-all duration-300 bg-gray-50"
-              style={{ 
-                color: currentTrialData.textColor,
-                padding: '2rem',
-                borderRadius: '0.5rem'
-              }}
-            >
-              {currentTrialData.text}
-            </div>
-          </div>
-
-          {/* Response buttons */}
-          {!feedback && isActive && (
-            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-              {instruction === 'word' ? (
-                // Show word buttons when instruction is "word"
-                COLOR_WORDS.map((word) => (
-                  <button
-                    key={word}
-                    onClick={() => handleResponse(word.toLowerCase())}
-                    className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                      word === 'RED' ? 'bg-red-500 hover:bg-red-600 text-white' :
-                      word === 'BLUE' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
-                      word === 'GREEN' ? 'bg-green-500 hover:bg-green-600 text-white' :
-                      'bg-yellow-500 hover:bg-yellow-600 text-black'
-                    }`}
-                  >
-                    {word}
-                  </button>
-                ))
-              ) : (
-                // Show color buttons when instruction is "color"
-                COLORS.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => handleResponse(color)}
-                    className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                      color === 'red' ? 'bg-red-500 hover:bg-red-600 text-white' :
-                      color === 'blue' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
-                      color === 'green' ? 'bg-green-500 hover:bg-green-600 text-white' :
-                      'bg-yellow-500 hover:bg-yellow-600 text-black'
-                    }`}
-                  >
-                    {color.toUpperCase()}
-                  </button>
-                ))
-              )}
+      {/* Main Game Area */}
+      <div className="flex-1 flex flex-col items-center justify-center">
+        {/* Timer Section */}
+        <div className="mb-8">
+          {itiCountdown > 0 && (
+            <div className="text-center">
+              <HorizontalProgress 
+                progress={getProgress()} 
+                color={getProgressColor()} 
+              />
+              <p className="text-lg font-semibold text-blue-600 mt-2">
+                Next trial in: {itiCountdown}s
+              </p>
             </div>
           )}
-
-          {/* Feedback */}
-          {feedback && (
-            <div className={`text-xl font-bold ${
-              feedback === 'correct' ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {feedback === 'correct' ? 'Correct!' : 'Incorrect!'}
+          
+          {trialCountdown > 0 && isActive && (
+            <div className="text-center">
+              <HorizontalProgress 
+                progress={getProgress()} 
+                color={getProgressColor()} 
+              />
+              <p className="text-lg font-semibold text-red-600 mt-2">
+                Time remaining: {trialCountdown}s
+              </p>
             </div>
           )}
+        </div>
 
-          {/* Trial info */}
-          <div className="mt-6 text-sm text-gray-500">
-            {/* <p>Condition: {currentTrialData.condition}</p> */}
-            {reactionTime && <p>Reaction time: {reactionTime}ms</p>}
+        {/* Main trial area */}
+        {currentTrialData && !itiCountdown && (
+          <div className="text-center max-w-2xl w-full">
+            {/* Instruction */}
+            <div className="mb-8">
+              <div className="bg-white rounded-xl px-6 py-4 shadow-lg inline-block">
+                <h3 className="text-2xl font-bold text-gray-800">
+                  {instruction === 'word' ? '🎯 Choose the WORD' : '🎨 Choose the COLOR'}
+                </h3>
+              </div>
+            </div>
+
+            {/* Stimulus */}
+            <div className="mb-10">
+              <div 
+                className="text-8xl font-bold mb-8 transition-all duration-300 bg-white shadow-2xl rounded-2xl border-4 border-gray-200"
+                style={{ 
+                  color: currentTrialData.textColor,
+                  padding: '3rem',
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                {currentTrialData.text}
+              </div>
+            </div>
+
+            {/* Response buttons */}
+            {!feedback && isActive && (
+              <div className="grid grid-cols-2 gap-6 max-w-lg mx-auto">
+                {instruction === 'word' ? (
+                  // Show word buttons when instruction is "word"
+                  COLOR_WORDS.map((word) => (
+                    <button
+                      key={word}
+                      onClick={() => handleResponse(word.toLowerCase())}
+                      className={`px-8 py-4 rounded-xl font-bold text-xl transition-all duration-200 transform hover:scale-105 shadow-lg ${
+                        word === 'RED' ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-200' :
+                        word === 'BLUE' ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-200' :
+                        word === 'GREEN' ? 'bg-green-500 hover:bg-green-600 text-white shadow-green-200' :
+                        'bg-yellow-500 hover:bg-yellow-600 text-white shadow-yellow-200'
+                      }`}
+                    >
+                      {word}
+                    </button>
+                  ))
+                ) : (
+                  // Show color buttons when instruction is "color"
+                  COLORS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => handleResponse(color)}
+                      className={`px-8 py-4 rounded-xl font-bold text-xl transition-all duration-200 transform hover:scale-105 shadow-lg ${
+                        color === 'red' ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-200' :
+                        color === 'blue' ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-200' :
+                        color === 'green' ? 'bg-green-500 hover:bg-green-600 text-white shadow-green-200' :
+                        'bg-yellow-500 hover:bg-yellow-600 text-white shadow-yellow-200'
+                      }`}
+                    >
+                      {color.toUpperCase()}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* Feedback */}
+            {feedback && (
+              <div className={`text-4xl font-bold mb-4 ${
+                feedback === 'correct' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {feedback === 'correct' ? '🎉 Correct!' : '❌ Incorrect!'}
+              </div>
+            )}
+
+            {/* Reaction time display */}
+            {reactionTime && (
+              <div className="bg-white rounded-lg px-4 py-2 shadow-md inline-block">
+                <span className="text-sm text-gray-600">Reaction time: </span>
+                <span className="font-bold text-lg text-gray-800">{reactionTime}ms</span>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ITI screen */}
-      {itiCountdown > 0 && (
-        <div className="text-center">
-          <div className="text-4xl font-bold text-gray-400 mb-4">+</div>
-          <p className="text-gray-600">Preparing next trial...</p>
-        </div>
-      )}
+        {/* ITI screen */}
+        {itiCountdown > 0 && (
+          <div className="text-center">
+            <div className="text-6xl font-bold text-gray-400 mb-4 animate-pulse">⏳</div>
+            <p className="text-xl text-gray-600 font-semibold">Preparing next trial...</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

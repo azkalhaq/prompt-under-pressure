@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { type StroopTrialData } from '@/lib/stroop-db';
 import { useInactivity } from '@/contexts/InactivityContext';
 import { useStroopContext } from '@/contexts/StroopContext';
+import { useSubmission } from '@/contexts/SubmissionContext';
 
 interface StroopConfig {
   iti: number;
@@ -67,6 +68,10 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
   // Get Stroop context
   const { shouldStartStroop, resetStroopTrigger } = useStroopContext();
   const { isPaused: isGloballyPaused } = useInactivity();
+  const { isSubmissionModalOpen } = useSubmission();
+  
+  // Combined pause state - pause if either inactivity timeout or submission modal is open
+  const isFullyPaused = isGloballyPaused || isSubmissionModalOpen;
 
   // Refs for timers
   const itiTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -135,7 +140,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
   const saveTrialData = useCallback(async (rt: number | null, correctness: boolean | null, userAnswer: string | null) => {
     if (!currentTrialData) return;
     // Do not record when paused, except for explicit 'inactive' marker
-    if (isGloballyPaused && userAnswer !== 'inactive') return;
+    if (isFullyPaused && userAnswer !== 'inactive') return;
     
     const trialData: StroopTrialData = {
       user_id: userId,
@@ -163,7 +168,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
     } catch (error) {
       console.error('Failed to save trial data:', error);
     }
-  }, [currentTrialData, userId, sessionId, currentTrial, config.iti, isGloballyPaused]);
+  }, [currentTrialData, userId, sessionId, currentTrial, config.iti, isFullyPaused]);
 
   // Move to next trial
   const nextTrial = useCallback(() => {
@@ -207,7 +212,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
 
   // Handle user response
   const handleResponse = useCallback((selectedAnswer: string) => {
-    if (!currentTrialData || !isActive || isPaused || isGloballyPaused) return;
+    if (!currentTrialData || !isActive || isPaused || isFullyPaused) return;
     
     const endTime = Date.now();
     const rt = trialStartTime ? endTime - trialStartTime : null;
@@ -246,7 +251,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
     setTimeout(() => {
       nextTrial();
     }, 1000);
-  }, [currentTrialData, isActive, isPaused, isGloballyPaused, trialStartTime, saveTrialData, nextTrial]);
+  }, [currentTrialData, isActive, isPaused, isFullyPaused, trialStartTime, saveTrialData, nextTrial]);
 
   // When inactivity warning fires, record current trial as inactive (once)
   useEffect(() => {
@@ -329,16 +334,16 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
 
   // ITI countdown effect
   useEffect(() => {
-    if (itiCountdown > 0 && !isGloballyPaused) {
+    if (itiCountdown > 0 && !isFullyPaused) {
       countdownTimerRef.current = setTimeout(() => {
         setItiCountdown(prev => prev - 1);
       }, 1000);
     }
-  }, [itiCountdown, isGloballyPaused]);
+  }, [itiCountdown, isFullyPaused]);
 
   // Trial countdown effect
   useEffect(() => {
-    if (trialCountdown > 0 && isActive && !isGloballyPaused) {
+    if (trialCountdown > 0 && isActive && !isFullyPaused) {
       countdownTimerRef.current = setTimeout(() => {
         setTrialCountdown(prev => {
           const newCountdown = prev - 1;
@@ -346,13 +351,13 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
         });
       }, 1000);
     }
-  }, [trialCountdown, isActive, isGloballyPaused]);
+  }, [trialCountdown, isActive, isFullyPaused]);
 
   // Handle trial timeout when countdown reaches 0
   useEffect(() => {
     // Only treat countdown reaching 0 as a timeout if a trial timer is configured (> 0)
-    // Don't process timeout when globally paused (session timeout modal is showing)
-    if (config.trialTimer > 0 && trialCountdown === 0 && isActive && currentTrialData && trialStartTime && !feedback && !isGloballyPaused) {
+    // Don't process timeout when paused (session timeout modal or submission modal is showing)
+    if (config.trialTimer > 0 && trialCountdown === 0 && isActive && currentTrialData && trialStartTime && !feedback && !isFullyPaused) {
       // Trial has timed out, handle it (only if no feedback yet)
       console.log('Trial timeout detected - advancing to next trial');
       const endTime = Date.now();
@@ -373,7 +378,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
         nextTrial();
       }, 1000);
     }
-  }, [trialCountdown, isActive, currentTrialData, trialStartTime, saveTrialData, nextTrial, feedback, config.trialTimer, isGloballyPaused]);
+  }, [trialCountdown, isActive, currentTrialData, trialStartTime, saveTrialData, nextTrial, feedback, config.trialTimer, isFullyPaused]);
 
   // End session when complete
   useEffect(() => {

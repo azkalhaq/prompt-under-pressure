@@ -8,6 +8,7 @@ import { RxQuestionMark, RxCross2 } from 'react-icons/rx'
 import { LuInfo } from 'react-icons/lu'
 import { useSessionContext } from '../contexts/SessionContext'
 import { useStroopContext } from '../contexts/StroopContext'
+import { useSubmission } from '../contexts/SubmissionContext'
 import SubmissionForm from './SubmissionForm'
  
 import { useSearchParams } from 'next/navigation'
@@ -24,10 +25,10 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
   const searchParams = useSearchParams()
   const { isPaused } = useInactivity()
   const [showSubmit, setShowSubmit] = useState(false)
-  const [showSubmissionForm, setShowSubmissionForm] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const { sessionId, userId } = useSessionContext()
   const { triggerStroopStart } = useStroopContext()
+  const { isSubmissionModalOpen, openSubmissionModal, closeSubmissionModal } = useSubmission()
   
   // Check if audio should be enabled
   const isAudioEnabled = shouldEnableAudio(searchParams)
@@ -95,7 +96,7 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
     if (onToggleSidebar) {
       onToggleSidebar()
     }
-    setShowSubmissionForm(true)
+    openSubmissionModal()
   }
 
   const handleSubmissionFormSubmit = async (data: { content: string; confidence: number }) => {
@@ -129,7 +130,7 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
       console.error('Failed to save submission data:', error)
     }
     
-    setShowSubmissionForm(false)
+    closeSubmissionModal()
     // Redirect to Thank You with userId parameter
     const thankYouUrl = new URL('/thank-you', window.location.origin);
     if (userId) {
@@ -139,7 +140,7 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
   }
 
   const handleSubmissionFormClose = () => {
-    setShowSubmissionForm(false)
+    closeSubmissionModal()
   }
 
   const scenarioContent: Record<string, { markdown: string }> = {
@@ -338,9 +339,9 @@ Think carefully about how to design the best possible GPT prompt to gather this 
       </div>
 
       {/* Submission Form Modal */}
-      {showSubmissionForm && (
+      {isSubmissionModalOpen && (
         <SubmissionForm
-          isOpen={showSubmissionForm}
+          isOpen={isSubmissionModalOpen}
           onSubmit={handleSubmissionFormSubmit}
           onClose={handleSubmissionFormClose}
         />

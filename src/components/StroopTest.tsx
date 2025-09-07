@@ -293,16 +293,16 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
 
   // ITI countdown effect
   useEffect(() => {
-    if (itiCountdown > 0) {
+    if (itiCountdown > 0 && !isGloballyPaused) {
       countdownTimerRef.current = setTimeout(() => {
         setItiCountdown(prev => prev - 1);
       }, 1000);
     }
-  }, [itiCountdown]);
+  }, [itiCountdown, isGloballyPaused]);
 
   // Trial countdown effect
   useEffect(() => {
-    if (trialCountdown > 0 && isActive) {
+    if (trialCountdown > 0 && isActive && !isGloballyPaused) {
       countdownTimerRef.current = setTimeout(() => {
         setTrialCountdown(prev => {
           const newCountdown = prev - 1;
@@ -310,12 +310,13 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
         });
       }, 1000);
     }
-  }, [trialCountdown, isActive]);
+  }, [trialCountdown, isActive, isGloballyPaused]);
 
   // Handle trial timeout when countdown reaches 0
   useEffect(() => {
     // Only treat countdown reaching 0 as a timeout if a trial timer is configured (> 0)
-    if (config.trialTimer > 0 && trialCountdown === 0 && isActive && currentTrialData && trialStartTime && !feedback) {
+    // Don't process timeout when globally paused (session timeout modal is showing)
+    if (config.trialTimer > 0 && trialCountdown === 0 && isActive && currentTrialData && trialStartTime && !feedback && !isGloballyPaused) {
       // Trial has timed out, handle it (only if no feedback yet)
       console.log('Trial timeout detected - advancing to next trial');
       const endTime = Date.now();
@@ -327,7 +328,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
         nextTrial();
       }, 1000);
     }
-  }, [trialCountdown, isActive, currentTrialData, trialStartTime, saveTrialData, nextTrial, feedback, config.trialTimer]);
+  }, [trialCountdown, isActive, currentTrialData, trialStartTime, saveTrialData, nextTrial, feedback, config.trialTimer, isGloballyPaused]);
 
   // End session when complete
   useEffect(() => {

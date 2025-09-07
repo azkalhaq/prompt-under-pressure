@@ -202,11 +202,11 @@ Think carefully about how to design the best possible GPT prompt to gather this 
         <button
           aria-label='Show scenario instructions'
           onClick={onToggleSidebar}
-          className='fixed top-4 left-4 z-30 p-2 rounded-lg hover:bg-gray-100 active:scale-[0.98] bg-white shadow-lg border border-gray-200 transition-all duration-200 group overflow-hidden'
+          className='fixed top-4 left-4 z-30 p-2 rounded-lg hover:bg-gray-800 active:scale-[0.98] bg-black shadow-lg border border-gray-800 transition-all duration-200 group overflow-hidden'
         >
           <div className='flex items-center'>
-            <RxQuestionMark className="text-gray-700 flex-shrink-0" />
-            <span className='text-sm text-gray-700 max-w-0 group-hover:max-w-32 transition-all duration-200 overflow-hidden whitespace-nowrap ml-0 group-hover:ml-2'>
+            <RxQuestionMark className="text-white flex-shrink-0 font-bold text-lg" />
+            <span className='text-sm text-white max-w-0 group-hover:max-w-32 transition-all duration-200 overflow-hidden whitespace-nowrap ml-0 group-hover:ml-2'>
               Show instructions
             </span>
           </div>

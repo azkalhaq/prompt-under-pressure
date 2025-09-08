@@ -25,7 +25,7 @@ export function useAudio(
   const hasUserInteractedRef = useRef(hasUserInteracted);
 
   const {
-    audioFile = '/audio/crowd-waiting.wav',
+    audioFile = '/audio/crowd-waiting.mp3',
     volume = 0.3,
     loop = true,
   } = options;

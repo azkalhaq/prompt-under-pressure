@@ -155,10 +155,10 @@ No constraints.
 
 **Task**
 ---
-You are a **junior marketing analyst** at a large consulting firm, currently in your 3-month probation period.  
-Your manager has asked you to prepare a **comprehensive competitor analysis report** on the **top 3 e-commerce brands in Australia**.  
+You are a **junior analyst** at a global consulting company, currently in your 3-month probation period. 
+Your manager wants you to analyze the **business model** of a technology that **leverage and monetizing sustainable AI services**. 
 
-Think carefully about how to design the best possible GPT prompt to gather this information **accurately** and in a **well-structured format**.`
+Think carefully and write the best GPT prompt that generates a professional, structured outline business model that decision-makers can use to **understand how the company creates, delivers, and captures value**.`
     },
     '/task-2': {
       markdown:
@@ -171,14 +171,14 @@ Think carefully about how to design the best possible GPT prompt to gather this 
 **Constraint**
 ---
 1. **Prompt the AI while performing the Stroop Task** shown on the right side of the screen **at the same time**.
-2. **Background audio will play**—listen carefully, as a **secret code** will be asked when submission form.
+2. **Background audio will play**—listen carefully, as a **secret code** will be revealed and asked on submission form.
 
 **Task**
 ---
-You are a **junior marketing analyst** at a large consulting firm, currently in your 3-month probation period.  
-Your manager has asked you to prepare a **comprehensive competitor analysis report** on the **top 3 e-commerce brands in Australia**.  
+You are a **junior analyst** at a global consulting company, currently in your 3-month probation period. 
+Your manager wants you to analyze the **business model** of a technology that **leverage and monetizing sustainable AI services**. 
 
-Think carefully about how to design the best possible GPT prompt to gather this information **accurately** and in a **well-structured format**.`
+Think carefully and write the best GPT prompt that generates a professional, structured outline business model that decision-makers can use to **understand how the company creates, delivers, and captures value**.`
     }
 
     ,

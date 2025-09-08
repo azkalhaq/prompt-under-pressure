@@ -99,7 +99,7 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
     openSubmissionModal()
   }
 
-  const handleSubmissionFormSubmit = async (data: { content: string; confidence: number }) => {
+  const handleSubmissionFormSubmit = async (data: { content: string; confidence: number; audio_code?: string }) => {
     console.log('Submission data:', data)
     
     try {
@@ -115,6 +115,7 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
               updates: { 
                 submitted_result: data.content,
                 confidence: data.confidence,
+                audio_code: data.audio_code || null,
                 submit_time: new Date().toISOString(), // Record when submission was made
               }
             }
@@ -162,10 +163,15 @@ Think carefully about how to design the best possible GPT prompt to gather this 
     '/task-2': {
       markdown:
         `### User Scenario / Task
+**Before you start**
+---
+- **Enable audio:** When your browser prompts for audio permission, click **Allow**.
+- **Set volume:** Make sure your device is **unmuted** and the volume is **clearly audible**.
 
 **Constraint**
 ---
-You must **prompt the AI while performing the Stroop Task** shown on the right side of the screen at the same time.
+1. **Prompt the AI while performing the Stroop Task** shown on the right side of the screen **at the same time**.
+2. **Background audio will play**—listen carefully, as a **secret code** will be asked when submission form.
 
 **Task**
 ---

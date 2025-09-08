@@ -1,30 +1,36 @@
 "use client"
 import React, { useState, useEffect } from 'react'
 import { RxCross2 } from 'react-icons/rx'
+import { useSearchParams } from 'next/navigation'
 
 interface SubmissionFormProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (data: { content: string; confidence: number }) => void
+  onSubmit: (data: { content: string; confidence: number; audio_code?: string }) => void
 }
 
 const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
+  const searchParams = useSearchParams()
   const [content, setContent] = useState('')
   const [confidence, setConfidence] = useState(4) // Default to middle value (5)
+  const [audioCode, setAudioCode] = useState('')
   const [animateIn, setAnimateIn] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const [audioPlayed, setAudioPlayed] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit({ content, confidence })
+    onSubmit({ content, confidence, audio_code: audioCode })
     setContent('')
     setConfidence(5)
+    setAudioCode('')
     onClose()
   }
 
   const handleClose = () => {
     setContent('')
     setConfidence(5)
+    setAudioCode('')
     setIsClosing(true)
     setAnimateIn(false)
     setTimeout(() => {
@@ -42,6 +48,29 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
       setIsClosing(false)
     }
   }, [isOpen])
+
+  // Play audio-code.mp3 when form opens if audio=1 query parameter is present
+  useEffect(() => {
+    if (!isOpen || audioPlayed) return
+    
+    const shouldPlayAudio = searchParams.get('audio') === '1'
+    if (shouldPlayAudio) {
+      const audio = new Audio('/audio/audio-code.mp3')
+      audio.volume = 0.7
+      
+      const playAudio = async () => {
+        try {
+          await audio.play()
+          setAudioPlayed(true)
+        } catch (error) {
+          console.warn('Failed to play audio-code.mp3:', error)
+        }
+      }
+      
+      // Small delay to ensure form is fully rendered
+      setTimeout(playAudio, 500)
+    }
+  }, [isOpen, audioPlayed, searchParams])
 
   if (!isOpen) return null
 
@@ -116,6 +145,24 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
                 </div>
                 <span className="text-sm text-gray-500">Very confident</span>
               </div>
+            </div>
+
+            {/* Audio Code Input */}
+            <div>
+              <label htmlFor="audioCode" className="block text-sm font-medium text-gray-700 mb-2">
+                Audio Code:
+              </label>
+              <input
+                type="text"
+                id="audioCode"
+                value={audioCode}
+                onChange={(e) => setAudioCode(e.target.value)}
+                placeholder="Enter the audio code you heard..."
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                If you heard an audio code when opening this form, please enter it here.
+              </p>
             </div>
           </form>
 

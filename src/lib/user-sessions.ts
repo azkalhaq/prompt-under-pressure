@@ -11,6 +11,7 @@ export interface UserSession {
   route_path?: string;
   submitted_result?: string;
   confidence?: number;
+  audio_code?: string;
   submit_time?: string;
   user_agent?: string;
   language?: string;
@@ -80,6 +81,7 @@ export async function updateUserSession(
     route_path?: string;
     submitted_result?: string;
     confidence?: number;
+    audio_code?: string | null;
     submit_time?: string;
   }
 ): Promise<void> {

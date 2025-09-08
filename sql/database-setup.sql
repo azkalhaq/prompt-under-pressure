@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     total_prompts INTEGER DEFAULT 0,                  -- number of chat interactions completed
     submitted_result TEXT,                            -- final text submitted by the user
     confidence INTEGER,                               -- confidence level of the user's submission
+    audio_code VARCHAR(255),                          -- audio code entered by user during submission
     submit_time TIMESTAMPTZ,                          -- when submission was made
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),     -- record creation time
     -- Browser fingerprinting fields for duplicate detection

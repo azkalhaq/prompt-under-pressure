@@ -262,38 +262,32 @@ Think carefully about how to design the best possible GPT prompt to gather this 
               <div className="prose mt-2.5 text-sky-800 [--tw-prose-background:var(--color-sky-50)] prose-a:text-sky-900 prose-code:text-sky-900 dark:text-slate-300 dark:prose-code:text-slate-300">
                 <ol className="list-decimal list-inside space-y-2">
                   <li className="mb-0">
-                    Read the <b>task details</b> and note any constraints.
+                    Read the <b>task details</b> and <b>constraints</b>.
                   </li>
                   <li className="mb-0">
-                    Click <b>Get Started</b>, then chat with the AI to complete the task while following the constraint.
+                    Click <b>Get Started</b>, then chat with the AI/LLM to complete the task while following the constraint.
                   </li>
                   <li className="mb-0">
-                    If the output isn’t right, <b>re-prompt until satisfied</b>.
+                    If the output isn’t good enough, <b>re-prompt until satisfied</b>.
                   </li>
                   <li className="mb-0">
-                    When ready, click <b>Submit</b> below 👇.
+                    When ready, click <b>Submit Button</b> below 👇.
                   </li>
                   <li className="mb-0">
-                    Copy the AI’s response into the submission form.
+                    <b>Use the AI’s response</b> into the submission form — <b>or create your own answer</b> if you prefer.
                   </li>
                   <li className="mb-0">
-                    <b>Edit</b> or <b>leave it as is</b> before submitting.
-                  </li>
-                  <li className="mb-0">
-                    Answer: <i>“How confident are you to submit this result?”</i>
-                  </li>
-                  <li className="mb-0">
-                    Then <b>submit the form</b>.
+                    Fill the form, then <b>submit the form</b>.
                   </li>
                 </ol>
                 <br />
                 <p className="text-sm italic">
-                  💡 Tip: You can view these instructions anytime by clicking the <b>?</b> button in the top-left corner.
+                  💡 Tip: You can reopen these instructions anytime via the <b>?</b> button (top-left).
                 </p>
               </div>
-
             </div>
           </div>
+          
           {/* Markdown Section */}
           <div className='prose prose-sm max-w-none'>
             <ReactMarkdown

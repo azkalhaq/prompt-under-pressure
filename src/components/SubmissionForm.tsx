@@ -12,25 +12,78 @@ interface SubmissionFormProps {
 const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
   const searchParams = useSearchParams()
   const [content, setContent] = useState('')
-  const [confidence, setConfidence] = useState(4) // Default to middle value (5)
+  const [confidence, setConfidence] = useState<number | null>(null) // No default value
   const [audioCode, setAudioCode] = useState('')
   const [animateIn, setAnimateIn] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const [audioPlayed, setAudioPlayed] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit({ content, confidence, audio_code: audioCode })
+    
+    // Check if content is empty
+    if (!content.trim()) {
+      // Focus the textarea and show validation message
+      const textarea = document.getElementById('content') as HTMLTextAreaElement
+      if (textarea) {
+        textarea.focus()
+        textarea.setCustomValidity('Please enter your analysis before submitting.')
+        textarea.reportValidity()
+      }
+      return
+    }
+    
+    // Check if confidence is selected
+    if (confidence === null) {
+      // Focus the first confidence option and show validation message
+      const firstConfidenceInput = document.querySelector('input[name="confidence"]') as HTMLInputElement
+      if (firstConfidenceInput) {
+        firstConfidenceInput.focus()
+        firstConfidenceInput.setCustomValidity('Please select your confidence level before submitting.')
+        firstConfidenceInput.reportValidity()
+      }
+      return
+    }
+    
+    // Clear any previous validation messages
+    const textarea = document.getElementById('content') as HTMLTextAreaElement
+    if (textarea) {
+      textarea.setCustomValidity('')
+    }
+    
+    // Clear confidence validation messages
+    const confidenceInputs = document.querySelectorAll('input[name="confidence"]')
+    confidenceInputs.forEach(input => {
+      (input as HTMLInputElement).setCustomValidity('')
+    })
+    
+    setShowConfirmation(true)
+  }
+
+  const handleConfirmSubmit = () => {
+    // Stop the crowd-waiting.wav audio when form is submitted
+    const stopAudioEvent = new CustomEvent('audioStop', { detail: { reason: 'form_submitted' } })
+    window.dispatchEvent(stopAudioEvent)
+    console.log('🎵 Audio stop event dispatched due to form submission')
+    
+    onSubmit({ content, confidence: confidence!, audio_code: audioCode })
     setContent('')
-    setConfidence(5)
+    setConfidence(null)
     setAudioCode('')
+    setShowConfirmation(false)
     onClose()
+  }
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false)
   }
 
   const handleClose = () => {
     setContent('')
-    setConfidence(5)
+    setConfidence(null)
     setAudioCode('')
+    setShowConfirmation(false)
     setIsClosing(true)
     setAnimateIn(false)
     setTimeout(() => {
@@ -106,7 +159,11 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
               <textarea
                 id="content"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => {
+                  setContent(e.target.value)
+                  // Clear validation message when user starts typing
+                  e.target.setCustomValidity('')
+                }}
                 placeholder="Write your analysis result here..."
                 className="w-full flex-1 min-h-64 max-h-none p-4 border border-gray-300 rounded-lg resize-y focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
@@ -119,7 +176,7 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
                 How confident are you to submit this result?
               </label>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Not at all confident</span>
+                <span className="text-sm font-bold text-red-600">Not at all confident</span>
                 <div className="flex space-x-2">
                   {[1, 2, 3, 4, 5, 6, 7].map((value) => (
                     <label key={value} className="flex flex-col items-center">
@@ -128,8 +185,16 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
                         name="confidence"
                         value={value}
                         checked={confidence === value}
-                        onChange={(e) => setConfidence(Number(e.target.value))}
+                        onChange={(e) => {
+                          setConfidence(Number(e.target.value))
+                          // Clear validation message when user selects a confidence level
+                          const confidenceInputs = document.querySelectorAll('input[name="confidence"]')
+                          confidenceInputs.forEach(input => {
+                            (input as HTMLInputElement).setCustomValidity('')
+                          })
+                        }}
                         className="sr-only"
+                        required
                       />
                       <div className={`
                         w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium cursor-pointer transition-all duration-200
@@ -143,7 +208,7 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
                     </label>
                   ))}
                 </div>
-                <span className="text-sm text-gray-500">Very confident</span>
+                <span className="text-sm font-bold text-green-600">Very confident</span>
               </div>
             </div>
 
@@ -185,6 +250,67 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmation && (
+        <>
+          {/* Confirmation Overlay */}
+          <div 
+            className="fixed inset-0 z-60 bg-black/60 transition-opacity duration-300"
+            onClick={handleCancelConfirmation}
+          />
+
+          {/* Confirmation Dialog */}
+          <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+              {/* Header */}
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Confirm Submission</h3>
+              </div>
+
+              {/* Content */}
+              <div className="px-6 py-4">
+                <p className="text-gray-700 mb-4">
+                  Are you sure you want to submit your analysis? This action cannot be undone.
+                </p>
+                
+                {/* Show summary of what's being submitted */}
+                <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                  <div className="text-sm text-gray-600 mb-2">
+                    <strong>Confidence Level:</strong> {confidence}/7
+                  </div>
+                  {audioCode && (
+                    <div className="text-sm text-gray-600 mb-2">
+                      <strong>Audio Code:</strong> {audioCode}
+                    </div>
+                  )}
+                  <div className="text-sm text-gray-600">
+                    <strong>Analysis Length:</strong> {content.length} characters
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={handleCancelConfirmation}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmSubmit}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+                >
+                  Confirm & Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   )
 }

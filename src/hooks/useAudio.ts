@@ -160,12 +160,25 @@ export function useAudio(
       }
     };
 
+    const handleAudioStop = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log('🎵 Audio stop event received:', customEvent.detail);
+      
+      if (isAudioEnabled) {
+        console.log('🎵 Stopping audio playback...');
+        stopAudio();
+        setIsAudioPlaying(false);
+      }
+    };
+
     window.addEventListener('audioActivation', handleAudioActivation);
+    window.addEventListener('audioStop', handleAudioStop);
     
     return () => {
       window.removeEventListener('audioActivation', handleAudioActivation);
+      window.removeEventListener('audioStop', handleAudioStop);
     };
-  }, [isAudioEnabled, startAudio]);
+  }, [isAudioEnabled, startAudio, stopAudio]);
 
   /**
    * Try to play audio after user interaction

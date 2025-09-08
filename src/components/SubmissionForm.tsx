@@ -212,23 +212,25 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
               </div>
             </div>
 
-            {/* Audio Code Input */}
-            <div>
-              <label htmlFor="audioCode" className="block text-sm font-medium text-gray-700 mb-2">
-                Audio Code:
-              </label>
-              <input
-                type="text"
-                id="audioCode"
-                value={audioCode}
-                onChange={(e) => setAudioCode(e.target.value)}
-                placeholder="Enter the audio code you heard..."
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                If you heard an audio code when opening this form, please enter it here.
-              </p>
-            </div>
+            {/* Audio Code Input - Only show when audio=1 is provided */}
+            {searchParams.get('audio') === '1' && (
+              <div>
+                <label htmlFor="audioCode" className="block text-sm font-medium text-gray-700 mb-2">
+                  Audio Code:
+                </label>
+                <input
+                  type="text"
+                  id="audioCode"
+                  value={audioCode}
+                  onChange={(e) => setAudioCode(e.target.value)}
+                  placeholder="Enter the audio code you heard..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  If you heard an audio code when opening this form, please enter it here.
+                </p>
+              </div>
+            )}
           </form>
 
           {/* Footer Actions */}

@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, Suspense } from 'react'
+import React, { useEffect, useState, Suspense } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import { useInactivity } from '@/contexts/InactivityContext'
@@ -29,6 +29,9 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
   const { sessionId, userId } = useSessionContext()
   const { triggerStroopStart } = useStroopContext()
   const { isSubmissionModalOpen, openSubmissionModal, closeSubmissionModal } = useSubmission()
+  const [markdown, setMarkdown] = useState<string>('')
+  const [isLoadingMd, setIsLoadingMd] = useState<boolean>(true)
+  const [mdError, setMdError] = useState<string | null>(null)
   
   // Check if audio should be enabled
   const isAudioEnabled = shouldEnableAudio(searchParams)
@@ -144,62 +147,30 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
     closeSubmissionModal()
   }
 
-  const scenarioContent: Record<string, { markdown: string }> = {
-    '/': {
-      markdown:
-        `### User Scenario / Task
-
-**Constraint**
----
-No constraints.
-
-**Task**
----
-You are a **junior analyst** at a global consulting company, currently in your 3-month probation period. 
-Your manager wants you to analyze the **business model** of a technology that **leverage and monetizing sustainable AI services**. 
-
-Think carefully and write the best GPT prompt that generates a professional, structured outline business model that decision-makers can use to **understand how the company creates, delivers, and captures value**.`
-    },
-    '/task-2': {
-      markdown:
-        `### User Scenario / Task
-**Before you start**
----
-- **Enable audio:** When your browser prompts for audio permission, click **Allow**.
-- **Set volume:** Make sure your device is **unmuted** and the volume is **clearly audible**.
-
-**Constraint**
----
-1. **Prompt the AI while performing the Stroop Task** shown on the right side of the screen **at the same time**.
-2. **Background audio will play**—listen carefully, as a **secret code** will be revealed and asked on submission form.
-
-**Task**
----
-You are a **junior analyst** at a global consulting company, currently in your 3-month probation period. 
-Your manager wants you to analyze the **business model** of a technology that **leverage and monetizing sustainable AI services**. 
-
-Think carefully and write the best GPT prompt that generates a professional, structured outline business model that decision-makers can use to **understand how the company creates, delivers, and captures value**.`
+  // Load markdown content from public files based on route
+  useEffect(() => {
+    const routeToFile: Record<string, string> = {
+      '/': '/content/home.md',
+      '/task-1': '/content/task-1.md',
+      '/task-2': '/content/task-2.md',
+      '/task-3': '/content/task-3.md',
     }
-
-    ,
-    '/task-3': {
-      markdown:
-        `### User Scenario / Task
-
-**Constraint**
----
-You must **prompt the AI while performing the Stroop Task** shown on the right side of the screen at the same time.
-
-**Task**
----
-You are a **junior marketing analyst** at a large consulting firm, currently in your 3-month probation period.  
-Your manager has asked you to prepare a **comprehensive competitor analysis report** on the **top 3 e-commerce brands in Australia**.  
-
-Think carefully about how to design the best possible GPT prompt to gather this information **accurately** and in a **well-structured format**.`
-    },
-  }
-
-  const content = scenarioContent[pathname] || scenarioContent['/']
+    const mdPath = routeToFile[pathname] || routeToFile['/']
+    setIsLoadingMd(true)
+    setMdError(null)
+    fetch(mdPath)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Failed to load ${mdPath}`)
+        const text = await res.text()
+        setMarkdown(text)
+        setIsLoadingMd(false)
+      })
+      .catch((err) => {
+        console.error('Failed to load markdown:', err)
+        setMdError('Failed to load instructions.')
+        setIsLoadingMd(false)
+      })
+  }, [pathname])
 
   return (
     <>
@@ -289,26 +260,32 @@ Think carefully about how to design the best possible GPT prompt to gather this 
           </div>
           
           {/* Markdown Section */}
-          <div className='prose prose-sm max-w-none dark:prose-invert'>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                h1: ({ children }: { children: React.ReactNode }) => <h1 className="text-xl font-bold text-gray-900 mb-4 mt-0 dark:text-gray-100">{children}</h1>,
-                h2: ({ children }: { children: React.ReactNode }) => <h2 className="text-lg font-semibold text-gray-900 mb-3 mt-6 dark:text-gray-100">{children}</h2>,
-                h3: ({ children }: { children: React.ReactNode }) => <h3 className="text-base font-semibold text-gray-800 mb-2 mt-4 dark:text-gray-200">{children}</h3>,
-                p: ({ children }: { children: React.ReactNode }) => <p className="text-gray-700 leading-relaxed mb-3 dark:text-gray-300">{children}</p>,
-                strong: ({ children }: { children: React.ReactNode }) => <strong className="font-semibold text-gray-900 dark:text-gray-100">{children}</strong>,
-                em: ({ children }: { children: React.ReactNode }) => <em className="italic text-gray-600 dark:text-gray-400">{children}</em>,
-                ul: ({ children }: { children: React.ReactNode }) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
-                ol: ({ children }: { children: React.ReactNode }) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
-                li: ({ children }: { children: React.ReactNode }) => <li className="text-gray-700 dark:text-gray-300">{children}</li>,
-                blockquote: ({ children }: { children: React.ReactNode }) => <blockquote className="border-l-4 border-blue-200 pl-4 italic text-gray-600 mb-3 dark:border-blue-900 dark:text-gray-400">{children}</blockquote>,
-                code: ({ children }: { children: React.ReactNode }) => <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800 dark:bg-gray-800 dark:text-gray-100">{children}</code>,
-                pre: ({ children }: { children: React.ReactNode }) => <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto mb-3 dark:bg-gray-900">{children}</pre>,
-              }}
-            >
-              {content.markdown}
-            </ReactMarkdown>
+          <div className='prose prose-sm max-w-none dark:prose-invert my-4'>
+            {isLoadingMd ? (
+              <p className="text-gray-500 dark:text-gray-400">Loading instructions…</p>
+            ) : mdError ? (
+              <p className="text-red-600 dark:text-red-400">{mdError}</p>
+            ) : (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: ({ children }: { children: React.ReactNode }) => <h1 className="text-xl font-bold text-gray-900 mb-4 mt-0 dark:text-gray-100">{children}</h1>,
+                  h2: ({ children }: { children: React.ReactNode }) => <h2 className="text-lg font-semibold text-gray-900 mb-3 mt-6 dark:text-gray-100">{children}</h2>,
+                  h3: ({ children }: { children: React.ReactNode }) => <h3 className="text-base font-semibold text-gray-800 mb-2 mt-4 dark:text-gray-200">{children}</h3>,
+                  p: ({ children }: { children: React.ReactNode }) => <p className="text-gray-700 leading-relaxed mb-3 dark:text-gray-300">{children}</p>,
+                  strong: ({ children }: { children: React.ReactNode }) => <strong className="font-semibold text-gray-900 dark:text-gray-100">{children}</strong>,
+                  em: ({ children }: { children: React.ReactNode }) => <em className="italic text-gray-600 dark:text-gray-400">{children}</em>,
+                  ul: ({ children }: { children: React.ReactNode }) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
+                  ol: ({ children }: { children: React.ReactNode }) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
+                  li: ({ children }: { children: React.ReactNode }) => <li className="text-gray-700 dark:text-gray-300">{children}</li>,
+                  blockquote: ({ children }: { children: React.ReactNode }) => <blockquote className="border-l-4 border-blue-200 pl-4 italic text-gray-600 mb-3 dark:border-blue-900 dark:text-gray-400">{children}</blockquote>,
+                  code: ({ children }: { children: React.ReactNode }) => <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800 dark:bg-gray-800 dark:text-gray-100">{children}</code>,
+                  pre: ({ children }: { children: React.ReactNode }) => <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto mb-3 dark:bg-gray-900">{children}</pre>,
+                }}
+              >
+                {markdown}
+              </ReactMarkdown>
+            )}
           </div>
         </div>
 

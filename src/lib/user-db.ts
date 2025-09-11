@@ -15,26 +15,30 @@ export async function createUser(userData: CreateUserRequest): Promise<CreateUse
   try {
     const supabase = getSupabaseServerClient();
     
-    // Validate email
-    if (!isValidEmail(userData.email)) {
+    // Validate email if provided
+    if (userData.email && !isValidEmail(userData.email)) {
       return { success: false, error: 'Invalid email format' };
     }
     
     // Sanitize inputs
     const sanitizedData = {
-      email: sanitizeInput(userData.email.toLowerCase()),
+      email: userData.email ? sanitizeInput(userData.email.toLowerCase()) : null,
       name: userData.name ? sanitizeInput(userData.name) : null,
-      username: userData.username ? sanitizeInput(userData.username) : generateUsernameFromEmail(userData.email)
+      username: userData.username
+        ? sanitizeInput(userData.username)
+        : (userData.email ? generateUsernameFromEmail(userData.email) : `user_${Date.now().toString(36)}`)
     };
     
     // Check if user already exists
-    const existingUser = await getUserByEmail(sanitizedData.email);
-    if (existingUser) {
-      return { success: false, error: 'User with this email already exists' };
+    if (sanitizedData.email) {
+      const existingUser = await getUserByEmail(sanitizedData.email);
+      if (existingUser) {
+        return { success: false, error: 'User with this email already exists' };
+      }
     }
     
     // Check if username is already taken
-    if (sanitizedData.username !== generateUsernameFromEmail(userData.email)) {
+    if (userData.email ? (sanitizedData.username !== generateUsernameFromEmail(userData.email)) : true) {
       const existingUsername = await getUserByUsername(sanitizedData.username);
       if (existingUsername) {
         return { success: false, error: 'Username already taken' };
@@ -72,7 +76,7 @@ export async function createUser(userData: CreateUserRequest): Promise<CreateUse
     // Insert new user
     const insertData: {
       user_id: string;
-      email: string;
+      email: string | null;
       username: string;
       name?: string;
       passcode: string;

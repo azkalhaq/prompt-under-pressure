@@ -5,7 +5,7 @@
 export interface User {
   id: number;
   user_id: string;
-  email: string;
+  email: string | null;
   username: string;
   name: string;
   passcode: string;
@@ -14,7 +14,7 @@ export interface User {
 }
 
 export interface CreateUserRequest {
-  email: string;
+  email?: string;
   username?: string;
   name?: string;
 }

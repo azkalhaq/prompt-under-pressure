@@ -45,13 +45,7 @@ export async function POST(request: NextRequest) {
 
     const body: CreateUserRequest = await request.json();
     
-    // Validate required fields
-    if (!body.email) {
-      return NextResponse.json(
-        { success: false, error: 'Email is required' },
-        { status: 400 }
-      );
-    }
+    // If email provided, basic presence check happens in createUser; not required here
     
     // Create the user
     const result = await createUser(body);

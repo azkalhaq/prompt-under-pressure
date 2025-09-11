@@ -162,16 +162,16 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
           <button
             type='button'
             onClick={handleScrollToBottom}
-            className='bg-gray-100 rounded-full p-3 shadow-lg hover:opacity-90 active:scale-[0.98] h-9 w-9 flex items-center justify-center'
+            className='bg-gray-100 rounded-full p-3 shadow-lg hover:opacity-90 active:scale-[0.98] h-9 w-9 flex items-center justify-center dark:bg-gray-800 dark:text-gray-200'
             aria-label='Scroll to bottom'
           >
             <IoArrowDown size={18} />
           </button>
         </div>
       )}
-      <div ref={containerRef} className='bg-white w-full flex flex-col items-center justify-center max-w-3xl mx-auto pb-1 px-4'>
+      <div ref={containerRef} className='bg-white w-full flex flex-col items-center justify-center max-w-3xl mx-auto pb-1 px-4 dark:bg-transparent'>
       <form onMouseDown={handleFormMouseDown} onSubmit={onFormSubmit} className='relative w-full cursor-text'>
-        <label className='relative flex w-full flex-col overflow-hidden rounded-2xl py-4 pl-4 pr-[52px] border border-gray-200 bg-white shadow-sm'>
+        <label className='relative flex w-full flex-col overflow-hidden rounded-2xl py-4 pl-4 pr-[52px] border border-gray-200 bg-white shadow-sm dark:bg-[#0f0f0f] dark:border-gray-800'>
           <div className='sr-only'>Message ChatGPT</div>
           <textarea 
             ref={textareaRef}
@@ -180,17 +180,17 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
             onKeyDown={handleKeyDown}
             value={prompt}
             rows={1}
-            className='placeholder:text-gray-500 w-full resize-none bg-transparent text-base leading-6 focus:outline-none overflow-auto max-h-60'
+            className='placeholder:text-gray-500 w-full resize-none bg-transparent text-base leading-6 focus:outline-none overflow-auto max-h-60 dark:placeholder:text-gray-400 dark:text-gray-100'
             style={{ height: 'auto' }}
           />
         </label>
         <div className='absolute bottom-3 right-3 mt-auto flex justify-end'>
-          <button type='submit' disabled={!prompt || disabled || isPaused} aria-label='Send prompt' className='bg-black text-white disabled:bg-gray-300 disabled:text-gray-600 relative h-9 w-9 rounded-full p-0 transition-colors hover:opacity-80 disabled:hover:opacity-100 flex items-center justify-center'>
+          <button type='submit' disabled={!prompt || disabled || isPaused} aria-label='Send prompt' className='bg-black text-white disabled:bg-gray-300 disabled:text-gray-600 relative h-9 w-9 rounded-full p-0 transition-colors hover:opacity-80 disabled:hover:opacity-100 flex items-center justify-center dark:bg-white dark:text-black dark:disabled:bg-gray-700 dark:disabled:text-gray-400'>
             <ImArrowUpRight2 className='-rotate-45' />
           </button>
         </div>
       </form>
-      <p className="text-xs mt-2 font-medium tracking-wide text-gray-600">
+      <p className="text-xs mt-2 font-medium tracking-wide text-gray-600 dark:text-gray-400">
         ChatGPT can make mistakes. Check important info.
       </p>
       </div>

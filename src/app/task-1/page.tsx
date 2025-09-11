@@ -175,7 +175,7 @@ export default function Home() {
         <div className="w-full max-w-4xl mx-auto relative flex items-center justify-center h-full px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-600 dark:text-gray-400">Loading...</p>
           </div>
         </div>
       </main>

@@ -31,16 +31,16 @@ const UserMessage = ({ content, onCopy, copiedIds }: {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className='px-4 py-2 rounded-2xl text-sm md:text-base break-words max-w-[75%] bg-gray-100 whitespace-pre-wrap justify-self-end'>
+      <div className='px-4 py-2 rounded-2xl text-sm md:text-base break-words max-w-[75%] bg-gray-100 whitespace-pre-wrap justify-self-end dark:bg-gray-800 dark:text-gray-100'>
         <span className='whitespace-pre-wrap'>{content}</span>
       </div>
       {/* Action buttons - positioned to the right of the message */}
       <div className='mt-2 flex items-center gap-1 justify-self-end' style={{ height: '32px'}}>
         {isHovered && (
-          <div className='flex items-center gap-1 text-gray-600 ml-2 justify-self-end'>
+          <div className='flex items-center gap-1 text-gray-600 ml-2 justify-self-end dark:text-gray-400'>
             <Tooltip content={copiedIds[messageId] ? 'Copied!' : 'Copy'} placement="bottom">
               <button
-                className='text-gray-600 hover:bg-gray-200 rounded-lg'
+                className='text-gray-600 hover:bg-gray-200 rounded-lg dark:text-gray-300 dark:hover:bg-gray-700'
                 aria-label={copiedIds[messageId] ? 'Copied' : 'Copy'}
                 aria-pressed={copiedIds[messageId] ? 'true' : 'false'}
                 onClick={() => onCopy(messageId, content)}
@@ -79,7 +79,7 @@ const AssistantMessage = ({
 }) => {
   return (
     <div className='w-full flex justify-start'>
-      <div className='px-4 py-2 rounded-2xl text-sm md:text-base break-words text-gray-900'>
+      <div className='px-4 py-2 rounded-2xl text-sm md:text-base break-words text-gray-900 dark:text-gray-100'>
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
@@ -111,11 +111,11 @@ const AssistantMessage = ({
                 )
               }
               return (
-                <code className={`rounded px-1 ${className || ''}`} {...props}>{children}</code>
+                <code className={`rounded px-1 ${className || ''} dark:bg-gray-800 dark:text-gray-100`} {...props}>{children}</code>
               )
             },
             pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
-              <pre className="rounded overflow-x-auto my-2" {...props} />
+              <pre className="rounded overflow-x-auto my-2 dark:bg-gray-900" {...props} />
             ),
             table: (props: React.TableHTMLAttributes<HTMLTableElement>) => <table className="table-auto border-collapse my-2" {...props} />,
             th: (props: React.ThHTMLAttributes<HTMLTableCellElement>) => <th className="border px-2 py-1" {...props} />,

@@ -31,11 +31,11 @@ const Shell = ({ children }: ShellProps) => {
   const hideChrome = pathname === '/thank-you' || pathname === '/login' || pathname.startsWith('/share/') || (mounted && pathname === '/')
   
   return (
-    <div className="h-screen overflow-hidden relative">
+    <div className="h-screen overflow-hidden relative bg-white text-gray-900 dark:bg-[#0a0a0a] dark:text-gray-100">
       {!hideChrome && (
         <Sidebar key={mounted ? 'mounted' : 'unmounted'} collapsed={mounted ? collapsed : true} onToggleSidebar={() => setCollapsed(v => !v)} />
       )}
-      <div className={`bg-white w-full h-full relative ${!disableShellScroll ? 'overflow-y-auto [scrollbar-gutter:stable]' : ''}`}>
+      <div className={`bg-white dark:bg-transparent w-full h-full relative ${!disableShellScroll ? 'overflow-y-auto [scrollbar-gutter:stable]' : ''}`}>
         {children}
       </div>
     </div>

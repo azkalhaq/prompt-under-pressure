@@ -100,33 +100,33 @@ export default function ThankYou({ userId }: ThankYouProps) {
 	};
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4 dark:from-gray-900 dark:to-black">
+      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl p-8 text-center dark:bg-[#0b0b0b]">
         <div className="flex justify-center mb-6">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
             <LuCheck className="w-12 h-12 text-green-600" />
           </div>
         </div>
         
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4 dark:text-gray-100">
           Task Already Completed!
         </h1>
         
-        <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+        <p className="text-lg text-gray-600 mb-6 leading-relaxed dark:text-gray-300">
           Your interaction has been successfully recorded. We appreciate the time and effort you have put into this task.
         </p>
         
          {/* Passcode Display Section */}
          {user?.passcode && (
-           <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-8">
-             <h2 className="text-xl font-bold text-green-800 mb-4">Your Unique Passcode</h2>
+           <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-8 dark:from-gray-900 dark:to-gray-800 dark:border-green-800">
+             <h2 className="text-xl font-bold text-green-800 mb-4 dark:text-green-400">Your Unique Passcode</h2>
              <div className="flex items-center justify-center">
-               <div className="flex items-center bg-white rounded-lg border border-green-300 overflow-hidden shadow-sm">
+               <div className="flex items-center bg-white rounded-lg border border-green-300 overflow-hidden shadow-sm dark:bg-[#0b0b0b] dark:border-green-800">
                  <input
                    type="text"
                    value={user.passcode}
                    readOnly
-                   className="font-mono text-lg font-bold text-green-700 px-3 bg-transparent border-none outline-none min-w-0"
+                   className="font-mono text-lg font-bold text-green-700 px-3 bg-transparent border-none outline-none min-w-0 dark:text-green-400"
                  />
                  <button
                    onClick={copyPasscode}
@@ -147,18 +147,18 @@ export default function ThankYou({ userId }: ThankYouProps) {
                  </button>
                </div>
              </div>
-             <p className="text-sm text-green-700 mt-4 text-center">
+             <p className="text-sm text-green-700 mt-4 text-center dark:text-green-400">
                Please use this passcode to continue the survey
              </p>
            </div>
          )}
         
-         <div className="bg-gray-50 rounded-lg p-6 mb-8">
-           <h3 className="text-sm font-medium text-gray-700 mb-4"><b>Session Information</b></h3>
-           <div className="text-sm text-gray-600 space-y-1">
+         <div className="bg-gray-50 rounded-lg p-6 mb-8 dark:bg-[#0f0f0f]">
+           <h3 className="text-sm font-medium text-gray-700 mb-4 dark:text-gray-300"><b>Session Information</b></h3>
+           <div className="text-sm text-gray-600 space-y-1 dark:text-gray-400">
              <div className="flex justify-between items-center">
                <span className="font-medium">User ID:</span>
-               <span className="font-mono text-xs bg-gray-200 px-2 py-1 rounded">
+               <span className="font-mono text-xs bg-gray-200 px-2 py-1 rounded dark:bg-gray-800 dark:text-gray-200">
                  {userId ?? 'N/A'}
                </span>
              </div>
@@ -172,18 +172,18 @@ export default function ThankYou({ userId }: ThankYouProps) {
                </div>
              ) : completedSessions.length > 0 ? (
                <div className="space-y-2">
-                 <div className="text-xs font-medium text-gray-500 mb-2">Completed Tasks:</div>
+                 <div className="text-xs font-medium text-gray-500 mb-2 dark:text-gray-400">Completed Tasks:</div>
                  {completedSessions.map((session) => (
-                   <div key={session.session_id} className="bg-white rounded border p-2 space-y-1">
+                   <div key={session.session_id} className="bg-white rounded border p-2 space-y-1 dark:bg-[#0b0b0b] dark:border-gray-800">
                      <div className="flex justify-between items-center">
                        <span className="font-medium text-xs">Task:</span>
-                       <span className="text-xs bg-blue-100 px-2 py-1 rounded">
+                       <span className="text-xs bg-blue-100 px-2 py-1 rounded dark:bg-blue-900 dark:text-blue-100">
                          {session.route_path || 'Unknown'}
                        </span>
                      </div>
                      <div className="flex justify-between items-center">
                        <span className="font-medium text-xs">Session ID:</span>
-                       <span className="font-mono text-xs bg-gray-200 px-2 py-1 rounded">
+                       <span className="font-mono text-xs bg-gray-200 px-2 py-1 rounded dark:bg-gray-800 dark:text-gray-200">
                          {session.session_id.slice(0, 8)}...
                        </span>
                      </div>
@@ -198,15 +198,15 @@ export default function ThankYou({ userId }: ThankYouProps) {
                </div>
              ) : (
                <div className="text-center py-2">
-                 <span className="text-gray-500 text-sm">No completed sessions found</span>
+                 <span className="text-gray-500 text-sm dark:text-gray-400">No completed sessions found</span>
                </div>
              )}
            </div>
          </div>
         
-         <div className="bg-blue-50 rounded-lg p-6 mb-8 text-left">
-           <h3 className="text-sm font-medium text-blue-800 mb-4">What happens next?</h3>
-           <ul className="text-sm text-blue-700 space-y-3">
+         <div className="bg-blue-50 rounded-lg p-6 mb-8 text-left dark:bg-blue-950/40">
+           <h3 className="text-sm font-medium text-blue-800 mb-4 dark:text-blue-300">What happens next?</h3>
+           <ul className="text-sm text-blue-700 space-y-3 dark:text-blue-200">
              <li className="flex items-start gap-3">
                <span className="text-blue-500 text-lg leading-none mt-0.5">•</span>
                <span className="leading-relaxed">Use your passcode to continue the survey.</span>
@@ -218,15 +218,15 @@ export default function ThankYou({ userId }: ThankYouProps) {
            </ul>
          </div>
         
-         <div className="pt-6 border-t border-gray-200">
-           <p className="text-sm text-gray-500 text-center leading-relaxed">
+         <div className="pt-6 border-t border-gray-200 dark:border-gray-800">
+           <p className="text-sm text-gray-500 text-center leading-relaxed dark:text-gray-400">
              This research is conducted in accordance with ethical guidelines.
            </p>
-           <p className="text-sm text-gray-500 text-center mt-2">
+           <p className="text-sm text-gray-500 text-center mt-2 dark:text-gray-400">
               If you experience any issues, please email{' '}
              <a 
                href="mailto:nazkalhaq@student.unimelb.edu.au" 
-               className="text-blue-600 hover:text-blue-700 underline"
+               className="text-blue-600 hover:text-blue-700 underline dark:text-blue-400 dark:hover:text-blue-300"
              >
                nazkalhaq@student.unimelb.edu.au
              </a>

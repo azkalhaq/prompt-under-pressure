@@ -30,7 +30,7 @@ const HorizontalProgress = ({ progress, color = '#3B82F6' }: {
 }) => {
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden dark:bg-gray-700">
         <div 
           className="h-full rounded-full transition-all duration-1000 ease-out"
           style={{ 
@@ -401,9 +401,9 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
 
   if (!currentTrialData && !isSessionComplete) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-lg shadow-lg ">
-        <h2 className="text-2xl font-bold mb-4">Task 2: Stroop Task</h2>
-        <p className="text-gray-600 mb-6 text-center">
+      <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-lg shadow-lg dark:bg-[#0b0b0b] ">
+        <h2 className="text-2xl font-bold mb-4 dark:text-gray-100">Task 2: Stroop Task</h2>
+        <p className="text-gray-600 mb-6 text-center dark:text-gray-400">
           Click the button to start the session.
         </p>
         {/* <button
@@ -420,37 +420,37 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
     const accuracy = stats.totalTrials > 0 ? Math.round((stats.correctAnswers / stats.totalTrials) * 100) : 0;
     
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6 bg-gradient-to-br from-green-50 to-emerald-100 rounded-lg shadow-lg">
+      <div className="flex flex-col items-center justify-center h-full p-6 bg-gradient-to-br from-green-50 to-emerald-100 rounded-lg shadow-lg dark:from-gray-900 dark:to-gray-800">
         <div className="text-center max-w-md">
           <div className="text-6xl mb-4">🎉</div>
           <h2 className="text-3xl font-bold mb-4 text-green-600">Session Complete!</h2>
-          <p className="text-gray-600 mb-6">You have completed the Stroop Challenge!</p>
+          <p className="text-gray-600 mb-6 dark:text-gray-300">You have completed the Stroop Challenge!</p>
           
           {/* Final Statistics */}
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <h3 className="text-xl font-bold mb-4 text-gray-800">Final Score</h3>
+          <div className="bg-white rounded-xl p-6 shadow-lg dark:bg-[#0b0b0b]">
+            <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">Final Score</h3>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">{stats.totalTrials}</div>
-                <div className="text-sm text-gray-600">Total Trials</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Total Trials</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">{accuracy}%</div>
-                <div className="text-sm text-gray-600">Accuracy</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Accuracy</div>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3 text-sm">
               <div className="text-center">
                 <div className="font-bold text-green-600">{stats.correctAnswers}</div>
-                <div className="text-gray-600">Correct</div>
+                <div className="text-gray-600 dark:text-gray-400">Correct</div>
               </div>
               <div className="text-center">
                 <div className="font-bold text-red-600">{stats.incorrectAnswers}</div>
-                <div className="text-gray-600">Wrong</div>
+                <div className="text-gray-600 dark:text-gray-400">Wrong</div>
               </div>
               <div className="text-center">
                 <div className="font-bold text-orange-600">{stats.skippedTrials}</div>
-                <div className="text-gray-600">Skipped</div>
+                <div className="text-gray-600 dark:text-gray-400">Skipped</div>
               </div>
             </div>
           </div>
@@ -480,37 +480,37 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
 
   return (
     <div className={`flex flex-col h-full p-6 rounded-lg shadow-lg transition-all duration-300 ${
-      feedback === 'correct' ? 'bg-gradient-to-br from-green-50 to-green-100' :
-      feedback === 'incorrect' ? 'bg-gradient-to-br from-red-50 to-red-100' :
-      'bg-gradient-to-br from-blue-50 to-indigo-100'
+      feedback === 'correct' ? 'bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-900 dark:to-gray-800' :
+      feedback === 'incorrect' ? 'bg-gradient-to-br from-red-50 to-red-100 dark:from-gray-900 dark:to-gray-800' :
+      'bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-black'
     }`}>
       {/* Game Header with Stats */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-4">
-          <div className="bg-white rounded-lg px-4 py-2 shadow-md">
-            <h2 className="text-xl font-bold text-gray-800">🎮 Stroop Task</h2>
+          <div className="bg-white rounded-lg px-4 py-2 shadow-md dark:bg-[#0b0b0b]">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">🎮 Stroop Task</h2>
           </div>
-          <div className="bg-white rounded-lg px-3 py-2 shadow-md">
-            <span className="text-sm text-gray-600">Trial </span>
+          <div className="bg-white rounded-lg px-3 py-2 shadow-md dark:bg-[#0b0b0b]">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Trial </span>
             <span className="font-bold text-lg text-blue-600">{currentTrial}</span>
           </div>
         </div>
         
         {/* Game Statistics */}
         <div className="flex space-x-3">
-          <div className="bg-white rounded-lg px-3 py-2 shadow-md text-center min-w-[60px]">
-            <div className="text-xs text-gray-500">Total</div>
-            <div className="font-bold text-lg text-gray-800">{stats.totalTrials}</div>
+          <div className="bg-white rounded-lg px-3 py-2 shadow-md text-center min-w-[60px] dark:bg-[#0b0b0b]">
+            <div className="text-xs text-gray-500 dark:text-gray-400">Total</div>
+            <div className="font-bold text-lg text-gray-800 dark:text-gray-100">{stats.totalTrials}</div>
           </div>
-          <div className="bg-white rounded-lg px-3 py-2 shadow-md text-center min-w-[60px]">
+          <div className="bg-white rounded-lg px-3 py-2 shadow-md text-center min-w-[60px] dark:bg-[#0b0b0b]">
             <div className="text-xs text-green-600">✓ Correct</div>
             <div className="font-bold text-lg text-green-600">{stats.correctAnswers}</div>
           </div>
-          <div className="bg-white rounded-lg px-3 py-2 shadow-md text-center min-w-[60px]">
+          <div className="bg-white rounded-lg px-3 py-2 shadow-md text-center min-w-[60px] dark:bg-[#0b0b0b]">
             <div className="text-xs text-red-600">✗ Wrong</div>
             <div className="font-bold text-lg text-red-600">{stats.incorrectAnswers}</div>
           </div>
-          <div className="bg-white rounded-lg px-3 py-2 shadow-md text-center min-w-[60px]">
+          <div className="bg-white rounded-lg px-3 py-2 shadow-md text-center min-w-[60px] dark:bg-[#0b0b0b]">
             <div className="text-xs text-orange-600">⏭ Skip</div>
             <div className="font-bold text-lg text-orange-600">{stats.skippedTrials}</div>
           </div>
@@ -551,8 +551,8 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
           <div className="text-center max-w-2xl w-full">
             {/* Instruction */}
             <div className="mb-8">
-              <div className="bg-white rounded-xl px-6 py-4 shadow-lg inline-block">
-                <h3 className="text-2xl font-bold text-gray-800">
+              <div className="bg-white rounded-xl px-6 py-4 shadow-lg inline-block dark:bg-[#0b0b0b]">
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
                   {instruction === 'word' ? '🎯 Choose the WORD' : '🎨 Choose the COLOR'}
                 </h3>
               </div>
@@ -561,7 +561,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
             {/* Stimulus */}
             <div className="mb-10">
               <div 
-                className="text-8xl font-bold mb-8 transition-all duration-300 bg-white shadow-2xl rounded-2xl border-4 border-gray-200"
+                className="text-8xl font-bold mb-8 transition-all duration-300 bg-white shadow-2xl rounded-2xl border-4 border-gray-200 dark:bg-[#0b0b0b] dark:border-gray-800"
                 style={{ 
                   color: currentTrialData.textColor,
                   padding: '3rem',
@@ -622,9 +622,9 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
 
             {/* Reaction time display */}
             {reactionTime && (
-              <div className="bg-white rounded-lg px-4 py-2 shadow-md inline-block">
-                <span className="text-sm text-gray-600">Reaction time: </span>
-                <span className="font-bold text-lg text-gray-800">{reactionTime}ms</span>
+              <div className="bg-white rounded-lg px-4 py-2 shadow-md inline-block dark:bg-[#0b0b0b]">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Reaction time: </span>
+                <span className="font-bold text-lg text-gray-800 dark:text-gray-100">{reactionTime}ms</span>
               </div>
             )}
           </div>
@@ -634,7 +634,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
         {itiCountdown > 0 && (
           <div className="text-center">
             <div className="text-6xl font-bold text-gray-400 mb-4 animate-pulse">⏳</div>
-            <p className="text-xl text-gray-600 font-semibold">Preparing next trial...</p>
+            <p className="text-xl text-gray-600 font-semibold dark:text-gray-300">Preparing next trial...</p>
           </div>
         )}
       </div>

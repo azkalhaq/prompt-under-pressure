@@ -49,22 +49,22 @@ export default function LoginPage() {
 	}, [searchParams])
 
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center px-4 py-12">
+		<div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center px-4 py-12 dark:from-gray-900 dark:to-black">
 			<div className="w-full max-w-md">
-				<div className="bg-white/90 backdrop-blur shadow-sm ring-1 ring-slate-200 rounded-xl p-6 md:p-8">
+				<div className="bg-white/90 backdrop-blur shadow-sm ring-1 ring-slate-200 rounded-xl p-6 md:p-8 dark:bg-[#0b0b0b]/90 dark:ring-gray-800">
 					<div className="mb-6 text-center">
-						<h1 className="text-2xl font-semibold tracking-tight text-slate-900">Sign in</h1>
-						<p className="mt-2 text-sm text-slate-600">
-							Enter your assigned <code className="px-1 py-0.5 rounded bg-slate-100">user id</code> to access the task.
+						<h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-gray-100">Sign in</h1>
+						<p className="mt-2 text-sm text-slate-600 dark:text-gray-300">
+							Enter your assigned <code className="px-1 py-0.5 rounded bg-slate-100 dark:bg-gray-800">user id</code> to access the task.
 						</p>
 						{redirectPath !== '/' && (
-							<p className="mt-1 text-xs text-slate-500">You will continue to <span className="font-medium">{redirectPath}</span>.</p>
+							<p className="mt-1 text-xs text-slate-500 dark:text-gray-400">You will continue to <span className="font-medium">{redirectPath}</span>.</p>
 						)}
 					</div>
 
 					<form onSubmit={onSubmit} className="space-y-4">
 						<div>
-							<label htmlFor="user_id" className="block text-sm font-medium text-slate-700">User ID</label>
+							<label htmlFor="user_id" className="block text-sm font-medium text-slate-700 dark:text-gray-300">User ID</label>
 							<input
 								id="user_id"
 								type="text"
@@ -74,7 +74,7 @@ export default function LoginPage() {
 								value={userId}
 								onChange={(e) => setUserId(e.target.value)}
 								placeholder="e.g. A1B2C"
-								className={`mt-1 block w-full rounded-lg border ${error ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-300 focus:border-slate-400 focus:ring-slate-200'} bg-white px-3 py-2 text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:ring`}
+								className={`mt-1 block w-full rounded-lg border ${error ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-300 focus:border-slate-400 focus:ring-slate-200'} bg-white px-3 py-2 text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:ring dark:bg-[#0f0f0f] dark:border-gray-800 dark:text-gray-100 dark:placeholder-gray-500`}
 							/>
 							{error && (
 								<p className="mt-2 text-sm text-red-600" role="alert">{error}</p>
@@ -90,7 +90,7 @@ export default function LoginPage() {
 						</button>
 					</form>
 
-					<p className="mt-6 text-center text-xs text-slate-500">Having trouble? Contact the study coordinator.</p>
+					<p className="mt-6 text-center text-xs text-slate-500 dark:text-gray-400">Having trouble? Contact the study coordinator.</p>
 				</div>
 			</div>
 		</div>

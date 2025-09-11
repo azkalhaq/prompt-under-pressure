@@ -208,11 +208,11 @@ Think carefully about how to design the best possible GPT prompt to gather this 
         <button
           aria-label='Show scenario instructions'
           onClick={onToggleSidebar}
-          className='fixed top-4 left-4 z-30 p-2 rounded-lg hover:bg-gray-800 active:scale-[0.98] bg-black shadow-lg border border-gray-800 transition-all duration-200 group overflow-hidden'
+          className='fixed top-4 left-4 z-30 p-2 rounded-lg hover:bg-gray-800 active:scale-[0.98] bg-black shadow-lg border border-gray-800 transition-all duration-200 group overflow-hidden dark:bg-white dark:text-black dark:hover:bg-gray-200 dark:border-gray-300'
         >
           <div className='flex items-center'>
-            <RxQuestionMark className="text-white flex-shrink-0 font-bold text-lg" />
-            <span className='text-sm text-white max-w-0 group-hover:max-w-32 transition-all duration-200 overflow-hidden whitespace-nowrap ml-0 group-hover:ml-2'>
+            <RxQuestionMark className="text-white dark:text-black flex-shrink-0 font-bold text-lg" />
+            <span className='text-sm text-white dark:text-black max-w-0 group-hover:max-w-32 transition-all duration-200 overflow-hidden whitespace-nowrap ml-0 group-hover:ml-2'>
               Show instructions
             </span>
           </div>
@@ -223,7 +223,7 @@ Think carefully about how to design the best possible GPT prompt to gather this 
       {!collapsed && (
         <div
           className={`fixed inset-0 z-10 transition-opacity duration-300 ${showSubmit ? 'bg-black/50 cursor-pointer' : 'bg-black/50 cursor-not-allowed'
-            }`}
+            } dark:bg-black/60`}
           onClick={showSubmit ? onToggleSidebar : undefined}
           aria-label={showSubmit ? "Close sidebar overlay" : "Sidebar cannot be closed until you get started"}
         />
@@ -234,17 +234,17 @@ Think carefully about how to design the best possible GPT prompt to gather this 
         className={`fixed top-0 left-0 h-full bg-white shadow-2xl transition-all duration-300 ease-in-out z-20 border-r border-gray-200 ${collapsed
           ? 'w-0 opacity-0 pointer-events-none'
           : 'w-full md:w-1/2 2xl:w-1/2 opacity-100'
-          }`}
+          } dark:bg-[#0b0b0b] dark:border-gray-800`}
       >
         {/* Header with close button */}
-        <div className='flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50'>
-          <h2 className='text-lg font-semibold text-gray-900'>Instructions</h2>
+        <div className='flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 dark:bg-[#0f0f0f] dark:border-gray-800'>
+          <h2 className='text-lg font-semibold text-gray-900 dark:text-gray-100'>Instructions</h2>
           <button
             aria-label={showSubmit ? 'Close sidebar' : 'Sidebar cannot be closed until you get started'}
             onClick={showSubmit ? onToggleSidebar : undefined}
             disabled={!showSubmit}
             className={`p-2 rounded-lg transition-all duration-200 ${showSubmit
-              ? 'hover:bg-gray-200 active:scale-[0.98] text-gray-600'
+              ? 'hover:bg-gray-200 active:scale-[0.98] text-gray-600 dark:hover:bg-gray-800 dark:text-gray-300'
               : 'text-gray-400 cursor-not-allowed opacity-50'
               }`}
           >
@@ -253,7 +253,7 @@ Think carefully about how to design the best possible GPT prompt to gather this 
         </div>
 
         {/* Content area */}
-        <div className='p-6 text-sm text-gray-700 overflow-y-auto flex-1 h-[calc(100%-10rem)]'>
+        <div className='p-6 text-sm text-gray-700 overflow-y-auto flex-1 h-[calc(100%-10rem)] dark:text-gray-300'>
           {/* Instructions Section */}
           <div className='flex rounded-2xl p-4 bg-sky-50 dark:bg-slate-800/60 dark:ring-1 dark:ring-slate-300/10'>
             <LuInfo className="h-6 w-6 flex-none text-sky-600" />
@@ -289,22 +289,22 @@ Think carefully about how to design the best possible GPT prompt to gather this 
           </div>
           
           {/* Markdown Section */}
-          <div className='prose prose-sm max-w-none'>
+          <div className='prose prose-sm max-w-none dark:prose-invert'>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                h1: ({ children }: { children: React.ReactNode }) => <h1 className="text-xl font-bold text-gray-900 mb-4 mt-0">{children}</h1>,
-                h2: ({ children }: { children: React.ReactNode }) => <h2 className="text-lg font-semibold text-gray-900 mb-3 mt-6">{children}</h2>,
-                h3: ({ children }: { children: React.ReactNode }) => <h3 className="text-base font-semibold text-gray-800 mb-2 mt-4">{children}</h3>,
-                p: ({ children }: { children: React.ReactNode }) => <p className="text-gray-700 leading-relaxed mb-3">{children}</p>,
-                strong: ({ children }: { children: React.ReactNode }) => <strong className="font-semibold text-gray-900">{children}</strong>,
-                em: ({ children }: { children: React.ReactNode }) => <em className="italic text-gray-600">{children}</em>,
+                h1: ({ children }: { children: React.ReactNode }) => <h1 className="text-xl font-bold text-gray-900 mb-4 mt-0 dark:text-gray-100">{children}</h1>,
+                h2: ({ children }: { children: React.ReactNode }) => <h2 className="text-lg font-semibold text-gray-900 mb-3 mt-6 dark:text-gray-100">{children}</h2>,
+                h3: ({ children }: { children: React.ReactNode }) => <h3 className="text-base font-semibold text-gray-800 mb-2 mt-4 dark:text-gray-200">{children}</h3>,
+                p: ({ children }: { children: React.ReactNode }) => <p className="text-gray-700 leading-relaxed mb-3 dark:text-gray-300">{children}</p>,
+                strong: ({ children }: { children: React.ReactNode }) => <strong className="font-semibold text-gray-900 dark:text-gray-100">{children}</strong>,
+                em: ({ children }: { children: React.ReactNode }) => <em className="italic text-gray-600 dark:text-gray-400">{children}</em>,
                 ul: ({ children }: { children: React.ReactNode }) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
                 ol: ({ children }: { children: React.ReactNode }) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
-                li: ({ children }: { children: React.ReactNode }) => <li className="text-gray-700">{children}</li>,
-                blockquote: ({ children }: { children: React.ReactNode }) => <blockquote className="border-l-4 border-blue-200 pl-4 italic text-gray-600 mb-3">{children}</blockquote>,
-                code: ({ children }: { children: React.ReactNode }) => <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800">{children}</code>,
-                pre: ({ children }: { children: React.ReactNode }) => <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto mb-3">{children}</pre>,
+                li: ({ children }: { children: React.ReactNode }) => <li className="text-gray-700 dark:text-gray-300">{children}</li>,
+                blockquote: ({ children }: { children: React.ReactNode }) => <blockquote className="border-l-4 border-blue-200 pl-4 italic text-gray-600 mb-3 dark:border-blue-900 dark:text-gray-400">{children}</blockquote>,
+                code: ({ children }: { children: React.ReactNode }) => <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800 dark:bg-gray-800 dark:text-gray-100">{children}</code>,
+                pre: ({ children }: { children: React.ReactNode }) => <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto mb-3 dark:bg-gray-900">{children}</pre>,
               }}
             >
               {content.markdown}
@@ -313,14 +313,14 @@ Think carefully about how to design the best possible GPT prompt to gather this 
         </div>
 
         {/* Footer area for additional actions */}
-        <div className='absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100 bg-gray-50'>
+        <div className='absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100 bg-gray-50 dark:bg-[#0f0f0f] dark:border-gray-800'>
           <div className='flex gap-3'>
             <button
               onClick={handleSubmit}
               disabled={!showSubmit}
               className={`flex-1 font-medium py-2 px-4 rounded-lg transition-all duration-200 ${showSubmit
                 ? 'bg-green-600 hover:bg-green-700 text-white cursor-pointer'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
                 }`}
             >
               Submit
@@ -329,7 +329,7 @@ Think carefully about how to design the best possible GPT prompt to gather this 
               <button
                 onClick={handleGetStarted}
                 disabled={isPaused}
-                className={`flex-1 font-medium py-2 px-4 rounded-lg transition-colors duration-200 ${isPaused ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                className={`flex-1 font-medium py-2 px-4 rounded-lg transition-colors duration-200 ${isPaused ? 'bg-gray-300 text-gray-600 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
               >
                 Get Started
               </button>
@@ -349,7 +349,7 @@ Think carefully about how to design the best possible GPT prompt to gather this 
 
       {/* Success Message */}
       {showSuccessMessage && (
-        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg dark:bg-green-600">
           <div className="flex items-center">
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />

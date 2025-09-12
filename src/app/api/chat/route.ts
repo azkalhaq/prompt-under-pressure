@@ -133,14 +133,12 @@ export async function POST(req: NextRequest) {
     console.log(`[Chat API] Pathname: ${currentPath}, Scenario: ${scenario}`);
     const taskCode = getTaskCode(req);
     const promptIndexNo = await getPromptIndexNo(sessionId ?? 'no-session');
-    const textMetrics = calculateTextMetrics(prompt);
-    const careMetrics = calculateCareMetrics(prompt);
     const promptingTimeMs: number | undefined = typeof body?.prompting_time_ms === 'number' ? body.prompting_time_ms : undefined;
     
     console.log(`[Chat API] Recording prompt immediately for api_call_id: ${apiCallId}`);
     console.log(`[Chat API] Prompt: ${prompt.slice(0, 100)}...`);
     
-    // Insert initial record with prompt data immediately
+    // Insert initial record with prompt data immediately (without text analysis)
     await insertChatInteraction({
       user_id: (userId ?? 'anonymous').slice(0, 100),
       session_id: sessionId ?? 'no-session',
@@ -160,8 +158,37 @@ export async function POST(req: NextRequest) {
       raw_request: null, // Will be updated when response is complete
       raw_response: null, // Will be updated when response is complete
       finish_reason: null, // Will be updated when response is complete
-      ...textMetrics,
-      ...careMetrics
+      // Text analysis metrics will be added asynchronously
+    });
+
+    // Perform text analysis asynchronously in the background
+    // This won't block the response streaming
+    setImmediate(async () => {
+      try {
+        console.log(`[Chat API] Starting async text analysis for api_call_id: ${apiCallId}`);
+        const textMetrics = calculateTextMetrics(prompt);
+        const careMetrics = calculateCareMetrics(prompt);
+        
+        // Update the record with text analysis results
+        const supabase = getSupabaseServerClientOrNull();
+        if (supabase) {
+          const { error } = await supabase
+            .from('chat_interactions')
+            .update({
+              ...textMetrics,
+              ...careMetrics
+            })
+            .eq('api_call_id', apiCallId);
+            
+          if (error) {
+            console.error('[Chat API] Error updating text analysis metrics:', error);
+          } else {
+            console.log('[Chat API] Successfully updated text analysis metrics');
+          }
+        }
+      } catch (error) {
+        console.error('[Chat API] Error in async text analysis:', error);
+      }
     });
     
     console.log(`[Chat API] Successfully recorded prompt immediately`);

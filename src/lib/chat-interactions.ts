@@ -17,14 +17,39 @@ export interface ChatInteractionData {
   word_count?: number;
   char_count?: number;
   vocab_count?: number;
+  
+  // basic text analysis metrics
+  letter_count?: number;
+  syllable_count?: number;
+  sentence_count?: number;
+  
+  // average calculation metrics
+  average_sentence_length?: number;
+  average_syllable_per_word?: number;
+  average_character_per_word?: number;
+  average_letter_per_word?: number;
+  average_sentence_per_word?: number;
+  
+  // readability index metrics
   flesch_reading_ease?: number;
+  flesch_reading_ease_grade?: number;
   flesch_kincaid_grade?: number;
+  poly_syllable_count?: number;
+  smog_index?: number;
   coleman_liau_index?: number;
   automated_readability_index?: number;
   dale_chall_readability_score?: number;
+  dale_chall_grade?: number;
   difficult_words?: number;
   linsear_write_formula?: number;
   gunning_fog?: number;
+  lix_score?: number;
+  rix_score?: number;
+  
+  // composite readability metrics
+  text_standard_score?: number;
+  text_standard_grade?: string;
+  text_median_score?: number;
   // CARE metrics
   care_context_score?: number;
   care_ask_score?: number;
@@ -69,14 +94,39 @@ export async function insertChatInteraction(data: ChatInteractionData): Promise<
       word_count: data.word_count,
       char_count: data.char_count,
       vocab_count: data.vocab_count,
+      
+      // basic text analysis metrics
+      letter_count: data.letter_count,
+      syllable_count: data.syllable_count,
+      sentence_count: data.sentence_count,
+      
+      // average calculation metrics
+      average_sentence_length: data.average_sentence_length,
+      average_syllable_per_word: data.average_syllable_per_word,
+      average_character_per_word: data.average_character_per_word,
+      average_letter_per_word: data.average_letter_per_word,
+      average_sentence_per_word: data.average_sentence_per_word,
+      
+      // readability index metrics
       flesch_reading_ease: data.flesch_reading_ease,
+      flesch_reading_ease_grade: data.flesch_reading_ease_grade,
       flesch_kincaid_grade: data.flesch_kincaid_grade,
+      poly_syllable_count: data.poly_syllable_count,
+      smog_index: data.smog_index,
       coleman_liau_index: data.coleman_liau_index,
       automated_readability_index: data.automated_readability_index,
       dale_chall_readability_score: data.dale_chall_readability_score,
+      dale_chall_grade: data.dale_chall_grade,
       difficult_words: data.difficult_words,
       linsear_write_formula: data.linsear_write_formula,
       gunning_fog: data.gunning_fog,
+      lix_score: data.lix_score,
+      rix_score: data.rix_score,
+      
+      // composite readability metrics
+      text_standard_score: data.text_standard_score,
+      text_standard_grade: data.text_standard_grade,
+      text_median_score: data.text_median_score,
       care_context_score: data.care_context_score,
       care_ask_score: data.care_ask_score,
       care_rules_score: data.care_rules_score,

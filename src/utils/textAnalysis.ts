@@ -55,36 +55,92 @@ export function calculateTextMetrics(text: string) {
   const char_count = calculateCharCount(text);
   const vocab_count = calculateVocabCount(text);
 
+  // Initialize all metrics with default values
+  let letter_count = 0;
+  let syllable_count = 0;
+  let sentence_count = 0;
+  let average_sentence_length = 0;
+  let average_syllable_per_word = 0;
+  let average_character_per_word = 0;
+  let average_letter_per_word = 0;
+  let average_sentence_per_word = 0;
   let flesch_reading_ease = 0;
+  let flesch_reading_ease_grade = 0;
   let flesch_kincaid_grade = 0;
+  let poly_syllable_count = 0;
+  let smog_index = 0;
   let coleman_liau_index = 0;
   let automated_readability_index = 0;
   let dale_chall_readability_score = 0;
+  let dale_chall_grade = 0;
   let difficult_words = 0;
   let linsear_write_formula = 0;
   let gunning_fog = 0;
+  let lix_score = 0;
+  let rix_score = 0;
+  let text_standard_score = 0;
+  let text_standard_grade = '';
+  let text_median_score = 0;
 
+  try { letter_count = readability.letterCount(text) ?? 0; } catch {}
+  try { syllable_count = readability.syllableCount(text) ?? 0; } catch {}
+  try { sentence_count = readability.sentenceCount(text) ?? 0; } catch {}
+  try { average_sentence_length = readability.averageSentenceLength(text) ?? 0; } catch {}
+  try { average_syllable_per_word = readability.averageSyllablePerWord(text) ?? 0; } catch {}
+  try { average_character_per_word = readability.averageCharacterPerWord(text) ?? 0; } catch {}
+  try { average_letter_per_word = readability.averageLetterPerWord(text) ?? 0; } catch {}
+  try { average_sentence_per_word = readability.averageSentencePerWord(text) ?? 0; } catch {}
   try { flesch_reading_ease = readability.fleschReadingEase(text) ?? 0; } catch {}
+  try { flesch_reading_ease_grade = readability.fleschReadingEaseToGrade(flesch_reading_ease) ?? 0; } catch {}
   try { flesch_kincaid_grade = readability.fleschKincaidGrade(text) ?? 0; } catch {}
-  try { coleman_liau_index = readability.colemanLiauIndex?.(text) ?? 0; } catch {}
-  try { automated_readability_index = readability.automatedReadabilityIndex?.(text) ?? 0; } catch {}
-  try { dale_chall_readability_score = readability.daleChallReadabilityScore?.(text) ?? 0; } catch {}
-  try { difficult_words = readability.difficultWords?.(text) ?? 0; } catch {}
-  try { linsear_write_formula = readability.linsearWriteFormula?.(text) ?? 0; } catch {}
-  try { gunning_fog = readability.gunningFog?.(text) ?? 0; } catch {}
+  try { poly_syllable_count = readability.polySyllableCount(text) ?? 0; } catch {}
+  try { smog_index = readability.smogIndex(text) ?? 0; } catch {}
+  try { coleman_liau_index = readability.colemanLiauIndex(text) ?? 0; } catch {}
+  try { automated_readability_index = readability.automatedReadabilityIndex(text) ?? 0; } catch {}
+  try { dale_chall_readability_score = readability.daleChallReadabilityScore(text) ?? 0; } catch {}
+  try { dale_chall_grade = readability.daleChallToGrade(dale_chall_readability_score) ?? 0; } catch {}
+  try { difficult_words = readability.difficultWords(text) ?? 0; } catch {}
+  try { linsear_write_formula = readability.linsearWriteFormula(text) ?? 0; } catch {}
+  try { gunning_fog = readability.gunningFog(text) ?? 0; } catch {}
+  try { lix_score = readability.lix(text) ?? 0; } catch {}
+  try { rix_score = readability.rix(text) ?? 0; } catch {}
+  try { 
+    const textStandard = readability.textStandard(text, true);
+    text_standard_score = typeof textStandard === 'number' ? textStandard : 0;
+    const textStandardGrade = readability.textStandard(text, false);
+    text_standard_grade = typeof textStandardGrade === 'string' ? textStandardGrade : '';
+  } catch {}
+  try { text_median_score = readability.textMedian(text) ?? 0; } catch {}
 
   return {
     word_count,
     char_count,
     vocab_count,
+    letter_count,
+    syllable_count,
+    sentence_count,
+    average_sentence_length,
+    average_syllable_per_word,
+    average_character_per_word,
+    average_letter_per_word,
+    average_sentence_per_word,
     flesch_reading_ease,
+    flesch_reading_ease_grade,
     flesch_kincaid_grade,
+    poly_syllable_count,
+    smog_index,
     coleman_liau_index,
     automated_readability_index,
     dale_chall_readability_score,
+    dale_chall_grade,
     difficult_words,
     linsear_write_formula,
-    gunning_fog
+    gunning_fog,
+    lix_score,
+    rix_score,
+    text_standard_score,
+    text_standard_grade,
+    text_median_score
   };
 }
 

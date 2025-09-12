@@ -81,15 +81,39 @@ CREATE TABLE IF NOT EXISTS chat_interactions (
     word_count INT,                                   -- number of words in prompt
     char_count INT,                                   -- number of characters in prompt
     vocab_count INT,                                  -- unique vocabulary count in prompt
-    -- prompt readability metrics
+    
+    -- basic text analysis metrics
+    letter_count INT,                                 -- number of letters (excluding punctuation)
+    syllable_count INT,                               -- number of syllables in prompt
+    sentence_count INT,                               -- number of sentences in prompt
+    
+    -- average calculation metrics
+    average_sentence_length NUMERIC(6,2),             -- average words per sentence
+    average_syllable_per_word NUMERIC(6,2),           -- average syllables per word
+    average_character_per_word NUMERIC(6,2),          -- average characters per word
+    average_letter_per_word NUMERIC(6,2),             -- average letters per word
+    average_sentence_per_word NUMERIC(6,2),           -- average sentences per word
+    
+    -- readability index metrics
     flesch_reading_ease NUMERIC(6,2),                 -- Flesch Reading Ease (prompt)
+    flesch_reading_ease_grade NUMERIC(6,2),           -- Flesch Reading Ease converted to grade level
     flesch_kincaid_grade NUMERIC(6,2),                -- Flesch–Kincaid Grade (prompt)
+    poly_syllable_count INT,                          -- count of polysyllabic words (3+ syllables)
+    smog_index NUMERIC(6,2),                          -- SMOG Index (prompt)
     coleman_liau_index NUMERIC(6,2),                  -- Coleman-Liau Index (prompt)
     automated_readability_index NUMERIC(6,2),         -- Automated Readability Index (prompt)
     dale_chall_readability_score NUMERIC(6,2),        -- Dale-Chall Readability Score (prompt)
+    dale_chall_grade NUMERIC(6,2),                    -- Dale-Chall score converted to grade level
     difficult_words INT,                              -- Difficult words count (prompt)
     linsear_write_formula NUMERIC(6,2),               -- Linsear Write Formula (prompt)
     gunning_fog NUMERIC(6,2),                         -- Gunning Fog Index (prompt)
+    lix_score NUMERIC(6,2),                           -- LIX Readability Measure (prompt)
+    rix_score NUMERIC(6,2),                           -- RIX Readability Measure (prompt)
+    
+    -- composite readability metrics
+    text_standard_score NUMERIC(6,2),                 -- Overall readability consensus score
+    text_standard_grade TEXT,                         -- Overall readability consensus grade (string)
+    text_median_score NUMERIC(6,2),                   -- Median readability score across all indices
 
     -- user reaction
     reaction VARCHAR(8) CHECK (reaction IN ('up','down')),

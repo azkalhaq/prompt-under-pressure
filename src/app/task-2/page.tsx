@@ -109,13 +109,6 @@ function Task2Content() {
           if (eventName === "token") {
             const token = JSON.parse(payload);
             setMessages(prev => prev.map(m => m.id === assistantMsg.id ? { ...m, content: m.content + token } : m));
-            // Auto-scroll to bottom during streaming
-            requestAnimationFrame(() => {
-              const parent = scrollParentRef.current;
-              if (parent) {
-                parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' });
-              }
-            });
           } else if (eventName === "done") {
             // no-op
           }

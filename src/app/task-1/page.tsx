@@ -124,13 +124,6 @@ function HomeContent() {
             accumulatedContent += token;
             // Batch updates to reduce re-renders
             setMessages(prev => prev.map(m => m.id === assistantMsg.id ? { ...m, content: accumulatedContent } : m));
-            // Auto-scroll to bottom during streaming
-            requestAnimationFrame(() => {
-              const parent = scrollParentRef.current;
-              if (parent) {
-                parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' });
-              }
-            });
           } else if (eventName === "done") {
             // no-op
           }

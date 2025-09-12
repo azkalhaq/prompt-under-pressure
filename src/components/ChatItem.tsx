@@ -201,9 +201,15 @@ const TypingIndicator = () => {
 // Main ChatItem Component
 const ChatItem = ({ messages, isLoading, canReact = true }: ChatItemProps) => {
   const endRef = useRef<HTMLDivElement | null>(null)
+  const prevMessageCountRef = useRef(messages.length)
+  
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isLoading])
+    // Only scroll when new messages are added, not when existing message content is updated
+    if (messages.length > prevMessageCountRef.current) {
+      endRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+    prevMessageCountRef.current = messages.length
+  }, [messages.length])
 
   const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant')
   const isAssistantTyping = Boolean(isLoading && lastAssistant && !lastAssistant.content)

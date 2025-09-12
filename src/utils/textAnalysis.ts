@@ -2,7 +2,7 @@
  * Text analysis utilities for calculating prompt metrics
  */
 
-import rs from 'text-readability';
+import readability from 'text-readability';
 
 /**
  * Calculate word count in a text
@@ -41,7 +41,7 @@ export function calculateVocabCount(text: string): number {
 export function calculateFleschKincaid(text: string): number {
   if (!text || typeof text !== 'string') return 0;
   try {
-    return rs.fleschKincaidGrade(text);
+    return readability.fleschKincaidGrade(text);
   } catch {
     return 0;
   }
@@ -64,14 +64,14 @@ export function calculateTextMetrics(text: string) {
   let linsear_write_formula = 0;
   let gunning_fog = 0;
 
-  try { flesch_reading_ease = rs.fleschReadingEase(text) ?? 0; } catch {}
-  try { flesch_kincaid_grade = rs.fleschKincaidGrade(text) ?? 0; } catch {}
-  try { coleman_liau_index = rs.colemanLiauIndex?.(text) ?? 0; } catch {}
-  try { automated_readability_index = rs.automatedReadabilityIndex?.(text) ?? 0; } catch {}
-  try { dale_chall_readability_score = rs.daleChallReadabilityScore?.(text) ?? 0; } catch {}
-  try { difficult_words = rs.difficultWords?.(text) ?? 0; } catch {}
-  try { linsear_write_formula = rs.linsearWriteFormula?.(text) ?? 0; } catch {}
-  try { gunning_fog = rs.gunningFog?.(text) ?? 0; } catch {}
+  try { flesch_reading_ease = readability.fleschReadingEase(text) ?? 0; } catch {}
+  try { flesch_kincaid_grade = readability.fleschKincaidGrade(text) ?? 0; } catch {}
+  try { coleman_liau_index = readability.colemanLiauIndex?.(text) ?? 0; } catch {}
+  try { automated_readability_index = readability.automatedReadabilityIndex?.(text) ?? 0; } catch {}
+  try { dale_chall_readability_score = readability.daleChallReadabilityScore?.(text) ?? 0; } catch {}
+  try { difficult_words = readability.difficultWords?.(text) ?? 0; } catch {}
+  try { linsear_write_formula = readability.linsearWriteFormula?.(text) ?? 0; } catch {}
+  try { gunning_fog = readability.gunningFog?.(text) ?? 0; } catch {}
 
   return {
     word_count,

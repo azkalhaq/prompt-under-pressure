@@ -63,16 +63,22 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
   }
 
   const handleSubmit = async () => {
+    if (!prompt || disabled || isPaused) return
+    
     const startedAt = firstInputTimeRef.current
     const promptingTimeMs = typeof startedAt === 'number' ? Math.max(0, Date.now() - startedAt) : undefined
+    const currentPrompt = prompt
+    
     setPrompt('')
-    if (!prompt || disabled || isPaused) return
+    firstInputTimeRef.current = null
+    
+    // Reset textarea height immediately after clearing the prompt
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
+    
     try {
-      await onSubmitPrompt?.(prompt, promptingTimeMs)
-      firstInputTimeRef.current = null
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto'
-      }
+      await onSubmitPrompt?.(currentPrompt, promptingTimeMs)
     } catch {
       // swallow; higher-level component can handle
     }

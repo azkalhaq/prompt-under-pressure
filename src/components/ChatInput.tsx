@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, KeyboardEvent, FormEvent, useRef, MouseEvent, useCallback, useEffect } from 'react'
+import React, { useState, KeyboardEvent, FormEvent, useRef, MouseEvent, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { useInactivity } from '@/contexts/InactivityContext'
 import { ImArrowUpRight2 } from 'react-icons/im'
 import { IoArrowDown } from 'react-icons/io5'
@@ -16,12 +16,89 @@ type ChatInputProps = {
   onAnchorRefChange?: (el: HTMLDivElement | null) => void
 }
 
-const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollButton, scrollParentRef, onHeightChange, onAnchorRefChange }: ChatInputProps) => {
+export type ChatInputHandle = {
+  setPromptText: (text: string, mode?: 'replace' | 'append') => void
+  appendQuotedText: (text: string) => void
+  focus: () => void
+}
+
+const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function ChatInput(
+  { onSubmitPrompt, disabled, showTitle, titleText, showScrollButton, scrollParentRef, onHeightChange, onAnchorRefChange }: ChatInputProps,
+  ref
+) {
   const { isPaused } = useInactivity()
   const [prompt, setPrompt] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const firstInputTimeRef = useRef<number | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const lastInsertedQuoteRef = useRef<string>('')
+
+  useImperativeHandle(ref, () => ({
+    setPromptText: (text: string, mode: 'replace' | 'append' = 'replace') => {
+      if (mode === 'replace') {
+        setPrompt(text)
+        requestAnimationFrame(() => {
+          const el = textareaRef.current
+          if (el) {
+            el.style.height = 'auto'
+            el.style.height = `${el.scrollHeight}px`
+            try { el.setSelectionRange(text.length, text.length) } catch {}
+          }
+        })
+      } else {
+        setPrompt(prev => {
+          const next = prev ? `${prev}\n\n${text}` : text
+          requestAnimationFrame(() => {
+            const el = textareaRef.current
+            if (el) {
+              el.style.height = 'auto'
+              el.style.height = `${el.scrollHeight}px`
+              try { el.setSelectionRange(next.length, next.length) } catch {}
+            }
+          })
+          return next
+        })
+      }
+    },
+    appendQuotedText: (raw: string) => {
+      const newQuoted = `> ${raw.replace(/\n/g, '\n> ')}\n\n`
+      const el = textareaRef.current
+      setPrompt(prev => {
+        let next = prev
+        const prevQuoted = lastInsertedQuoteRef.current
+        if (prevQuoted && prev.includes(prevQuoted)) {
+          next = prev.replace(prevQuoted, newQuoted)
+        } else {
+          // Try replacing a leading quote block if present
+          const leadingQuoteBlock = /^(?:>.*\n?)+\n\n/m
+          if (leadingQuoteBlock.test(prev)) {
+            next = prev.replace(leadingQuoteBlock, newQuoted)
+          } else {
+            next = prev ? `${prev}\n\n${newQuoted}` : newQuoted
+          }
+        }
+        lastInsertedQuoteRef.current = newQuoted
+        requestAnimationFrame(() => {
+          if (el) {
+            el.focus()
+            el.style.height = 'auto'
+            el.style.height = `${el.scrollHeight}px`
+            try { el.setSelectionRange(next.length, next.length) } catch {}
+          }
+        })
+        return next
+      })
+      if (firstInputTimeRef.current === null) firstInputTimeRef.current = Date.now()
+    },
+    focus: () => {
+      const el = textareaRef.current
+      if (el) {
+        el.focus()
+        const len = el.value.length
+        try { el.setSelectionRange(len, len) } catch {}
+      }
+    }
+  }), [])
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.shiftKey && e.key === 'Enter') {
@@ -197,12 +274,12 @@ const ChatInput = ({ onSubmitPrompt, disabled, showTitle, titleText, showScrollB
         </div>
       </form>
       <p className="text-xs mt-2 font-medium tracking-wide text-gray-600 dark:text-gray-400">
-        ChatGPT can make mistakes. Check important info.
+        GPT can make mistakes. Check important info.
       </p>
       </div>
       {/* model selection */}
     </div>
   )
-}
+})
 
 export default ChatInput

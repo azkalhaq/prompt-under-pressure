@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "rea
 import { useSearchParams } from "next/navigation";
  
 import ChatItem from "@/components/ChatItem";
-import ChatInput from "@/components/ChatInput";
+import ChatInput, { ChatInputHandle } from "@/components/ChatInput";
 import { useSessionContext } from "@/contexts/SessionContext";
 import { useAudio } from "@/hooks/useAudio";
 
@@ -18,6 +18,7 @@ function HomeContent() {
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [inputHeight, setInputHeight] = useState(0);
   const anchorRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<ChatInputHandle | null>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
   
   // Audio functionality - removed unused variables
@@ -141,12 +142,17 @@ function HomeContent() {
       <div className={`w-full max-w-4xl mx-auto relative ${hasMessages ? 'flex flex-col gap-3 h-full' : 'flex items-center justify-center h-full px-4'}`}>
         {hasMessages && (
           <div className="flex-1 px-4 pt-10">
-            <ChatItem messages={messages} isLoading={isLoading} />
+            <ChatItem
+              messages={messages}
+              isLoading={isLoading}
+              onQuoteSelection={(text) => inputRef.current?.appendQuotedText(text)}
+            />
             <div ref={anchorRef} style={{ height: Math.max(24, inputHeight-20) }} />
           </div>
         )}
         <div className={`${hasMessages ? 'sticky bottom-0' : ''} w-full flex justify-center px-4`}>
           <ChatInput
+            ref={inputRef}
             onSubmitPrompt={handleSubmitPrompt}
             disabled={isLoading || sessionLoading}
             showTitle={!hasMessages}

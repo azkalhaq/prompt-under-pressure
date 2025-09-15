@@ -1,4 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { FaQuoteLeft } from 'react-icons/fa'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { FiCopy, FiThumbsUp, FiThumbsDown, FiCheck } from 'react-icons/fi'
@@ -14,6 +16,7 @@ type ChatItemProps = {
   messages: Message[]
   isLoading?: boolean
   canReact?: boolean
+  onQuoteSelection?: (text: string) => void
 }
 
 // User Message Component
@@ -66,7 +69,8 @@ const AssistantMessage = ({
   onReact,
   copiedIds,
   reactions,
-  canReact
+  canReact,
+  onQuoteSelection
 }: {
   content: string
   messageId: string
@@ -76,55 +80,236 @@ const AssistantMessage = ({
   copiedIds: Record<string, boolean>
   reactions: Record<string, 'up' | 'down' | undefined>
   canReact?: boolean
+  onQuoteSelection?: (text: string) => void
 }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [selText, setSelText] = useState('')
+  const [btnPos, setBtnPos] = useState<{ x: number; y: number } | null>(null)
+  const isDraggingRef = useRef(false)
+  const lastSelRef = useRef('')
+
+  // Memoize markdown to prevent rerendering content on selection state changes
+  const markdownContent = useMemo(() => (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        ol: (props: React.OlHTMLAttributes<HTMLOListElement>) => (
+          <ol className="list-decimal pl-6 my-2" {...props} />
+        ),
+        ul: (props: React.HTMLAttributes<HTMLUListElement>) => <ul className="list-disc pl-6 my-2" {...props} />,
+        li: (props: React.LiHTMLAttributes<HTMLLIElement>) => <li className="my-1" {...props} />,
+        a: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => <a className="underline" target="_blank" rel="noreferrer" {...props} />,
+        code: ({ className, children, ...props }: { className?: string; children?: React.ReactNode }) => {
+          const text = String(children ?? '')
+          const match = /language-([a-zA-Z0-9]+)/.exec(className || '')
+          const lang = match?.[1]
+          if (lang) {
+            return (
+              <div className="contain-inline-size rounded-2xl relative bg-gray-50 border border-gray-200 my-2">
+                <div className="flex items-center text-gray-600 px-4 py-2 text-xs font-sans justify-between h-9 bg-gray-100 select-none rounded-t-2xl">
+                  {lang}
+                </div>
+                <div className="sticky top-9">
+                  <div className="absolute end-0 bottom-0 flex h-9 items-center pe-2">
+                    <CopyButton text={text} />
+                  </div>
+                </div>
+                <div className="overflow-y-auto p-4" dir="ltr">
+                  <code className="whitespace-pre">{text}</code>
+                </div>
+              </div>
+            )
+          }
+          return (
+            <code className={`rounded px-1 ${className || ''} dark:bg-gray-800 dark:text-gray-100`} {...props}>{children}</code>
+          )
+        },
+        pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
+          <pre className="rounded overflow-x-auto my-2 dark:bg-gray-900" {...props} />
+        ),
+        table: (props: React.TableHTMLAttributes<HTMLTableElement>) => <table className="table-auto border-collapse my-2" {...props} />,
+        th: (props: React.ThHTMLAttributes<HTMLTableCellElement>) => <th className="border px-2 py-1" {...props} />,
+        td: (props: React.TdHTMLAttributes<HTMLTableCellElement>) => <td className="border px-2 py-1" {...props} />,
+        p: (props: React.HTMLAttributes<HTMLParagraphElement>) => <p className="my-2" {...props} />,
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  ), [content])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const computeSelectionInContainer = () => {
+      const sel = window.getSelection()
+      if (!sel || sel.isCollapsed) {
+        setSelText('')
+        setBtnPos(null)
+        lastSelRef.current = ''
+        return
+      }
+      const range = sel.rangeCount ? sel.getRangeAt(0) : null
+      if (!range) return
+      const common = range.commonAncestorContainer
+      const commonEl = common instanceof Element ? common : common.parentElement
+      if (!commonEl || !container.contains(commonEl)) {
+        setSelText('')
+        setBtnPos(null)
+        lastSelRef.current = ''
+        return
+      }
+      const text = sel.toString().trim()
+      if (!text || text === lastSelRef.current) return
+      lastSelRef.current = text
+      const rects = range.getClientRects()
+      const last = rects[rects.length - 1]
+      if (last) {
+        setBtnPos({ x: last.right + window.scrollX, y: last.bottom + window.scrollY })
+      } else {
+        const r = range.getBoundingClientRect()
+        setBtnPos({ x: r.right + window.scrollX, y: r.bottom + window.scrollY })
+      }
+      setSelText(text)
+    }
+
+    const onMouseDown = () => {
+      isDraggingRef.current = true
+      setBtnPos(null)
+    }
+    const onMouseUp = () => {
+      isDraggingRef.current = false
+      // Wait a tick for selection to settle
+      setTimeout(computeSelectionInContainer, 0)
+    }
+    const onTouchStart = onMouseDown
+    const onTouchEnd = onMouseUp
+    const onKeyUp = computeSelectionInContainer
+    const onScroll = () => setBtnPos(null)
+
+    // Hide immediately if selection collapses or moves outside container
+    const onSelectionChange = () => {
+      const sel = window.getSelection()
+      if (!sel || sel.isCollapsed) {
+        setSelText('')
+        setBtnPos(null)
+        lastSelRef.current = ''
+        return
+      }
+      const range = sel.rangeCount ? sel.getRangeAt(0) : null
+      if (!range) return
+      const common = range.commonAncestorContainer
+      const commonEl = common instanceof Element ? common : common.parentElement
+      if (!commonEl || !container.contains(commonEl)) {
+        setSelText('')
+        setBtnPos(null)
+        lastSelRef.current = ''
+      }
+    }
+
+    // Hide if clicking anywhere outside the container or button
+    const hideButton = () => {
+      setSelText('')
+      setBtnPos(null)
+      lastSelRef.current = ''
+    }
+
+    const onDocumentMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+      const isAskBtn = target.closest('[data-askgpt-btn="true"]')
+      if (isAskBtn) return
+      // Hide on any click outside the Ask button
+      hideButton()
+    }
+    const onDocumentPointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+      const isAskBtn = target.closest('[data-askgpt-btn="true"]')
+      if (isAskBtn) return
+      hideButton()
+    }
+    const onDocumentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+      const isAskBtn = target.closest('[data-askgpt-btn="true"]')
+      if (isAskBtn) return
+      hideButton()
+    }
+    const onDocumentTouchStart = (e: TouchEvent) => {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+      const isAskBtn = target.closest('[data-askgpt-btn="true"]')
+      if (isAskBtn) return
+      hideButton()
+    }
+    const onWindowBlur = () => {
+      hideButton()
+    }
+    const onVisibilityChange = () => {
+      if (document.hidden) hideButton()
+    }
+
+    container.addEventListener('mousedown', onMouseDown)
+    container.addEventListener('mouseup', onMouseUp)
+    container.addEventListener('touchstart', onTouchStart, { passive: true })
+    container.addEventListener('touchend', onTouchEnd, { passive: true })
+    container.addEventListener('keyup', onKeyUp)
+    window.addEventListener('scroll', onScroll, true)
+    document.addEventListener('selectionchange', onSelectionChange)
+    document.addEventListener('mousedown', onDocumentMouseDown, true)
+    document.addEventListener('pointerdown', onDocumentPointerDown, true)
+    document.addEventListener('click', onDocumentClick, true)
+    document.addEventListener('touchstart', onDocumentTouchStart, { passive: true, capture: true })
+    window.addEventListener('blur', onWindowBlur)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      container.removeEventListener('mousedown', onMouseDown)
+      container.removeEventListener('mouseup', onMouseUp)
+      container.removeEventListener('touchstart', onTouchStart as EventListener)
+      container.removeEventListener('touchend', onTouchEnd as EventListener)
+      container.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('scroll', onScroll, true)
+      document.removeEventListener('selectionchange', onSelectionChange)
+      document.removeEventListener('mousedown', onDocumentMouseDown, true)
+      document.removeEventListener('pointerdown', onDocumentPointerDown, true)
+      document.removeEventListener('click', onDocumentClick, true)
+      document.removeEventListener('touchstart', onDocumentTouchStart as EventListener, true)
+      window.removeEventListener('blur', onWindowBlur)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [])
+
+  const handleAskGpt = () => {
+    if (!selText) return
+    onQuoteSelection?.(selText)
+    setSelText('')
+    setBtnPos(null)
+    try { window.getSelection()?.removeAllRanges() } catch {}
+  }
+
   return (
     <div className='w-full flex justify-start'>
-      <div className='px-4 py-2 rounded-2xl text-sm md:text-base break-words text-gray-900 dark:text-gray-100'>
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          components={{
-            ol: (props: React.OlHTMLAttributes<HTMLOListElement>) => (
-              <ol className="list-decimal pl-6 my-2" {...props} />
-            ),
-            ul: (props: React.HTMLAttributes<HTMLUListElement>) => <ul className="list-disc pl-6 my-2" {...props} />,
-            li: (props: React.LiHTMLAttributes<HTMLLIElement>) => <li className="my-1" {...props} />,
-            a: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => <a className="underline" target="_blank" rel="noreferrer" {...props} />,
-            code: ({ className, children, ...props }: { className?: string; children?: React.ReactNode }) => {
-              const text = String(children ?? '')
-              const match = /language-([a-zA-Z0-9]+)/.exec(className || '')
-              const lang = match?.[1]
-              if (lang) {
-                return (
-                  <div className="contain-inline-size rounded-2xl relative bg-gray-50 border border-gray-200 my-2">
-                    <div className="flex items-center text-gray-600 px-4 py-2 text-xs font-sans justify-between h-9 bg-gray-100 select-none rounded-t-2xl">
-                      {lang}
-                    </div>
-                    <div className="sticky top-9">
-                      <div className="absolute end-0 bottom-0 flex h-9 items-center pe-2">
-                        <CopyButton text={text} />
-                      </div>
-                    </div>
-                    <div className="overflow-y-auto p-4" dir="ltr">
-                      <code className="whitespace-pre">{text}</code>
-                    </div>
-                  </div>
-                )
-              }
-              return (
-                <code className={`rounded px-1 ${className || ''} dark:bg-gray-800 dark:text-gray-100`} {...props}>{children}</code>
-              )
-            },
-            pre: (props: React.HTMLAttributes<HTMLPreElement>) => (
-              <pre className="rounded overflow-x-auto my-2 dark:bg-gray-900" {...props} />
-            ),
-            table: (props: React.TableHTMLAttributes<HTMLTableElement>) => <table className="table-auto border-collapse my-2" {...props} />,
-            th: (props: React.ThHTMLAttributes<HTMLTableCellElement>) => <th className="border px-2 py-1" {...props} />,
-            td: (props: React.TdHTMLAttributes<HTMLTableCellElement>) => <td className="border px-2 py-1" {...props} />,
-            p: (props: React.HTMLAttributes<HTMLParagraphElement>) => <p className="my-2" {...props} />,
-          }}
-        >
-          {content}
-        </ReactMarkdown>
+      <div ref={containerRef} className='px-4 py-2 rounded-2xl text-sm md:text-base break-words text-gray-900 dark:text-gray-100 relative'>
+        {markdownContent}
+
+        {/* Selection Ask GPT button */}
+        {selText && btnPos && createPortal(
+          <button
+            type="button"
+            tabIndex={-1}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleAskGpt}
+            data-askgpt-btn="true"
+            className='fixed z-50 text-sm rounded-full px-4 py-1.5 shadow-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 flex items-center gap-2 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100'
+            style={{ left: btnPos.x + 8, top: btnPos.y + 8 }}
+          >
+            <FaQuoteLeft />
+            Ask GPT
+          </button>,
+          document.body
+        )}
 
         {/* Action buttons - only show when not typing and content exists */}
         {content && !isTyping && (
@@ -199,7 +384,7 @@ const TypingIndicator = () => {
 }
 
 // Main ChatItem Component
-const ChatItem = ({ messages, isLoading, canReact = true }: ChatItemProps) => {
+const ChatItem = ({ messages, isLoading, canReact = true, onQuoteSelection }: ChatItemProps) => {
   const endRef = useRef<HTMLDivElement | null>(null)
   const prevMessageCountRef = useRef(messages.length)
   
@@ -261,6 +446,7 @@ const ChatItem = ({ messages, isLoading, canReact = true }: ChatItemProps) => {
               copiedIds={copiedIds}
               reactions={reactions}
               canReact={canReact}
+              onQuoteSelection={onQuoteSelection}
             />
           )}
         </div>

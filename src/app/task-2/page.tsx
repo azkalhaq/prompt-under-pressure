@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import ChatItem from "@/components/ChatItem";
-import ChatInput from "@/components/ChatInput";
+import ChatInput, { ChatInputHandle } from "@/components/ChatInput";
 import StroopTest from "@/components/StroopTest";
 import { useSessionContext } from "@/contexts/SessionContext";
 import { useAudio } from "@/hooks/useAudio";
@@ -20,6 +20,7 @@ function Task2Content() {
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
   const messagesScrollRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<ChatInputHandle | null>(null);
   const searchParams = useSearchParams();
 
   const model = process.env.OPENAI_MODEL;
@@ -130,11 +131,16 @@ function Task2Content() {
             {hasMessages ? (
               <>
                 <div ref={messagesScrollRef} className="flex-1 overflow-y-auto min-h-0 pt-10">
-                  <ChatItem messages={messages} isLoading={isLoading} />
+                  <ChatItem
+                    messages={messages}
+                    isLoading={isLoading}
+                    onQuoteSelection={(text) => inputRef.current?.appendQuotedText(text)}
+                  />
                   <div ref={anchorRef} style={{ height: Math.max(24, inputHeight-20) }} />
                 </div>
                 <div className="flex-shrink-0 w-full flex justify-center">
                   <ChatInput
+                    ref={inputRef}
                     onSubmitPrompt={handleSubmitPrompt}
                     disabled={isLoading || sessionLoading}
                     showTitle={false}
@@ -148,6 +154,7 @@ function Task2Content() {
             ) : (
               <div className="flex items-center justify-center h-full">
                 <ChatInput
+                  ref={inputRef}
                   onSubmitPrompt={handleSubmitPrompt}
                   disabled={isLoading || sessionLoading}
                   showTitle={true}

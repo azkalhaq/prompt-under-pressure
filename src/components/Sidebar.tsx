@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import { useInactivity } from '@/contexts/InactivityContext'
 import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
 import { RxQuestionMark, RxCross2 } from 'react-icons/rx'
 import { LuInfo } from 'react-icons/lu'
 import { useSessionContext } from '../contexts/SessionContext'
@@ -268,6 +269,7 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
             ) : (
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
                 components={{
                   h1: ({ children }: { children: React.ReactNode }) => <h1 className="text-xl font-bold text-gray-900 mb-4 mt-0 dark:text-gray-100">{children}</h1>,
                   h2: ({ children }: { children: React.ReactNode }) => <h2 className="text-lg font-semibold text-gray-900 mb-3 mt-6 dark:text-gray-100">{children}</h2>,
@@ -281,6 +283,16 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
                   blockquote: ({ children }: { children: React.ReactNode }) => <blockquote className="border-l-4 border-blue-200 pl-4 italic text-gray-600 mb-3 dark:border-blue-900 dark:text-gray-400">{children}</blockquote>,
                   code: ({ children }: { children: React.ReactNode }) => <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800 dark:bg-gray-800 dark:text-gray-100">{children}</code>,
                   pre: ({ children }: { children: React.ReactNode }) => <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto mb-3 dark:bg-gray-900">{children}</pre>,
+                  a: ({ children, href }: { children: React.ReactNode; href?: string }) => (
+                    <a 
+                      href={href} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200"
+                    >
+                      {children}
+                    </a>
+                  ),
                 }}
               >
                 {markdown}

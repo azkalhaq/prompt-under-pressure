@@ -164,31 +164,62 @@ export async function POST(req: NextRequest) {
     // Perform text analysis asynchronously in the background
     // This won't block the response streaming
     setImmediate(async () => {
-      try {
-        console.log(`[Chat API] Starting async text analysis for api_call_id: ${apiCallId}`);
-        const textMetrics = calculateTextMetrics(prompt);
-        const careMetrics = calculateCareMetrics(prompt);
-        
-        // Update the record with text analysis results
-        const supabase = getSupabaseServerClientOrNull();
-        if (supabase) {
-          const { error } = await supabase
-            .from('chat_interactions')
-            .update({
-              ...textMetrics,
-              ...careMetrics
-            })
-            .eq('api_call_id', apiCallId);
-            
-          if (error) {
-            console.error('[Chat API] Error updating text analysis metrics:', error);
+      const updateTextAnalysis = async (retryCount = 0): Promise<void> => {
+        try {
+          console.log(`[Chat API] Starting async text analysis for api_call_id: ${apiCallId} (attempt ${retryCount + 1})`);
+          const textMetrics = calculateTextMetrics(prompt);
+          const careMetrics = calculateCareMetrics(prompt);
+          
+          // Update the record with text analysis results
+          const supabase = getSupabaseServerClientOrNull();
+          if (supabase) {
+            const { error } = await supabase
+              .from('chat_interactions')
+              .update({
+                ...textMetrics,
+                ...careMetrics
+              })
+              .eq('api_call_id', apiCallId);
+              
+            if (error) {
+              console.error(`[Chat API] Error updating text analysis metrics (attempt ${retryCount + 1}):`, error);
+              
+              // Retry up to 3 times with exponential backoff
+              if (retryCount < 3) {
+                const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+                console.log(`[Chat API] Retrying text analysis in ${delay}ms...`);
+                setTimeout(() => updateTextAnalysis(retryCount + 1), delay);
+              } else {
+                console.error('[Chat API] Failed to update text analysis metrics after 3 attempts');
+              }
+            } else {
+              console.log('[Chat API] Successfully updated text analysis metrics');
+            }
           } else {
-            console.log('[Chat API] Successfully updated text analysis metrics');
+            console.error('[Chat API] Supabase client is null for text analysis');
+            // Retry if client is null
+            if (retryCount < 3) {
+              const delay = Math.pow(2, retryCount) * 1000;
+              console.log(`[Chat API] Retrying text analysis in ${delay}ms due to null client...`);
+              setTimeout(() => updateTextAnalysis(retryCount + 1), delay);
+            }
+          }
+        } catch (error) {
+          console.error(`[Chat API] Error in async text analysis (attempt ${retryCount + 1}):`, error);
+          
+          // Retry on exception
+          if (retryCount < 3) {
+            const delay = Math.pow(2, retryCount) * 1000;
+            console.log(`[Chat API] Retrying text analysis in ${delay}ms due to exception...`);
+            setTimeout(() => updateTextAnalysis(retryCount + 1), delay);
+          } else {
+            console.error('[Chat API] Failed to update text analysis metrics after 3 attempts due to exceptions');
           }
         }
-      } catch (error) {
-        console.error('[Chat API] Error in async text analysis:', error);
-      }
+      };
+
+      // Start the text analysis update process
+      await updateTextAnalysis();
     });
     
     console.log(`[Chat API] Successfully recorded prompt immediately`);
@@ -208,41 +239,70 @@ export async function POST(req: NextRequest) {
       model,
       messages,
       onMetrics: async ({ responseText, tokensInput, tokensOutput, rawRequest, rawResponse, finishReason }) => {
-        try {
-          const totalCost = calculateStandardTokenCost(model, tokensInput, tokensOutput);
-          
-          console.log(`[Chat API] Updating response for api_call_id: ${apiCallId}`);
-          console.log(`[Chat API] Response text length: ${responseText?.length || 0}`);
-          console.log(`[Chat API] Tokens input: ${tokensInput}, output: ${tokensOutput}`);
-          
-          // Update the existing record with response data
-          const supabase = getSupabaseServerClientOrNull();
-          if (supabase) {
-            const { error } = await supabase
-              .from('chat_interactions')
-              .update({
-                response: responseText,
-                token_input: tokensInput,
-                token_output: tokensOutput,
-                cost_input: totalCost * (tokensInput / (tokensInput + tokensOutput)),
-                cost_output: totalCost * (tokensOutput / (tokensInput + tokensOutput)),
-                raw_request: rawRequest as Record<string, unknown> | undefined,
-                raw_response: rawResponse as Record<string, unknown> | undefined,
-                finish_reason: typeof finishReason === 'string' ? finishReason : undefined,
-              })
-              .eq('api_call_id', apiCallId);
-              
-            if (error) {
-              console.error('[Chat API] Update error:', error);
+        const updateResponseData = async (retryCount = 0): Promise<void> => {
+          try {
+            const totalCost = calculateStandardTokenCost(model, tokensInput, tokensOutput);
+            
+            console.log(`[Chat API] Updating response for api_call_id: ${apiCallId} (attempt ${retryCount + 1})`);
+            console.log(`[Chat API] Response text length: ${responseText?.length || 0}`);
+            console.log(`[Chat API] Tokens input: ${tokensInput}, output: ${tokensOutput}`);
+            
+            // Update the existing record with response data
+            const supabase = getSupabaseServerClientOrNull();
+            if (supabase) {
+              const { error } = await supabase
+                .from('chat_interactions')
+                .update({
+                  response: responseText,
+                  token_input: tokensInput,
+                  token_output: tokensOutput,
+                  cost_input: totalCost * (tokensInput / (tokensInput + tokensOutput)),
+                  cost_output: totalCost * (tokensOutput / (tokensInput + tokensOutput)),
+                  raw_request: rawRequest as Record<string, unknown> | undefined,
+                  raw_response: rawResponse as Record<string, unknown> | undefined,
+                  finish_reason: typeof finishReason === 'string' ? finishReason : undefined,
+                })
+                .eq('api_call_id', apiCallId);
+                
+              if (error) {
+                console.error(`[Chat API] Update error (attempt ${retryCount + 1}):`, error);
+                
+                // Retry up to 3 times with exponential backoff
+                if (retryCount < 3) {
+                  const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+                  console.log(`[Chat API] Retrying in ${delay}ms...`);
+                  setTimeout(() => updateResponseData(retryCount + 1), delay);
+                } else {
+                  console.error('[Chat API] Failed to update response data after 3 attempts');
+                }
+              } else {
+                console.log('[Chat API] Successfully updated response data');
+              }
             } else {
-              console.log('[Chat API] Successfully updated response data');
+              console.error('[Chat API] Supabase client is null');
+              // Retry if client is null
+              if (retryCount < 3) {
+                const delay = Math.pow(2, retryCount) * 1000;
+                console.log(`[Chat API] Retrying in ${delay}ms due to null client...`);
+                setTimeout(() => updateResponseData(retryCount + 1), delay);
+              }
             }
-          } else {
-            console.error('[Chat API] Supabase client is null');
+          } catch (e) {
+            console.error(`[Chat API] Chat interaction update exception (attempt ${retryCount + 1}):`, e);
+            
+            // Retry on exception
+            if (retryCount < 3) {
+              const delay = Math.pow(2, retryCount) * 1000;
+              console.log(`[Chat API] Retrying in ${delay}ms due to exception...`);
+              setTimeout(() => updateResponseData(retryCount + 1), delay);
+            } else {
+              console.error('[Chat API] Failed to update response data after 3 attempts due to exceptions');
+            }
           }
-        } catch (e) {
-          console.error('Chat interaction update exception', e);
-        }
+        };
+
+        // Start the update process
+        await updateResponseData();
       },
     });
 

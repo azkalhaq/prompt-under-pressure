@@ -237,19 +237,19 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
                     Read the <b>task details</b> and <b>constraints</b>.
                   </li>
                   <li className="mb-0">
-                    Click <b>Get Started</b>, then chat with the AI/LLM to complete the task while following the constraint.
+                    Click <b>Get Started</b>, then chat with the AI/LLM to complete the task. 
                   </li>
                   <li className="mb-0">
                     If the output isn’t good enough, <b>re-prompt until satisfied</b>.
                   </li>
                   <li className="mb-0">
-                    When ready, click <b>Submit Button</b> below 👇.
+                    When ready, click <b>Submit</b> button below 👇.
                   </li>
                   <li className="mb-0">
-                    <b>Use the AI’s response</b> into the submission form — <b>or create your own answer</b> if you prefer.
+                    Use the AI’s response — or adapt it with your own ideas — in the submission form.
                   </li>
                   <li className="mb-0">
-                    Fill the form, then <b>submit the form</b>.
+                    Fill and submit the form to finish.
                   </li>
                 </ol>
                 <br />

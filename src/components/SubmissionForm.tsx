@@ -154,7 +154,7 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
             {/* Content textarea */}
             <div className="flex-1 min-h-0 flex flex-col">
               <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
-                Your Analysis:
+                Your Submission:
               </label>
               <textarea
                 id="content"
@@ -164,7 +164,7 @@ const SubmissionForm = ({ isOpen, onClose, onSubmit }: SubmissionFormProps) => {
                   // Clear validation message when user starts typing
                   e.target.setCustomValidity('')
                 }}
-                placeholder="Write your analysis result here..."
+                placeholder="Write your submission result here..."
                 className="w-full flex-1 min-h-64 max-h-none p-4 border border-gray-300 rounded-lg resize-y focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-[#0f0f0f] dark:border-gray-800 dark:text-gray-100"
                 required
               />

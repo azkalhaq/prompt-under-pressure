@@ -109,7 +109,7 @@ export default function ThankYou({ userId }: ThankYouProps) {
         </div>
         
         <h1 className="text-3xl font-bold text-gray-900 mb-4 dark:text-gray-100">
-          Task Already Completed!
+          Task Completed!
         </h1>
         
         <p className="text-lg text-gray-600 mb-6 leading-relaxed dark:text-gray-300">

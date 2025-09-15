@@ -5,6 +5,7 @@
 ---
 - **Enable audio:** When your browser prompts for audio permission, click **Allow**.
 - **Set volume:** Make sure your device is **unmuted** and the volume is **clearly audible**.
+- ⚠️ **Note:** The audio may be distracting, this is intentional. Please do not mute.
 
 **Constraint**
 ---
@@ -39,5 +40,5 @@ and can be **monetized** for a client in **Telco Industry**.
 
 **Incentives**
 ---
-- **Voucher draw:** Meeting the minimum task quality submission makes you eligible for a **$50 raffle**.
+- **Voucher draw:** Meeting the minimum task quality submission makes you eligible for a **$25 raffle**.
 - **Best idea:** One participant with the best business idea will **win a $50 voucher**.

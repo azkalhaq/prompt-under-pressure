@@ -147,7 +147,8 @@ export function calculateTextMetrics(text: string) {
 /**
  * Heuristic CARE prompt-quality metrics based on NN/g CARE framework
  * CARE: Context, Ask, Rules, Examples
- * Returns discrete scores (0-2) for core dimensions and supporting booleans/counters.
+ * Returns raw hit counts for each dimension (number of detected signals),
+ * plus supporting booleans/counters.
  */
 export function calculateCareMetrics(text: string) {
   if (!text || typeof text !== 'string') {
@@ -172,49 +173,71 @@ export function calculateCareMetrics(text: string) {
   // Context signals
   const contextSignals = [
     'user', 'audience', 'customer', 'persona', 'based in', 'locale', 'working on', 'project',
-    'platform', 'web', 'mobile', 'app', 'ecommerce', 'login', 'screen', 'domain', 'industry', 'goal', 'success', 'background', 'context'
+    'platform', 'web', 'mobile', 'app', 'ecommerce', 'login', 'screen', 'domain', 'industry', 'goal', 'success', 'background', 'context',
+    // Scenario-specific context
+    'telco', 'telecom', 'telecommunications', 'operator', 'carrier', 'isp', '5g', 'network', 'edge', 'bss', 'oss', 'subscriber', 'arpu', 'churn',
+    'client in', 'telco industry', 'executive', 'decision-makers', 'business model canvas', 'bmc', 'slide', 'global consulting firm', 'junior analyst', 'probation', 'manager'
   ];
   const contextHits = contextSignals.filter(s => lower.includes(s)).length;
-  const care_context_score = contextHits >= 5 ? 2 : contextHits >= 2 ? 1 : 0;
+  const care_context_score = contextHits; // raw hits
 
   // Ask signals (role, outputs, steps, format)
   const askSignals = [
-    'generate', 'write', 'create', 'produce', 'return', 'provide', 'follow these steps', 'steps:', 'format:', 'present', 'rank'
+    'please', 'help', 'generate', 'write', 'create', 'produce', 'return', 'provide', 'follow these steps', 'steps:', 'format:', 'present', 'rank',
+    // Scenario-specific asks
+    'propose', 'select', 'choose', 'develop', 'outline', 'structure', 'summarize', 'bullet points',
+    'draft', 'iterate', 'explore', 'submit', 'finalize', 'deliver'
   ];
   const askHits = askSignals.filter(s => lower.includes(s)).length;
-  const care_ask_score = askHits >= 4 ? 2 : askHits >= 2 ? 1 : 0;
+  const care_ask_score = askHits; // raw hits
 
   // Rules signals
   const rulesSignals = [
-    'guidelines', "don't", 'do not', 'avoid', 'must', 'should', 'tone', 'style', 'no more than', 'max', 'limit', 'constraints'
+    'guidelines', "don't", 'do not', 'avoid', 'must', 'should', 'tone', 'style', 'no more than', 'max', 'limit', 'constraints',
+    // Scenario-specific rules/expectations
+    'audience:', 'format:', 'submission:', 'suitable for', 'for 1 slide', 'executive-level', 'bullet points', 'clear headings', 'monetize'
   ];
   const rulesHits = rulesSignals.filter(s => lower.includes(s)).length;
-  const care_rules_score = rulesHits >= 4 ? 2 : rulesHits >= 2 ? 1 : 0;
+  const care_rules_score = rulesHits; // raw hits
 
   // Examples signals
-  const examplesSignals = ['examples:', 'example:', 'good example', 'bad example', 'avoid ... like'];
+  const examplesSignals = ['examples:', 'example:', 'good example', 'bad example', 'avoid ... like',
+    // Scenario-specific example phrasing
+    'example of', 'can be found here', 'learn more', 'click here', 'see example'
+  ];
   const examplesHits = examplesSignals.filter(s => lower.includes(s)).length;
-  const care_examples_score = examplesHits >= 2 ? 2 : examplesHits >= 1 ? 1 : 0;
+  const care_examples_score = examplesHits; // raw hits
 
   // Specificity: presence of concrete nouns and constraints (numbers, exact targets)
   const numberMatches = lower.match(/\b\d+\b/g) || [];
-  const constraintSignals = ['exact', 'specific', 'table', 'json', 'columns', 'fields', 'schema', 'section'];
+  const constraintSignals = ['exact', 'specific', 'table', 'json', 'columns', 'fields', 'schema', 'section',
+    // Scenario-specific structural constraints
+    'headings', 'bullet points', 'sections', 'cells', 'canvas', 'template', 'outline', 'slide', 'one slide', '1 slide'
+  ];
   const specificityHits = numberMatches.length + constraintSignals.filter(s => lower.includes(s)).length;
-  const care_specificity_score = specificityHits >= 4 ? 2 : specificityHits >= 2 ? 1 : 0;
+  const care_specificity_score = specificityHits; // raw hits
 
   // Measurability: explicit measurable constraints
-  const measSignals = ['no more than', 'at most', 'at least', 'characters', 'sentences', '<=', '>=', '<', '>', 'limit to'];
+  const measSignals = ['no more than', 'at most', 'at least', 'characters', 'sentences', '<=', '>=', '<', '>', 'limit to',
+    // Scenario-specific measurable terms
+    'kpi', 'kpis', 'roi', 'arpu', 'churn', 'mrr', 'arr', '%', '$', 'increase by', 'decrease by', 'reduce by', 'target', 'deadline', '3-month', 'probation', 'timeline'
+  ];
   const measHits = measSignals.filter(s => lower.includes(s)).length + numberMatches.length;
-  const care_measurability_score = measHits >= 5 ? 2 : measHits >= 2 ? 1 : 0;
+  const care_measurability_score = measHits; // raw hits
 
   // Verifiability: schema/format or rubric present
-  const verifSignals = ['json', 'schema', 'table', 'markdown table', 'columns', 'fields', 'validate', 'rubric'];
+  const verifSignals = ['json', 'schema', 'table', 'markdown table', 'columns', 'fields', 'validate', 'rubric',
+    // Scenario-specific verifiability cues
+    'checklist', 'template', 'example', 'link', 'url', 'reference', 'source', 'criteria'
+  ];
   const verifHits = verifSignals.filter(s => lower.includes(s)).length;
-  const care_verifiability_score = verifHits >= 3 ? 2 : verifHits >= 1 ? 1 : 0;
+  const care_verifiability_score = verifHits; // raw hits
 
   // Ambiguity: count vague terms
   const vagueTerms = [
-    'optimize', 'improve', 'nice', 'good', 'bad', 'better', 'best', 'simple', 'easily', 'quickly', 'sufficient', 'robust', 'intuitive'
+    'optimize', 'improve', 'nice', 'good', 'bad', 'better', 'best', 'simple', 'easily', 'quickly', 'sufficient', 'robust', 'intuitive',
+    // Scenario-relevant vague/marketing terms
+    'innovative', 'novel', 'synergy', 'cutting-edge', 'state-of-the-art', 'scalable', 'disruptive', 'impactful', 'efficient', 'seamless', 'holistic', 'streamlined', 'leverage'
   ];
   const care_ambiguity_count = vagueTerms.reduce((count, term) => count + ((lower.match(new RegExp(`\\b${term}\\b`, 'g')) || []).length), 0);
 
@@ -222,11 +245,17 @@ export function calculateCareMetrics(text: string) {
   const care_output_format_specified = verifSignals.some(s => lower.includes(s));
 
   // Role specified
-  const roleSignals = ['you are a', 'act as', "you're a", 'role:', 'Your role'];
+  const roleSignals = ['you are a', 'act as', "you're a", 'role:', 'Your role',
+    // Scenario-specific role cues
+    'junior analyst', 'as a', 'your manager', 'manager asks', 'in your probation'
+  ];
   const care_role_specified = roleSignals.some(s => lower.includes(s));
 
   // Quantity specified
-  const quantitySignals = ['options', 'variations', 'list', 'top', 'rank'];
+  const quantitySignals = ['options', 'variations', 'list', 'top', 'rank',
+    // Scenario-specific quantity cues
+    'one', 'single', '1', 'exactly', 'only', 'choose one', 'select one'
+  ];
   const qtyNumbers = numberMatches.length;
   const care_quantity_specified = qtyNumbers > 0 && quantitySignals.some(s => lower.includes(s));
 

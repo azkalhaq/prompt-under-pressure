@@ -34,5 +34,5 @@ and can be **monetized** for a client in **Telco Industry**.
 
 **Incentives**
 ---
-- **Voucher draw:** Meeting the minimum output expectation submission makes you eligible for a **$50 raffle**.
+- **Voucher draw:** Meeting the output expectation submission makes you eligible for a **$50 voucher raffle**.
 - **Best idea:** One participant with the best business idea will **win a $50 voucher**.

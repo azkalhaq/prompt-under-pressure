@@ -172,8 +172,9 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
 
   // Move to next trial
   const nextTrial = useCallback(() => {
-    // Check if instruction should switch BEFORE incrementing trial number
-    const shouldSwitchInstruction = currentTrial % config.instructionSwitchTrials === 0;
+    // Determine switching behavior BEFORE incrementing trial number
+    const isRandomSwitching = config.instructionSwitchTrials <= 0;
+    const shouldSwitchInstruction = !isRandomSwitching && (currentTrial % config.instructionSwitchTrials === 0);
     
     // Debug logging
     console.log('Next Trial Debug:', {
@@ -185,7 +186,13 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
     
     // Determine the instruction for the next trial
     let nextInstruction = instruction;
-    if (shouldSwitchInstruction) {
+    if (isRandomSwitching) {
+      // When instructionSwitchTrials is 0 or less, choose randomly each trial
+      nextInstruction = Math.random() < 0.5 ? 'word' : 'color';
+      console.log('Randomly choosing next instruction:', nextInstruction);
+      setInstruction(nextInstruction);
+    } else if (shouldSwitchInstruction) {
+      // Periodic switching
       nextInstruction = instruction === 'word' ? 'color' : 'word';
       console.log('Switching instruction from', instruction, 'to', nextInstruction);
       setInstruction(nextInstruction);

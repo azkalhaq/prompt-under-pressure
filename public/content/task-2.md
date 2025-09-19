@@ -35,4 +35,4 @@ and can be **monetized** for a client in **Telecommunication Industry**.
 **Incentives 🎁**
 ---
 - **Voucher draw:** Meeting the output expectation submission makes you eligible for a **$50 voucher raffle**.
-- **Best idea:** One participant with the best business idea while maintain to answer the game **will win a $50 voucher**.
+- **Best idea:** One participant with the best business idea while maintain performance on the game **will win a $50 voucher**.

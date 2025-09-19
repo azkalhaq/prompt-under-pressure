@@ -22,12 +22,20 @@ function Task2Content() {
   const messagesScrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<ChatInputHandle | null>(null);
   const searchParams = useSearchParams();
+  const effectiveSearchParams = useMemo(() => {
+    // Clone and set default audio=1 if not provided
+    const sp = new URLSearchParams(searchParams.toString());
+    if (sp.get('audio') === null) {
+      sp.set('audio', '1');
+    }
+    return sp;
+  }, [searchParams]);
 
   const model = process.env.OPENAI_MODEL;
   const hasMessages = messages.length > 0;
   
-  // Audio functionality - removed unused variables
-  useAudio(searchParams);
+  // Audio functionality - default audio to enabled unless explicitly overridden by query param
+  useAudio(effectiveSearchParams);
 
   
 

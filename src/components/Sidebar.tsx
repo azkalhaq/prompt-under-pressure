@@ -23,6 +23,14 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const effectiveSearchParams = React.useMemo(() => {
+    const sp = new URLSearchParams(searchParams.toString())
+    // Only default audio=1 on task-2; preserve behavior on other routes
+    if (pathname === '/task-2' && sp.get('audio') === null) {
+      sp.set('audio', '1')
+    }
+    return sp
+  }, [searchParams, pathname])
   const { isPaused } = useInactivity()
   const [showSubmit, setShowSubmit] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
@@ -41,8 +49,8 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
     Math.max(0, Math.floor(startDelaySeconds))
   )
   
-  // Check if audio should be enabled
-  const isAudioEnabled = shouldEnableAudio(searchParams)
+  // Check if audio should be enabled (default to enabled if param missing)
+  const isAudioEnabled = shouldEnableAudio(effectiveSearchParams)
 
   // Check if we're on a page that has the StroopTest component
   const hasStroopTest = pathname === '/task-2'

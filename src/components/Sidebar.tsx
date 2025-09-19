@@ -6,7 +6,6 @@ import { useInactivity } from '@/contexts/InactivityContext'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { RxQuestionMark, RxCross2 } from 'react-icons/rx'
-import { LuInfo } from 'react-icons/lu'
 import { useSessionContext } from '../contexts/SessionContext'
 import { useStroopContext } from '../contexts/StroopContext'
 import { useSubmission } from '../contexts/SubmissionContext'
@@ -33,6 +32,14 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
   const [markdown, setMarkdown] = useState<string>('')
   const [isLoadingMd, setIsLoadingMd] = useState<boolean>(true)
   const [mdError, setMdError] = useState<string | null>(null)
+  
+  // Get Started countdown configuration (default 10s if not provided)
+  const rawStartDelay = process.env.NEXT_PUBLIC_GET_STARTED_DELAY_SECONDS
+  const configuredStartDelay = rawStartDelay && rawStartDelay.trim() !== '' ? Number(rawStartDelay) : NaN
+  const startDelaySeconds = Number.isFinite(configuredStartDelay) ? configuredStartDelay : 10
+  const [remainingStartDelay, setRemainingStartDelay] = useState<number>(
+    Math.max(0, Math.floor(startDelaySeconds))
+  )
   
   // Check if audio should be enabled
   const isAudioEnabled = shouldEnableAudio(searchParams)
@@ -173,6 +180,17 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
       })
   }, [pathname])
 
+  // Countdown timer for enabling the Get Started button
+  useEffect(() => {
+    if (remainingStartDelay <= 0) return
+    const intervalId = setInterval(() => {
+      setRemainingStartDelay((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+    return () => clearInterval(intervalId)
+  }, [remainingStartDelay])
+
+  const isGetStartedEnabled = remainingStartDelay <= 0 && !isPaused
+
   return (
     <>
       {/* Help button - only show when sidebar is collapsed */}
@@ -184,7 +202,7 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
         >
           <div className='flex items-center'>
             <RxQuestionMark className="text-white dark:text-black flex-shrink-0 font-bold text-lg" />
-            <span className='text-sm text-white dark:text-black max-w-0 group-hover:max-w-32 transition-all duration-200 overflow-hidden whitespace-nowrap ml-0 group-hover:ml-2'>
+            <span className='text-sm text-white dark:text-black ml-1 group-hover:max-w-32 transition-all duration-200 overflow-hidden whitespace-nowrap ml-0 group-hover:ml-2'>
               Show instructions
             </span>
           </div>
@@ -225,9 +243,9 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
         </div>
 
         {/* Content area */}
-        <div className='p-6 text-sm text-gray-700 overflow-y-auto flex-1 h-[calc(100%-10rem)] dark:text-gray-300'>
+        <div className='px-6 text-sm text-gray-700 overflow-y-auto flex-1 h-[calc(100%-10rem)] dark:text-gray-300'>
           {/* Instructions Section */}
-          <div className='flex rounded-2xl p-4 bg-sky-50 dark:bg-slate-800/60 dark:ring-1 dark:ring-slate-300/10'>
+          {/* <div className='flex rounded-2xl p-4 bg-sky-50 dark:bg-slate-800/60 dark:ring-1 dark:ring-slate-300/10'>
             <LuInfo className="h-6 w-6 flex-none text-sky-600" />
             <div className="ml-4 flex-auto">
               <p className="not-prose font-display text-xl text-sky-900 dark:text-sky-400">Step by step</p>
@@ -258,10 +276,16 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
           
           {/* Markdown Section */}
-          <div className='prose prose-sm max-w-none dark:prose-invert my-4'>
+          <div
+            className='prose prose-sm max-w-none dark:prose-invert my-4 select-none'
+            onCopy={(e) => e.preventDefault()}
+            onPaste={(e) => e.preventDefault()}
+            onCut={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+          >
             {isLoadingMd ? (
               <p className="text-gray-500 dark:text-gray-400">Loading instructions…</p>
             ) : mdError ? (
@@ -317,10 +341,10 @@ function SidebarContent({ collapsed, onToggleSidebar }: SidebarProps) {
             {!showSubmit && (
               <button
                 onClick={handleGetStarted}
-                disabled={isPaused}
-                className={`flex-1 font-medium py-2 px-4 rounded-lg transition-colors duration-200 ${isPaused ? 'bg-gray-300 text-gray-600 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                disabled={!isGetStartedEnabled}
+                className={`flex-1 font-medium py-2 px-4 rounded-lg transition-colors duration-200 ${!isGetStartedEnabled ? 'bg-gray-300 text-gray-600 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
               >
-                Get Started
+                {`Get Started${remainingStartDelay > 0 ? ` (${remainingStartDelay})` : ''}`}
               </button>
             )}
           </div>

@@ -487,7 +487,7 @@ export default function StroopTest({ userId, sessionId }: { userId: string; sess
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-4">
           <div className="bg-white rounded-lg px-4 py-2 shadow-md dark:bg-[#0b0b0b]">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">🎮 Stroop Task</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">🎮 Stroop Game</h2>
           </div>
           <div className="bg-white rounded-lg px-3 py-2 shadow-md dark:bg-[#0b0b0b]">
             <span className="text-sm text-gray-600 dark:text-gray-400">Trial </span>

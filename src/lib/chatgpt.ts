@@ -27,7 +27,7 @@ export async function streamChatCompletion({
   client: OpenAI;
   model: string;
   messages: ChatMessage[];
-  onMetrics?: (m: { responseText: string; tokensInput: number; tokensOutput: number; apiCallId?: string; rawRequest?: object; rawResponse?: object; finishReason?: string | null }) => void;
+  onMetrics?: (m: { responseText: string; tokensInput: number; tokensOutput: number; apiCallId?: string; rawRequest?: object; rawResponse?: object; finishReason?: string | null; firstResponseTime?: Date; latency?: number }) => void;
 }) {
   const encoder = new TextEncoder();
 
@@ -40,15 +40,25 @@ export async function streamChatCompletion({
           stream: true,
         };
         
+        // Record the start time for latency calculation
+        const requestStartTime = new Date();
+        
         const response = await client.chat.completions.create(requestPayload);
 
         let responseText = "";
         let lastFinishReason: string | null = null;
         let metricsSent = false;
+        let firstResponseTime: Date | null = null;
         
         for await (const chunk of (response as AsyncIterable<MinimalChunk>)) {
           const choice = chunk?.choices?.[0];
           const delta = choice?.delta?.content || "";
+          
+          // Capture first response time when we get the first chunk with content
+          if (delta && !firstResponseTime) {
+            firstResponseTime = new Date();
+          }
+          
           if (typeof choice?.finish_reason !== "undefined") {
             lastFinishReason = choice.finish_reason ?? null;
           }
@@ -73,13 +83,20 @@ export async function streamChatCompletion({
             };
             
             if (!metricsSent) {
+              // Calculate latency in milliseconds
+              const latency = firstResponseTime ? 
+                firstResponseTime.getTime() - requestStartTime.getTime() : 
+                undefined;
+              
               onMetrics?.({ 
                 responseText, 
                 tokensInput: messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0), 
                 tokensOutput: Math.ceil(responseText.length / 4),
                 rawRequest: requestPayload,
                 rawResponse: completeResponse,
-                finishReason: lastFinishReason ?? "stop"
+                finishReason: lastFinishReason ?? "stop",
+                firstResponseTime: firstResponseTime || undefined,
+                latency: latency
               });
               metricsSent = true;
             }
@@ -113,13 +130,20 @@ export async function streamChatCompletion({
             }
           };
           
+          // Calculate latency in milliseconds
+          const latency = firstResponseTime ? 
+            firstResponseTime.getTime() - requestStartTime.getTime() : 
+            undefined;
+          
           onMetrics?.({ 
             responseText, 
             tokensInput: messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0), 
             tokensOutput: Math.ceil(responseText.length / 4),
             rawRequest: requestPayload,
             rawResponse: completeResponse,
-            finishReason: lastFinishReason ?? "stop"
+            finishReason: lastFinishReason ?? "stop",
+            firstResponseTime: firstResponseTime || undefined,
+            latency: latency
           });
           metricsSent = true;
           try { controller.enqueue(encoder.encode("event: done\n\n")); } catch {}

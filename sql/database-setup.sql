@@ -150,6 +150,8 @@ CREATE TABLE IF NOT EXISTS chat_interactions (
 
     -- timestamp related
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),    -- record creation time
+    first_response_time TIMESTAMPTZ,                  -- time when first response chunk received from OpenAI API
+    latency INTEGER,                                   -- API latency in milliseconds (time from request to first response)
 
     FOREIGN KEY (session_id) REFERENCES user_sessions(session_id) ON DELETE CASCADE
 );
@@ -172,6 +174,8 @@ CREATE INDEX IF NOT EXISTS idx_chat_interactions_created_at ON chat_interactions
 CREATE INDEX IF NOT EXISTS idx_chat_interactions_scenario ON chat_interactions(scenario);
 CREATE INDEX IF NOT EXISTS idx_chat_interactions_task_code ON chat_interactions(task_code);
 CREATE INDEX IF NOT EXISTS idx_chat_interactions_prompt_index_no ON chat_interactions(prompt_index_no);
+CREATE INDEX IF NOT EXISTS idx_chat_interactions_first_response_time ON chat_interactions(first_response_time);
+CREATE INDEX IF NOT EXISTS idx_chat_interactions_latency ON chat_interactions(latency);
 
 -- Migration script for existing data (if needed)
 -- This will help migrate existing stroop_sessions to user_sessions

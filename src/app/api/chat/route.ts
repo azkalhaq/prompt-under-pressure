@@ -238,7 +238,7 @@ export async function POST(req: NextRequest) {
       client,
       model,
       messages,
-      onMetrics: async ({ responseText, tokensInput, tokensOutput, rawRequest, rawResponse, finishReason }) => {
+      onMetrics: async ({ responseText, tokensInput, tokensOutput, rawRequest, rawResponse, finishReason, firstResponseTime, latency }) => {
         const updateResponseData = async (retryCount = 0): Promise<void> => {
           try {
             const totalCost = calculateStandardTokenCost(model, tokensInput, tokensOutput);
@@ -246,6 +246,7 @@ export async function POST(req: NextRequest) {
             console.log(`[Chat API] Updating response for api_call_id: ${apiCallId} (attempt ${retryCount + 1})`);
             console.log(`[Chat API] Response text length: ${responseText?.length || 0}`);
             console.log(`[Chat API] Tokens input: ${tokensInput}, output: ${tokensOutput}`);
+            console.log(`[Chat API] First response time: ${firstResponseTime}, Latency: ${latency}ms`);
             
             // Update the existing record with response data
             const supabase = getSupabaseServerClientOrNull();
@@ -261,6 +262,8 @@ export async function POST(req: NextRequest) {
                   raw_request: rawRequest as Record<string, unknown> | undefined,
                   raw_response: rawResponse as Record<string, unknown> | undefined,
                   finish_reason: typeof finishReason === 'string' ? finishReason : undefined,
+                  first_response_time: firstResponseTime,
+                  latency: latency,
                 })
                 .eq('api_call_id', apiCallId);
                 

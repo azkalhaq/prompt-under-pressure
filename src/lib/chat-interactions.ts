@@ -75,6 +75,10 @@ export interface ChatInteractionData {
   finish_reason?: string | null;
   raw_response?: Record<string, unknown> | null;
   raw_request?: Record<string, unknown> | null;
+  
+  // timestamp related
+  first_response_time?: Date | null;
+  latency?: number | null;
 }
 
 export async function insertChatInteraction(data: ChatInteractionData): Promise<void> {
@@ -148,7 +152,9 @@ export async function insertChatInteraction(data: ChatInteractionData): Promise<
       cost_output: data.cost_output,
       finish_reason: data.finish_reason,
       raw_response: data.raw_response,
-      raw_request: data.raw_request
+      raw_request: data.raw_request,
+      first_response_time: data.first_response_time,
+      latency: data.latency
     });
 
   if (error) {

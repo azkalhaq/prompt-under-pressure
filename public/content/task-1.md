@@ -21,10 +21,10 @@ and can be **monetized** for a client in **Telecommunication Industry**.
 **Output Expectation 🎯**
 ---
 - **Audience:** executive-level decision-makers  
-- **Format:** clear headings and bullet points, suitable for **1 slide**  
-- **Submission:** provide a **final BMC outline** for 1 slide, You may use GPT’s output directly or modify it with your own creativity.  
+- **Format:** (Text) clear headings and bullet points, suitable for **1 slide**  
+- **Submission:** You will fill **form/text input** to provide a **final BMC outline** for 1 slide, You may use GPT’s output directly or modify it with your own creativity.   
 <details>
-<summary>Example of BMC: <span style="color: #2563eb; text-decoration: underline; cursor: pointer;">Click to expand</span></summary>
+<summary>Example and component of BMC: <span style="color: #2563eb; text-decoration: underline; cursor: pointer;">Click to expand</span></summary>
 <img src="https://www.garyfox.co/wp-content/uploads/2024/07/Linkedin-business-model-canvas.png.webp" alt="An example of LinkedIn BMC" />
 </details>
 

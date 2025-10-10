@@ -322,6 +322,7 @@ export async function POST(req: NextRequest) {
     }
     return new Response(stream, { headers });
   } catch (error: unknown) {
+    console.error('Chat API error:', error);
     return new Response(error instanceof Error ? error.message : "Unexpected error", { status: 500 });
   }
 }

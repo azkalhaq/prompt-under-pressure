@@ -54,6 +54,32 @@ interface MetricsDisplayProps {
     care_quantity_specified?: boolean;
     care_has_citations?: boolean;
     
+    // Structural quality metrics (likert scale 1-5)
+    task_intent_specification?: number;
+    goal_objective_articulation?: number;
+    persona_role_definition?: number;
+    step_by_step_decomposition?: number;
+    chain_of_thought_structure?: number;
+    context_provisioning?: number;
+    reference_use?: number;
+    example_use?: number;
+    tonality_writing_style?: number;
+    output_format_specification?: number;
+    information_hierarchy?: number;
+    
+    // Structural quality comments/justifications
+    task_intent_specification_comment?: string;
+    goal_objective_articulation_comment?: string;
+    persona_role_definition_comment?: string;
+    step_by_step_decomposition_comment?: string;
+    chain_of_thought_structure_comment?: string;
+    context_provisioning_comment?: string;
+    reference_use_comment?: string;
+    example_use_comment?: string;
+    tonality_writing_style_comment?: string;
+    output_format_specification_comment?: string;
+    information_hierarchy_comment?: string;
+    
     // API metrics (for responses)
     model?: string;
     token_input?: number;
@@ -102,6 +128,24 @@ export default function MetricsDisplay({
     if (score >= 1.5) return 'text-green-600';
     if (score >= 1.0) return 'text-yellow-600';
     if (score >= 0.5) return 'text-orange-600';
+    return 'text-red-600';
+  };
+
+  const getStructuralQuality = (score: number | undefined) => {
+    if (score === undefined || score === null) return 'N/A';
+    if (score >= 4.5) return 'Excellent';
+    if (score >= 3.5) return 'Strong';
+    if (score >= 2.5) return 'Adequate';
+    if (score >= 1.5) return 'Weak';
+    return 'Not Present';
+  };
+
+  const getStructuralQualityColor = (score: number | undefined) => {
+    if (score === undefined || score === null) return 'text-gray-500';
+    if (score >= 4.5) return 'text-green-600';
+    if (score >= 3.5) return 'text-blue-600';
+    if (score >= 2.5) return 'text-yellow-600';
+    if (score >= 1.5) return 'text-orange-600';
     return 'text-red-600';
   };
 
@@ -260,6 +304,138 @@ export default function MetricsDisplay({
                 <div>
                   <span className="text-gray-500">Has Citations:</span>
                   <span className="ml-1 font-mono">{formatValue(metrics.care_has_citations)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Structural Quality Metrics */}
+            <div>
+              <h5 className="font-medium text-gray-600 mb-2">Structural Quality Scores (1-5 Likert Scale)</h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-gray-500">Task Intent Specification:</span>
+                    <span className={`ml-1 font-mono ${getStructuralQualityColor(metrics.task_intent_specification)}`}>
+                      {formatValue(metrics.task_intent_specification, 1)}/5 ({getStructuralQuality(metrics.task_intent_specification)})
+                    </span>
+                    {metrics.task_intent_specification_comment && (
+                      <div className="text-xs text-gray-400 mt-1 italic">
+                        "{metrics.task_intent_specification_comment}"
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Goal/Objective Articulation:</span>
+                    <span className={`ml-1 font-mono ${getStructuralQualityColor(metrics.goal_objective_articulation)}`}>
+                      {formatValue(metrics.goal_objective_articulation, 1)}/5 ({getStructuralQuality(metrics.goal_objective_articulation)})
+                    </span>
+                    {metrics.goal_objective_articulation_comment && (
+                      <div className="text-xs text-gray-400 mt-1 italic">
+                        "{metrics.goal_objective_articulation_comment}"
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Persona/Role Definition:</span>
+                    <span className={`ml-1 font-mono ${getStructuralQualityColor(metrics.persona_role_definition)}`}>
+                      {formatValue(metrics.persona_role_definition, 1)}/5 ({getStructuralQuality(metrics.persona_role_definition)})
+                    </span>
+                    {metrics.persona_role_definition_comment && (
+                      <div className="text-xs text-gray-400 mt-1 italic">
+                        "{metrics.persona_role_definition_comment}"
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Step-by-Step Decomposition:</span>
+                    <span className={`ml-1 font-mono ${getStructuralQualityColor(metrics.step_by_step_decomposition)}`}>
+                      {formatValue(metrics.step_by_step_decomposition, 1)}/5 ({getStructuralQuality(metrics.step_by_step_decomposition)})
+                    </span>
+                    {metrics.step_by_step_decomposition_comment && (
+                      <div className="text-xs text-gray-400 mt-1 italic">
+                        "{metrics.step_by_step_decomposition_comment}"
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Chain-of-Thought Structure:</span>
+                    <span className={`ml-1 font-mono ${getStructuralQualityColor(metrics.chain_of_thought_structure)}`}>
+                      {formatValue(metrics.chain_of_thought_structure, 1)}/5 ({getStructuralQuality(metrics.chain_of_thought_structure)})
+                    </span>
+                    {metrics.chain_of_thought_structure_comment && (
+                      <div className="text-xs text-gray-400 mt-1 italic">
+                        "{metrics.chain_of_thought_structure_comment}"
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-gray-500">Context Provisioning:</span>
+                    <span className={`ml-1 font-mono ${getStructuralQualityColor(metrics.context_provisioning)}`}>
+                      {formatValue(metrics.context_provisioning, 1)}/5 ({getStructuralQuality(metrics.context_provisioning)})
+                    </span>
+                    {metrics.context_provisioning_comment && (
+                      <div className="text-xs text-gray-400 mt-1 italic">
+                        "{metrics.context_provisioning_comment}"
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Reference Use:</span>
+                    <span className={`ml-1 font-mono ${getStructuralQualityColor(metrics.reference_use)}`}>
+                      {formatValue(metrics.reference_use, 1)}/5 ({getStructuralQuality(metrics.reference_use)})
+                    </span>
+                    {metrics.reference_use_comment && (
+                      <div className="text-xs text-gray-400 mt-1 italic">
+                        "{metrics.reference_use_comment}"
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Example Use:</span>
+                    <span className={`ml-1 font-mono ${getStructuralQualityColor(metrics.example_use)}`}>
+                      {formatValue(metrics.example_use, 1)}/5 ({getStructuralQuality(metrics.example_use)})
+                    </span>
+                    {metrics.example_use_comment && (
+                      <div className="text-xs text-gray-400 mt-1 italic">
+                        "{metrics.example_use_comment}"
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Tonality/Writing Style:</span>
+                    <span className={`ml-1 font-mono ${getStructuralQualityColor(metrics.tonality_writing_style)}`}>
+                      {formatValue(metrics.tonality_writing_style, 1)}/5 ({getStructuralQuality(metrics.tonality_writing_style)})
+                    </span>
+                    {metrics.tonality_writing_style_comment && (
+                      <div className="text-xs text-gray-400 mt-1 italic">
+                        "{metrics.tonality_writing_style_comment}"
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Output Format Specification:</span>
+                    <span className={`ml-1 font-mono ${getStructuralQualityColor(metrics.output_format_specification)}`}>
+                      {formatValue(metrics.output_format_specification, 1)}/5 ({getStructuralQuality(metrics.output_format_specification)})
+                    </span>
+                    {metrics.output_format_specification_comment && (
+                      <div className="text-xs text-gray-400 mt-1 italic">
+                        "{metrics.output_format_specification_comment}"
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Information Hierarchy:</span>
+                    <span className={`ml-1 font-mono ${getStructuralQualityColor(metrics.information_hierarchy)}`}>
+                      {formatValue(metrics.information_hierarchy, 1)}/5 ({getStructuralQuality(metrics.information_hierarchy)})
+                    </span>
+                    {metrics.information_hierarchy_comment && (
+                      <div className="text-xs text-gray-400 mt-1 italic">
+                        "{metrics.information_hierarchy_comment}"
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import { useParams } from "next/navigation";
 import MetricsDisplay from "@/components/MetricsDisplay";
 
@@ -60,6 +60,32 @@ type UiMessage = {
     care_quantity_specified?: boolean;
     care_has_citations?: boolean;
     
+    // Structural quality metrics (likert scale 1-5)
+    task_intent_specification?: number;
+    goal_objective_articulation?: number;
+    persona_role_definition?: number;
+    step_by_step_decomposition?: number;
+    chain_of_thought_structure?: number;
+    context_provisioning?: number;
+    reference_use?: number;
+    example_use?: number;
+    tonality_writing_style?: number;
+    output_format_specification?: number;
+    information_hierarchy?: number;
+    
+    // Structural quality comments/justifications
+    task_intent_specification_comment?: string;
+    goal_objective_articulation_comment?: string;
+    persona_role_definition_comment?: string;
+    step_by_step_decomposition_comment?: string;
+    chain_of_thought_structure_comment?: string;
+    context_provisioning_comment?: string;
+    reference_use_comment?: string;
+    example_use_comment?: string;
+    tonality_writing_style_comment?: string;
+    output_format_specification_comment?: string;
+    information_hierarchy_comment?: string;
+    
     // API metrics (for responses)
     model?: string;
     token_input?: number;
@@ -88,6 +114,19 @@ type SessionSummary = {
   total_cost_input: number;
   total_cost_output: number;
   avg_latency: number;
+  
+  // Structural quality averages
+  avg_task_intent_specification: number;
+  avg_goal_objective_articulation: number;
+  avg_persona_role_definition: number;
+  avg_step_by_step_decomposition: number;
+  avg_chain_of_thought_structure: number;
+  avg_context_provisioning: number;
+  avg_reference_use: number;
+  avg_example_use: number;
+  avg_tonality_writing_style: number;
+  avg_output_format_specification: number;
+  avg_information_hierarchy: number;
 };
 
 function EvalContent() {
@@ -101,6 +140,7 @@ function EvalContent() {
   const [userPromptsCopySuccess, setUserPromptsCopySuccess] = useState(false);
   const [aiResponsesCopySuccess, setAiResponsesCopySuccess] = useState(false);
   const [expandedMetrics, setExpandedMetrics] = useState<Set<string>>(new Set());
+  const [isEvaluating, setIsEvaluating] = useState(false);
 
   // Get AI name from environment variable
   const aiName = process.env.NEXT_PUBLIC_AI_NAME || 'LLM/Agent/AI';
@@ -176,6 +216,84 @@ function EvalContent() {
     setExpandedMetrics(newExpanded);
   };
 
+  // Function to trigger structural quality evaluation for missing data
+  const triggerStructuralEvaluation = useCallback(async (messages: UiMessage[]) => {
+    console.log('🔍 Checking for structural quality evaluation...');
+    if (isEvaluating) {
+      console.log('⏳ Already evaluating, skipping...');
+      return;
+    }
+    
+    // Find user messages that don't have structural quality metrics
+    const userMessages = messages.filter(message => 
+      message.role === 'user' && 
+      message.metrics && 
+      (message.metrics.task_intent_specification === undefined || message.metrics.task_intent_specification === null)
+    );
+
+    console.log(`📊 Found ${userMessages.length} user messages without structural quality metrics`);
+    
+    // Debug: Show the actual values for the first few messages
+    const userMessagesForDebug = messages.filter(message => message.role === 'user' && message.metrics);
+    console.log('🔍 Debug - First few user messages and their task_intent_specification values:');
+    userMessagesForDebug.slice(0, 3).forEach((msg, index) => {
+      console.log(`  Message ${index + 1}:`, {
+        id: msg.id,
+        task_intent_specification: msg.metrics?.task_intent_specification,
+        type: typeof msg.metrics?.task_intent_specification
+      });
+    });
+    
+    if (userMessages.length === 0) {
+      console.log('✅ All messages already have structural quality metrics');
+      return;
+    }
+
+    console.log('🚀 Starting structural quality evaluation...');
+    setIsEvaluating(true);
+    
+    try {
+      // Get the actual chat interactions from the database to get the real IDs
+      const response = await fetch(`/api/eval/${sessionId}`);
+      if (!response.ok) {
+        console.error('❌ Failed to fetch eval data:', response.status);
+        return;
+      }
+      
+      // Get chat interactions that need evaluation by checking the database directly
+      console.log('📡 Calling evaluation API...');
+      const evalResponse = await fetch('/api/evaluate-structural-quality', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId,
+          evaluateAll: true // Flag to evaluate all missing interactions
+        })
+      });
+
+      console.log('📡 Evaluation API response:', evalResponse.status);
+      if (evalResponse.ok) {
+        const result = await evalResponse.json();
+        console.log('✅ Evaluation completed:', result);
+        // Reload the page data after evaluation
+        setTimeout(() => {
+          console.log('🔄 Reloading page...');
+          window.location.reload();
+        }, 2000);
+      } else {
+        const error = await evalResponse.text();
+        console.error('❌ Evaluation failed:', error);
+      }
+      
+    } catch (err) {
+      console.error('❌ Error triggering structural evaluation:', err);
+    } finally {
+      setIsEvaluating(false);
+    }
+  }, [isEvaluating, sessionId]);
+
   useEffect(() => {
     const fetchEvalData = async () => {
       if (!sessionId) return;
@@ -198,6 +316,11 @@ function EvalContent() {
         const data = await response.json();
         setMessages(data.messages || []);
         setSessionSummary(data.sessionSummary || null);
+        
+        // Trigger structural evaluation for missing data
+        if (data.messages && data.messages.length > 0) {
+          triggerStructuralEvaluation(data.messages);
+        }
       } catch (err) {
         console.error('Error fetching evaluation data:', err);
         setError('Failed to load evaluation data');
@@ -207,7 +330,7 @@ function EvalContent() {
     };
 
     fetchEvalData();
-  }, [sessionId]);
+  }, [sessionId, triggerStructuralEvaluation]);
 
   if (isLoading) {
     return (
@@ -216,6 +339,20 @@ function EvalContent() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading evaluation data...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (isEvaluating) {
+    return (
+      <main className="h-full flex flex-col items-center pt-10">
+        <div className="w-full max-w-4xl mx-auto relative flex items-center justify-center h-full px-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Evaluating structural quality metrics...</p>
+            <p className="text-gray-500 text-sm mt-2">This may take a few moments</p>
           </div>
         </div>
       </main>
@@ -294,6 +431,57 @@ function EvalContent() {
               <div>
                 <span className="text-gray-600">Avg Latency:</span>
                 <span className="ml-2 font-mono">{sessionSummary.avg_latency.toFixed(0)}ms</span>
+              </div>
+            </div>
+            
+            {/* Structural Quality Summary */}
+            <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">📊 Structural Quality Metrics (Session Average)</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-gray-600 text-xs">Task Intent</span>
+                  <span className="font-mono text-lg">{sessionSummary.avg_task_intent_specification.toFixed(1)}/5</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-600 text-xs">Goal Articulation</span>
+                  <span className="font-mono text-lg">{sessionSummary.avg_goal_objective_articulation.toFixed(1)}/5</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-600 text-xs">Persona/Role</span>
+                  <span className="font-mono text-lg">{sessionSummary.avg_persona_role_definition.toFixed(1)}/5</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-600 text-xs">Step Decomposition</span>
+                  <span className="font-mono text-lg">{sessionSummary.avg_step_by_step_decomposition.toFixed(1)}/5</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-600 text-xs">Chain of Thought</span>
+                  <span className="font-mono text-lg">{sessionSummary.avg_chain_of_thought_structure.toFixed(1)}/5</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-600 text-xs">Context Provisioning</span>
+                  <span className="font-mono text-lg">{sessionSummary.avg_context_provisioning.toFixed(1)}/5</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-600 text-xs">Reference Use</span>
+                  <span className="font-mono text-lg">{sessionSummary.avg_reference_use.toFixed(1)}/5</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-600 text-xs">Example Use</span>
+                  <span className="font-mono text-lg">{sessionSummary.avg_example_use.toFixed(1)}/5</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-600 text-xs">Tonality/Style</span>
+                  <span className="font-mono text-lg">{sessionSummary.avg_tonality_writing_style.toFixed(1)}/5</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-600 text-xs">Output Format</span>
+                  <span className="font-mono text-lg">{sessionSummary.avg_output_format_specification.toFixed(1)}/5</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-600 text-xs">Info Hierarchy</span>
+                  <span className="font-mono text-lg">{sessionSummary.avg_information_hierarchy.toFixed(1)}/5</span>
+                </div>
               </div>
             </div>
           </div>

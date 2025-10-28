@@ -64,6 +64,32 @@ export interface ChatInteractionData {
   care_quantity_specified?: boolean;
   care_has_citations?: boolean;
   
+  // Structural quality metrics (likert scale 1-5)
+  task_intent_specification?: number;
+  goal_objective_articulation?: number;
+  persona_role_definition?: number;
+  step_by_step_decomposition?: number;
+  chain_of_thought_structure?: number;
+  context_provisioning?: number;
+  reference_use?: number;
+  example_use?: number;
+  tonality_writing_style?: number;
+  output_format_specification?: number;
+  information_hierarchy?: number;
+  
+  // Structural quality comments/justifications
+  task_intent_specification_comment?: string;
+  goal_objective_articulation_comment?: string;
+  persona_role_definition_comment?: string;
+  step_by_step_decomposition_comment?: string;
+  chain_of_thought_structure_comment?: string;
+  context_provisioning_comment?: string;
+  reference_use_comment?: string;
+  example_use_comment?: string;
+  tonality_writing_style_comment?: string;
+  output_format_specification_comment?: string;
+  information_hierarchy_comment?: string;
+  
   // OpenAI related
   api_call_id?: string;
   role_used: 'system' | 'user' | 'assistant' | 'tool';
@@ -143,6 +169,32 @@ export async function insertChatInteraction(data: ChatInteractionData): Promise<
       care_role_specified: data.care_role_specified,
       care_quantity_specified: data.care_quantity_specified,
       care_has_citations: data.care_has_citations,
+      
+      // structural quality metrics
+      task_intent_specification: data.task_intent_specification,
+      goal_objective_articulation: data.goal_objective_articulation,
+      persona_role_definition: data.persona_role_definition,
+      step_by_step_decomposition: data.step_by_step_decomposition,
+      chain_of_thought_structure: data.chain_of_thought_structure,
+      context_provisioning: data.context_provisioning,
+      reference_use: data.reference_use,
+      example_use: data.example_use,
+      tonality_writing_style: data.tonality_writing_style,
+      output_format_specification: data.output_format_specification,
+      information_hierarchy: data.information_hierarchy,
+      
+      // structural quality comments
+      task_intent_specification_comment: data.task_intent_specification_comment,
+      goal_objective_articulation_comment: data.goal_objective_articulation_comment,
+      persona_role_definition_comment: data.persona_role_definition_comment,
+      step_by_step_decomposition_comment: data.step_by_step_decomposition_comment,
+      chain_of_thought_structure_comment: data.chain_of_thought_structure_comment,
+      context_provisioning_comment: data.context_provisioning_comment,
+      reference_use_comment: data.reference_use_comment,
+      example_use_comment: data.example_use_comment,
+      tonality_writing_style_comment: data.tonality_writing_style_comment,
+      output_format_specification_comment: data.output_format_specification_comment,
+      information_hierarchy_comment: data.information_hierarchy_comment,
       api_call_id: data.api_call_id,
       role_used: data.role_used,
       model: data.model,

@@ -14,6 +14,31 @@ export async function GET(
 
     const supabase = getSupabaseServerClient();
     
+    // Fetch session data
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('user_sessions')
+      .select(`
+        total_prompts,
+        avg_task_intent_specification,
+        avg_goal_objective_articulation,
+        avg_persona_role_definition,
+        avg_step_by_step_decomposition,
+        avg_chain_of_thought_structure,
+        avg_context_provisioning,
+        avg_reference_use,
+        avg_example_use,
+        avg_tonality_writing_style,
+        avg_output_format_specification,
+        avg_information_hierarchy
+      `)
+      .eq('session_id', sessionId)
+      .single();
+
+    if (sessionError) {
+      console.error('Error fetching session data:', sessionError);
+      return Response.json({ error: 'Failed to fetch session data' }, { status: 500 });
+    }
+    
     // Fetch chat interactions with all metrics for the given session, ordered by prompt_index_no
     const { data: interactions, error } = await supabase
       .from('chat_interactions')
@@ -64,6 +89,28 @@ export async function GET(
         care_role_specified,
         care_quantity_specified,
         care_has_citations,
+        task_intent_specification,
+        goal_objective_articulation,
+        persona_role_definition,
+        step_by_step_decomposition,
+        chain_of_thought_structure,
+        context_provisioning,
+        reference_use,
+        example_use,
+        tonality_writing_style,
+        output_format_specification,
+        information_hierarchy,
+        task_intent_specification_comment,
+        goal_objective_articulation_comment,
+        persona_role_definition_comment,
+        step_by_step_decomposition_comment,
+        chain_of_thought_structure_comment,
+        context_provisioning_comment,
+        reference_use_comment,
+        example_use_comment,
+        tonality_writing_style_comment,
+        output_format_specification_comment,
+        information_hierarchy_comment,
         model,
         token_input,
         token_output,
@@ -140,7 +187,33 @@ export async function GET(
           care_output_format_specified: interaction.care_output_format_specified,
           care_role_specified: interaction.care_role_specified,
           care_quantity_specified: interaction.care_quantity_specified,
-          care_has_citations: interaction.care_has_citations
+          care_has_citations: interaction.care_has_citations,
+          
+          // Structural quality metrics
+          task_intent_specification: interaction.task_intent_specification,
+          goal_objective_articulation: interaction.goal_objective_articulation,
+          persona_role_definition: interaction.persona_role_definition,
+          step_by_step_decomposition: interaction.step_by_step_decomposition,
+          chain_of_thought_structure: interaction.chain_of_thought_structure,
+          context_provisioning: interaction.context_provisioning,
+          reference_use: interaction.reference_use,
+          example_use: interaction.example_use,
+          tonality_writing_style: interaction.tonality_writing_style,
+          output_format_specification: interaction.output_format_specification,
+          information_hierarchy: interaction.information_hierarchy,
+          
+          // Structural quality comments
+          task_intent_specification_comment: interaction.task_intent_specification_comment,
+          goal_objective_articulation_comment: interaction.goal_objective_articulation_comment,
+          persona_role_definition_comment: interaction.persona_role_definition_comment,
+          step_by_step_decomposition_comment: interaction.step_by_step_decomposition_comment,
+          chain_of_thought_structure_comment: interaction.chain_of_thought_structure_comment,
+          context_provisioning_comment: interaction.context_provisioning_comment,
+          reference_use_comment: interaction.reference_use_comment,
+          example_use_comment: interaction.example_use_comment,
+          tonality_writing_style_comment: interaction.tonality_writing_style_comment,
+          output_format_specification_comment: interaction.output_format_specification_comment,
+          information_hierarchy_comment: interaction.information_hierarchy_comment
         }
       },
       ...(interaction.response ? [{
@@ -161,10 +234,10 @@ export async function GET(
 
     // Calculate session-level summary metrics
     const sessionSummary = {
-      scenario: interactions[0]?.scenario,
-      task_code: interactions[0]?.task_code,
+      scenario: interactions[0]?.scenario || 'unknown',
+      task_code: interactions[0]?.task_code || null,
       total_interactions: interactions.length,
-      total_prompts: interactions.filter(i => i.prompt).length,
+      total_prompts: sessionData?.total_prompts || interactions.filter(i => i.prompt).length,
       total_responses: interactions.filter(i => i.response).length,
       
       // Average readability metrics across all prompts
@@ -214,7 +287,20 @@ export async function GET(
       avg_latency: interactions
         .filter(i => i.latency !== null)
         .reduce((sum, i) => sum + (i.latency || 0), 0) / 
-        interactions.filter(i => i.latency !== null).length || 0
+        interactions.filter(i => i.latency !== null).length || 0,
+      
+      // Structural quality averages (from pre-calculated session data)
+      avg_task_intent_specification: sessionData?.avg_task_intent_specification || 0,
+      avg_goal_objective_articulation: sessionData?.avg_goal_objective_articulation || 0,
+      avg_persona_role_definition: sessionData?.avg_persona_role_definition || 0,
+      avg_step_by_step_decomposition: sessionData?.avg_step_by_step_decomposition || 0,
+      avg_chain_of_thought_structure: sessionData?.avg_chain_of_thought_structure || 0,
+      avg_context_provisioning: sessionData?.avg_context_provisioning || 0,
+      avg_reference_use: sessionData?.avg_reference_use || 0,
+      avg_example_use: sessionData?.avg_example_use || 0,
+      avg_tonality_writing_style: sessionData?.avg_tonality_writing_style || 0,
+      avg_output_format_specification: sessionData?.avg_output_format_specification || 0,
+      avg_information_hierarchy: sessionData?.avg_information_hierarchy || 0
     };
 
     return Response.json({ 

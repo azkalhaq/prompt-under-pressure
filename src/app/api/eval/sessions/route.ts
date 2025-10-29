@@ -23,7 +23,9 @@ export async function GET(request: NextRequest) {
         avg_example_use,
         avg_tonality_writing_style,
         avg_output_format_specification,
-        avg_information_hierarchy
+        avg_information_hierarchy,
+        session_prompt_strategy_classification,
+        session_prompt_strategy_justification
       `)
       .order('created_at', { ascending: false });
 
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest) {
     
     const { data: interactions, error: interactionsError } = await supabase
       .from('chat_interactions')
-      .select('session_id, scenario, task_code, task_intent_specification')
+      .select('session_id, scenario, task_code, task_intent_specification, prompt_strategy_classification')
       .in('session_id', sessionIds)
       .order('prompt_index_no', { ascending: true });
 
@@ -59,6 +61,7 @@ export async function GET(request: NextRequest) {
     // Group interactions by session_id and get the first one for scenario/task_code
     const sessionInteractionMap = new Map<string, any>();
     const sessionEvaluationCounts = new Map<string, { total: number; evaluated: number }>();
+    const sessionClassificationCounts = new Map<string, { total: number; classified: number }>();
 
     interactions?.forEach(interaction => {
       if (!sessionInteractionMap.has(interaction.session_id)) {
@@ -70,10 +73,21 @@ export async function GET(request: NextRequest) {
         sessionEvaluationCounts.set(interaction.session_id, { total: 0, evaluated: 0 });
       }
       
-      const counts = sessionEvaluationCounts.get(interaction.session_id)!;
-      counts.total++;
+      const evalCounts = sessionEvaluationCounts.get(interaction.session_id)!;
+      evalCounts.total++;
       if (interaction.task_intent_specification !== null) {
-        counts.evaluated++;
+        evalCounts.evaluated++;
+      }
+
+      // Count classification status
+      if (!sessionClassificationCounts.has(interaction.session_id)) {
+        sessionClassificationCounts.set(interaction.session_id, { total: 0, classified: 0 });
+      }
+      
+      const classCounts = sessionClassificationCounts.get(interaction.session_id)!;
+      classCounts.total++;
+      if (interaction.prompt_strategy_classification !== null) {
+        classCounts.classified++;
       }
     });
 
@@ -81,6 +95,7 @@ export async function GET(request: NextRequest) {
     const sessionsWithStatus = sessions.map(session => {
       const interaction = sessionInteractionMap.get(session.session_id);
       const evaluationCounts = sessionEvaluationCounts.get(session.session_id) || { total: 0, evaluated: 0 };
+      const classificationCounts = sessionClassificationCounts.get(session.session_id) || { total: 0, classified: 0 };
       
       // Determine if session needs evaluation
       const needsEvaluation = session.avg_task_intent_specification === null && evaluationCounts.total > 0;
@@ -90,12 +105,22 @@ export async function GET(request: NextRequest) {
         ? Math.round((evaluationCounts.evaluated / evaluationCounts.total) * 100)
         : 0;
 
+      // Determine if session needs classification
+      const needsClassification = classificationCounts.total > 0 && classificationCounts.classified < classificationCounts.total;
+      
+      // Calculate classification progress percentage
+      const classificationProgress = classificationCounts.total > 0 
+        ? Math.round((classificationCounts.classified / classificationCounts.total) * 100)
+        : 0;
+
       return {
         ...session,
         scenario: interaction?.scenario || 'Unknown',
         task_code: interaction?.task_code || null,
         needsEvaluation,
-        evaluationProgress
+        evaluationProgress,
+        needsClassification,
+        classificationProgress
       };
     });
 

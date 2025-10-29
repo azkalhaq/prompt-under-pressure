@@ -29,7 +29,9 @@ export async function GET(
         avg_example_use,
         avg_tonality_writing_style,
         avg_output_format_specification,
-        avg_information_hierarchy
+        avg_information_hierarchy,
+        session_prompt_strategy_classification,
+        session_prompt_strategy_justification
       `)
       .eq('session_id', sessionId)
       .single();
@@ -100,6 +102,8 @@ export async function GET(
         tonality_writing_style,
         output_format_specification,
         information_hierarchy,
+        prompt_strategy_classification,
+        prompt_strategy_justification,
         task_intent_specification_comment,
         goal_objective_articulation_comment,
         persona_role_definition_comment,
@@ -201,6 +205,9 @@ export async function GET(
           tonality_writing_style: interaction.tonality_writing_style,
           output_format_specification: interaction.output_format_specification,
           information_hierarchy: interaction.information_hierarchy,
+          // Prompt strategy classification
+          prompt_strategy_classification: interaction.prompt_strategy_classification,
+          prompt_strategy_justification: interaction.prompt_strategy_justification,
           
           // Structural quality comments
           task_intent_specification_comment: interaction.task_intent_specification_comment,
@@ -300,7 +307,11 @@ export async function GET(
       avg_example_use: sessionData?.avg_example_use || 0,
       avg_tonality_writing_style: sessionData?.avg_tonality_writing_style || 0,
       avg_output_format_specification: sessionData?.avg_output_format_specification || 0,
-      avg_information_hierarchy: sessionData?.avg_information_hierarchy || 0
+      avg_information_hierarchy: sessionData?.avg_information_hierarchy || 0,
+      
+      // Session-level prompt strategy classification
+      session_prompt_strategy_classification: sessionData?.session_prompt_strategy_classification || null,
+      session_prompt_strategy_justification: sessionData?.session_prompt_strategy_justification || null
     };
 
     return Response.json({ 

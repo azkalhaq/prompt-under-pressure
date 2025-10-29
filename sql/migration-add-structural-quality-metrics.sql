@@ -14,6 +14,9 @@ ADD COLUMN IF NOT EXISTS example_use SMALLINT,
 ADD COLUMN IF NOT EXISTS tonality_writing_style SMALLINT,
 ADD COLUMN IF NOT EXISTS output_format_specification SMALLINT,
 ADD COLUMN IF NOT EXISTS information_hierarchy SMALLINT,
+-- Prompt strategy classification columns
+ADD COLUMN IF NOT EXISTS prompt_strategy_classification TEXT,
+ADD COLUMN IF NOT EXISTS prompt_strategy_justification TEXT,
 -- Add comment columns for justifications
 ADD COLUMN IF NOT EXISTS task_intent_specification_comment TEXT,
 ADD COLUMN IF NOT EXISTS goal_objective_articulation_comment TEXT,
@@ -39,7 +42,10 @@ ADD COLUMN IF NOT EXISTS avg_reference_use NUMERIC(6,2),
 ADD COLUMN IF NOT EXISTS avg_example_use NUMERIC(6,2),
 ADD COLUMN IF NOT EXISTS avg_tonality_writing_style NUMERIC(6,2),
 ADD COLUMN IF NOT EXISTS avg_output_format_specification NUMERIC(6,2),
-ADD COLUMN IF NOT EXISTS avg_information_hierarchy NUMERIC(6,2);
+ADD COLUMN IF NOT EXISTS avg_information_hierarchy NUMERIC(6,2),
+-- Add session-level prompt strategy classification
+ADD COLUMN IF NOT EXISTS session_prompt_strategy_classification TEXT,
+ADD COLUMN IF NOT EXISTS session_prompt_strategy_justification TEXT;
 
 -- Add indexes for better query performance on new columns
 CREATE INDEX IF NOT EXISTS idx_chat_interactions_task_intent_specification ON chat_interactions(task_intent_specification);
@@ -67,6 +73,10 @@ COMMENT ON COLUMN chat_interactions.tonality_writing_style IS 'Likert scale (1-5
 COMMENT ON COLUMN chat_interactions.output_format_specification IS 'Likert scale (1-5): Does it define the expected output structure or format?';
 COMMENT ON COLUMN chat_interactions.information_hierarchy IS 'Likert scale (1-5): Is information organized clearly and logically within the prompt?';
 
+-- Prompt strategy classification docs
+COMMENT ON COLUMN chat_interactions.prompt_strategy_classification IS 'Automatically classified prompt strategy/technique used (e.g., zero-shot, few-shot, CoT, ReAct, etc.)';
+COMMENT ON COLUMN chat_interactions.prompt_strategy_justification IS 'Short justification for the prompt strategy classification';
+
 -- Add comments for comment columns
 COMMENT ON COLUMN chat_interactions.task_intent_specification_comment IS 'Brief justification for task intent specification score';
 COMMENT ON COLUMN chat_interactions.goal_objective_articulation_comment IS 'Brief justification for goal/objective articulation score';
@@ -91,3 +101,7 @@ COMMENT ON COLUMN user_sessions.avg_example_use IS 'Average example use score ac
 COMMENT ON COLUMN user_sessions.avg_tonality_writing_style IS 'Average tonality/writing style score across all prompts in session';
 COMMENT ON COLUMN user_sessions.avg_output_format_specification IS 'Average output format specification score across all prompts in session';
 COMMENT ON COLUMN user_sessions.avg_information_hierarchy IS 'Average information hierarchy score across all prompts in session';
+
+-- Add comments for session-level prompt strategy classification
+COMMENT ON COLUMN user_sessions.session_prompt_strategy_classification IS 'Most common prompt strategy classification used across the session';
+COMMENT ON COLUMN user_sessions.session_prompt_strategy_justification IS 'Justification for the session-level prompt strategy classification';

@@ -27,6 +27,10 @@ interface SessionSummary {
 interface SessionWithEvaluationStatus extends SessionSummary {
   needsEvaluation: boolean;
   evaluationProgress: number; // percentage of interactions that have been evaluated
+  needsClassification: boolean;
+  classificationProgress: number; // percentage of interactions that have been classified
+  session_prompt_strategy_classification?: string;
+  session_prompt_strategy_justification?: string;
 }
 
 export default function EvalIndexPage() {
@@ -35,6 +39,8 @@ export default function EvalIndexPage() {
   const [error, setError] = useState<string | null>(null);
   const [evaluatingSessions, setEvaluatingSessions] = useState<Set<string>>(new Set());
   const [evaluationResults, setEvaluationResults] = useState<Record<string, string>>({});
+  const [classifyingSessions, setClassifyingSessions] = useState<Set<string>>(new Set());
+  const [classificationResults, setClassificationResults] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchSessions();
@@ -126,6 +132,71 @@ export default function EvalIndexPage() {
     }
   };
 
+  const classifySession = async (sessionId: string) => {
+    if (classifyingSessions.has(sessionId)) return;
+    
+    setClassifyingSessions(prev => new Set(prev).add(sessionId));
+    setClassificationResults(prev => ({ ...prev, [sessionId]: 'Classifying...' }));
+    
+    try {
+      console.log(`🚀 Starting classification for session: ${sessionId}`);
+      
+      const response = await fetch('/api/classify-prompt-strategy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId,
+          classifyAll: true
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`✅ Classification completed for session ${sessionId}:`, result);
+        setClassificationResults(prev => ({ 
+          ...prev, 
+          [sessionId]: `Classified ${result.classified} interactions` 
+        }));
+        
+        // Refresh the sessions list to show updated data
+        setTimeout(() => {
+          fetchSessions();
+        }, 1000);
+      } else {
+        const errorText = await response.text();
+        console.error(`❌ Classification failed for session ${sessionId}:`, errorText);
+        setClassificationResults(prev => ({ 
+          ...prev, 
+          [sessionId]: `Error: ${response.status}` 
+        }));
+      }
+    } catch (err) {
+      console.error(`❌ Error classifying session ${sessionId}:`, err);
+      setClassificationResults(prev => ({ 
+        ...prev, 
+        [sessionId]: `Error: ${err instanceof Error ? err.message : 'Unknown error'}` 
+      }));
+    } finally {
+      setClassifyingSessions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(sessionId);
+        return newSet;
+      });
+    }
+  };
+
+  const classifyAllSessions = async () => {
+    const sessionsNeedingClassification = sessions.filter(session => session.needsClassification);
+    
+    for (const session of sessionsNeedingClassification) {
+      await classifySession(session.session_id);
+      // Add a small delay between classifications to avoid overwhelming the system
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+  };
+
   const getEvaluationStatus = (session: SessionWithEvaluationStatus) => {
     if (session.needsEvaluation) {
       return (
@@ -143,6 +214,28 @@ export default function EvalIndexPage() {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
           No Data
+        </span>
+      );
+    }
+  };
+
+  const getClassificationStatus = (session: SessionWithEvaluationStatus) => {
+    if (session.needsClassification) {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+          Needs Classification
+        </span>
+      );
+    } else if (session.classificationProgress > 0) {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          Classified ({session.classificationProgress}%)
+        </span>
+      );
+    } else {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          No Classification
         </span>
       );
     }
@@ -199,8 +292,10 @@ export default function EvalIndexPage() {
     );
   }
 
-  const sessionsNeedingEvaluation = sessions.filter(session => session.needsEvaluation);
-  const evaluatedSessions = sessions.filter(session => !session.needsEvaluation && session.avg_task_intent_specification !== null);
+    const sessionsNeedingEvaluation = sessions.filter(session => session.needsEvaluation);
+    const evaluatedSessions = sessions.filter(session => !session.needsEvaluation && session.avg_task_intent_specification !== null);
+    const sessionsNeedingClassification = sessions.filter(session => session.needsClassification);
+    const classifiedSessions = sessions.filter(session => !session.needsClassification && session.classificationProgress > 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -214,7 +309,7 @@ export default function EvalIndexPage() {
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -260,6 +355,34 @@ export default function EvalIndexPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                  <span className="text-orange-600 text-sm font-medium">🏷️</span>
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Needs Classification</p>
+                <p className="text-2xl font-semibold text-gray-900">{sessionsNeedingClassification.length}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 text-sm font-medium">🏷️</span>
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Classified</p>
+                <p className="text-2xl font-semibold text-gray-900">{classifiedSessions.length}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                   <span className="text-purple-600 text-sm font-medium">📈</span>
                 </div>
@@ -281,8 +404,8 @@ export default function EvalIndexPage() {
         </div>
 
         {/* Action Buttons */}
-        {sessionsNeedingEvaluation.length > 0 && (
-          <div className="mb-6">
+        <div className="mb-6 flex flex-wrap gap-4">
+          {sessionsNeedingEvaluation.length > 0 && (
             <button
               onClick={evaluateAllSessions}
               disabled={evaluatingSessions.size > 0}
@@ -290,8 +413,18 @@ export default function EvalIndexPage() {
             >
               {evaluatingSessions.size > 0 ? 'Evaluating...' : `Evaluate All (${sessionsNeedingEvaluation.length} sessions)`}
             </button>
-          </div>
-        )}
+          )}
+          
+          {sessionsNeedingClassification.length > 0 && (
+            <button
+              onClick={classifyAllSessions}
+              disabled={classifyingSessions.size > 0}
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {classifyingSessions.size > 0 ? 'Classifying...' : `Classify All (${sessionsNeedingClassification.length} sessions)`}
+            </button>
+          )}
+        </div>
 
         {/* Sessions Table */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -313,7 +446,13 @@ export default function EvalIndexPage() {
                     Prompts
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    Evaluation
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Classification
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Session Strategy
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Avg Score
@@ -346,6 +485,25 @@ export default function EvalIndexPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getEvaluationStatus(session)}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getClassificationStatus(session)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {session.session_prompt_strategy_classification ? (
+                        <div className="text-sm">
+                          <div className="font-medium text-gray-900">
+                            {session.session_prompt_strategy_classification}
+                          </div>
+                          {session.session_prompt_strategy_justification && (
+                            <div className="text-xs text-gray-500 mt-1 max-w-xs truncate" title={session.session_prompt_strategy_justification}>
+                              {session.session_prompt_strategy_justification}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">Not classified</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {getStructuralQualityScore(session)}/5
                     </td>
@@ -365,6 +523,15 @@ export default function EvalIndexPage() {
                           {evaluatingSessions.has(session.session_id) ? 'Evaluating...' : 'Evaluate'}
                         </button>
                       )}
+                      {session.needsClassification && (
+                        <button
+                          onClick={() => classifySession(session.session_id)}
+                          disabled={classifyingSessions.has(session.session_id)}
+                          className="text-orange-600 hover:text-orange-900 disabled:opacity-50"
+                        >
+                          {classifyingSessions.has(session.session_id) ? 'Classifying...' : 'Classify'}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -373,19 +540,42 @@ export default function EvalIndexPage() {
           </div>
         </div>
 
-        {/* Evaluation Results */}
-        {Object.keys(evaluationResults).length > 0 && (
+        {/* Results */}
+        {(Object.keys(evaluationResults).length > 0 || Object.keys(classificationResults).length > 0) && (
           <div className="mt-6 bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Evaluation Results</h3>
-            <div className="space-y-2">
-              {Object.entries(evaluationResults).map(([sessionId, result]) => (
-                <div key={sessionId} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded">
-                  <span className="text-sm font-mono text-gray-600">
-                    {sessionId.substring(0, 8)}...
-                  </span>
-                  <span className="text-sm text-gray-900">{result}</span>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Results</h3>
+            <div className="space-y-4">
+              {Object.keys(evaluationResults).length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Evaluation Results</h4>
+                  <div className="space-y-2">
+                    {Object.entries(evaluationResults).map(([sessionId, result]) => (
+                      <div key={sessionId} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded">
+                        <span className="text-sm font-mono text-gray-600">
+                          {sessionId.substring(0, 8)}...
+                        </span>
+                        <span className="text-sm text-gray-900">{result}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              )}
+              
+              {Object.keys(classificationResults).length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Classification Results</h4>
+                  <div className="space-y-2">
+                    {Object.entries(classificationResults).map(([sessionId, result]) => (
+                      <div key={sessionId} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded">
+                        <span className="text-sm font-mono text-gray-600">
+                          {sessionId.substring(0, 8)}...
+                        </span>
+                        <span className="text-sm text-gray-900">{result}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

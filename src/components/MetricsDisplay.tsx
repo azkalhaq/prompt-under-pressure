@@ -67,6 +67,10 @@ interface MetricsDisplayProps {
     output_format_specification?: number;
     information_hierarchy?: number;
     
+    // Prompt strategy classification
+    prompt_strategy_classification?: string;
+    prompt_strategy_justification?: string;
+    
     // Structural quality comments/justifications
     task_intent_specification_comment?: string;
     goal_objective_articulation_comment?: string;
@@ -368,6 +372,16 @@ export default function MetricsDisplay({
                       </div>
                     )}
                   </div>
+          {/* Prompt Strategy Classification */}
+          {metrics.prompt_strategy_classification && (
+            <div className="mt-4 p-3 rounded border bg-gray-50">
+              <div className="text-sm text-gray-600">Prompt Strategy Classification</div>
+              <div className="mt-1 text-sm font-medium text-gray-900">{metrics.prompt_strategy_classification}</div>
+              {metrics.prompt_strategy_justification && (
+                <div className="mt-1 text-xs text-gray-500 italic">"{metrics.prompt_strategy_justification}"</div>
+              )}
+            </div>
+          )}
                 </div>
                 <div className="space-y-2">
                   <div>

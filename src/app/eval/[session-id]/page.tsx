@@ -127,6 +127,10 @@ type SessionSummary = {
   avg_tonality_writing_style: number;
   avg_output_format_specification: number;
   avg_information_hierarchy: number;
+  
+  // Session-level prompt strategy classification
+  session_prompt_strategy_classification?: string;
+  session_prompt_strategy_justification?: string;
 };
 
 function EvalContent() {
@@ -484,6 +488,29 @@ function EvalContent() {
                 </div>
               </div>
             </div>
+            
+            {/* Session-Level Prompt Strategy Classification */}
+            {sessionSummary.session_prompt_strategy_classification && (
+              <div className="mt-4 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 Session-Level Prompt Strategy</h3>
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-600 text-sm font-medium">Classification:</span>
+                    <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold">
+                      {sessionSummary.session_prompt_strategy_classification}
+                    </span>
+                  </div>
+                  {sessionSummary.session_prompt_strategy_justification && (
+                    <div className="mt-2">
+                      <span className="text-gray-600 text-sm font-medium">Justification:</span>
+                      <p className="text-sm text-gray-700 mt-1 p-2 bg-white rounded border">
+                        {sessionSummary.session_prompt_strategy_justification}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

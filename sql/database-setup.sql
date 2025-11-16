@@ -1,4 +1,4 @@
--- Database setup for Next.js Pup Project
+-- Database setup for Prompting Under Pressure platform
 -- This file sets up the unified session system for both Stroop tests and Chat interactions
 
 -- Create users table

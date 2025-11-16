@@ -1,5 +1,7 @@
 # Stroop Test Component
 
+> **Disclaimer:** This documentation was generated with assistance from an AI model. Please verify details against the codebase before relying on it.
+
 This component implements a classic Stroop test for measuring cognitive interference and processing speed. The test presents color words (RED, BLUE, GREEN, YELLOW) in different colors and asks participants to either name the word or identify the color.
 
 ## Features

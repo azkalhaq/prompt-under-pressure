@@ -1,93 +1,184 @@
 # User Management System
 
-This document describes the user management system implemented for the Next.js Pup Project.
+> **Disclaimer:** This documentation was generated with assistance from an AI model. Please verify details against the codebase before relying on it.
+
+This document covers the user management surface area for the Prompting Under Pressure platform: database schema, API endpoints, helper utilities, and UI entry points. It reflects the current implementation as of `sql/database-setup.sql` and `src/app/api/users/route.ts`.
 
 ## Overview
 
-The user management system provides a complete solution for creating, retrieving, and managing users in the application. It includes:
+The system provides:
 
-- Database table for storing user information
-- API endpoints for user operations
-- Utility functions for user ID generation and validation
-- React components for user registration
-- TypeScript interfaces for type safety
+- A Postgres table (`users`) for storing participant metadata and six-digit passcodes.
+- Admin-protected API endpoints for creating and fetching users (with optional HTTP Basic Auth).
+- Utility helpers for ID generation, username derivation, and sanitisation.
+- React flows for admin/test operators to register or locate users.
 
 ## Database Schema
 
-### Users Table
+### `users` Table
 
 ```sql
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,                         -- surrogate key
-    user_id VARCHAR(128) UNIQUE NOT NULL,             -- unique user identifier (generated unique id based on n alphanumeric char - configurable)
-    email VARCHAR(255) UNIQUE,                        -- user's email address
-    username VARCHAR(255) UNIQUE,                     -- username (optional, default value use email)
-    name VARCHAR(255),                                -- fullname
+    user_id VARCHAR(128) UNIQUE NOT NULL,             -- externally shared participant ID
+    email VARCHAR(255) UNIQUE,                        -- optional email address
+    username VARCHAR(255) UNIQUE,                     -- optional username handle
+    name VARCHAR(255),                                -- full name or label
+    passcode VARCHAR(6) NOT NULL,                     -- six-digit numeric passcode
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),    -- record creation time
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()     -- record update time
 );
 ```
 
-### Indexes
+Related indexes (created in `sql/database-setup.sql`):
 
-- `idx_users_user_id` - For fast lookups by user_id
-- `idx_users_email` - For fast lookups by email
-- `idx_users_username` - For fast lookups by username
+- `idx_users_user_id`
+- `idx_users_email`
+- `idx_users_username`
+- `idx_users_passcode`
+
+### Passcode Behaviour
+
+- Generated automatically when a user is created (see `lib/user-db.ts`).
+- 6 digits, zero-padded (e.g., `042193`).
+- Usable as a lookup parameter via `GET /api/users?passcode=...`.
 
 ## API Endpoints
 
-### POST /api/users
+Endpoints live in `src/app/api/users/route.ts`.
 
-Creates a new user.
+### Authentication
 
-**Request Body:**
+- Toggle HTTP Basic Auth with `USERS_API_BASIC_AUTH_ENABLED=true`.
+- Credentials pulled from `ADMIN_BASIC_USER` / `ADMIN_BASIC_PASS`.
+- If enabled and not provided, POST requests return `401 Unauthorized`.
+
+### POST `/api/users`
+
+Create or upsert a user record. The handler:
+
+- Accepts `CreateUserRequest` (see `types/user.ts`) containing any combination of `email`, `user_id`, `name`, `username`, `passcode`.
+- Generates `user_id` / `passcode` when omitted.
+- Prevents duplicates by checking existing users.
+
+Example request:
+
 ```json
 {
-  "email": "user@example.com",
-  "name": "John Doe",
-  "username": "johndoe"  // optional
+  "email": "participant@example.com",
+  "name": "Participant 12",
+  "user_id": "P12ALPHA",
+  "username": "participant12"
 }
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "user": {
-    "id": 1,
-    "user_id": "abc123def456",
-    "email": "user@example.com",
-    "username": "johndoe",
-    "name": "John Doe",
-    "created_at": "2024-01-01T00:00:00Z",
-    "updated_at": "2024-01-01T00:00:00Z"
-  }
-}
-```
+Success response:
 
-### GET /api/users
-
-Retrieves user information. Must provide one of the following query parameters:
-
-- `?email=user@example.com` - Get user by email
-- `?user_id=abc123` - Get user by user_id
-- `?username=johndoe` - Get user by username
-
-**Response:**
 ```json
 {
   "success": true,
   "user": {
-    "id": 1,
-    "user_id": "abc123def456",
-    "email": "user@example.com",
-    "username": "johndoe",
-    "name": "John Doe",
-    "created_at": "2024-01-01T00:00:00Z",
-    "updated_at": "2024-01-01T00:00:00Z"
+    "id": 42,
+    "user_id": "P12ALPHA",
+    "email": "participant@example.com",
+    "username": "participant12",
+    "name": "Participant 12",
+    "passcode": "084391",
+    "created_at": "2025-01-05T19:44:12.239Z",
+    "updated_at": "2025-01-05T19:44:12.239Z"
   }
 }
 ```
+
+### GET `/api/users`
+
+Fetch a user by one of the following query parameters:
+
+- `user_id`
+- `email`
+- `username`
+- `passcode`
+
+If none are provided, the API returns `400`. Unknown users respond with `404`.
+
+```http
+GET /api/users?passcode=084391
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "user": {
+    "user_id": "P12ALPHA",
+    "email": "participant@example.com",
+    "username": "participant12",
+    "name": "Participant 12",
+    "passcode": "084391",
+    "created_at": "2025-01-05T19:44:12.239Z",
+    "updated_at": "2025-01-05T19:44:12.239Z"
+  }
+}
+```
+
+## TypeScript Interfaces & Utilities
+
+Key exports live under `src/lib/user-db.ts` and `src/utils/userUtils.ts`.
+
+### ID & Username Helpers
+
+```typescript
+import { generateUserId, generateUsernameFromEmail } from '@/utils/userUtils';
+
+const userId = generateUserId(12);     // e.g. "AB3D7K9QRT12"
+const fallbackId = generateUserId();   // defaults to 12 characters
+
+const username = generateUsernameFromEmail('alex.taylor@example.org'); // "alex.taylor"
+```
+
+### Validation & Sanitisation
+
+```typescript
+import { isValidEmail, sanitizeInput } from '@/utils/userUtils';
+
+isValidEmail('person@example.com'); // true
+sanitizeInput("<script>alert('x')</script>"); // "scriptalert('x')/script"
+```
+
+### Database Helpers
+
+```typescript
+import {
+  createUser,
+  updateUser,
+  getUserByEmail,
+  getUserById,
+  getUserByUsername,
+  getUserByPasscode,
+  checkUserExists,
+} from '@/lib/user-db';
+
+const created = await createUser({ email: 'person@example.com' });
+const fetched = await getUserByPasscode('084391');
+const updated = await updateUser('P12ALPHA', { name: 'Alex Taylor' });
+```
+
+- `createUser` and `updateUser` enforce email format, username uniqueness, and passcode generation.
+- `checkUserExists` tries email, username, and user ID automatically.
+
+## React Interfaces
+
+- `src/components/UserRegistration.tsx` — admin registration form using above helpers.
+- `src/app/login/page.tsx` — participant login screen that validates IDs through `GET /api/users`.
+
+These components rely on the same API contract described above.
+
+## Operational Notes
+
+- Ensure the server has `USERS_API_BASIC_AUTH_ENABLED=false` when exposing POST `/api/users` publicly (e.g., kiosk registration). Enable it for controlled admin-only contexts.
+- The API is stateless; there is no session cookie or authentication beyond optional Basic Auth.
+- Passcodes should be treated as sensitive; avoid exposing them to participants unless they are part of the study design.
 
 ## Utility Functions
 

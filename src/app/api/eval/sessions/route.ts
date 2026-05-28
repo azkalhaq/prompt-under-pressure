@@ -1,7 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/supabase';
 
-export async function GET(request: NextRequest) {
+type InteractionRow = {
+  session_id: string;
+  scenario: string | null;
+  task_code: string | null;
+  task_intent_specification: number | null;
+  prompt_strategy_classification: string | null;
+};
+
+export async function GET() {
   try {
     const supabase = getSupabaseServerClient();
     
@@ -59,11 +67,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Group interactions by session_id and get the first one for scenario/task_code
-    const sessionInteractionMap = new Map<string, any>();
+    const sessionInteractionMap = new Map<string, InteractionRow>();
     const sessionEvaluationCounts = new Map<string, { total: number; evaluated: number }>();
     const sessionClassificationCounts = new Map<string, { total: number; classified: number }>();
 
-    interactions?.forEach(interaction => {
+    const interactionsTyped = (interactions ?? []) as unknown as InteractionRow[];
+    interactionsTyped.forEach(interaction => {
       if (!sessionInteractionMap.has(interaction.session_id)) {
         sessionInteractionMap.set(interaction.session_id, interaction);
       }

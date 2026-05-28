@@ -1,6 +1,6 @@
 "use client"
 import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import ChatItem from "@/components/ChatItem";
 import ChatInput, { ChatInputHandle } from "@/components/ChatInput";
 import { useSessionContext } from "@/contexts/SessionContext";
@@ -10,7 +10,6 @@ type UiMessage = { id: string; role: "user" | "assistant"; content: string };
 
 function ScenarioThreeContent() {
   const { sessionId, userId, isLoading: sessionLoading } = useSessionContext();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);

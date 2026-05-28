@@ -324,7 +324,7 @@ export default function MetricsDisplay({
                     </span>
                     {metrics.task_intent_specification_comment && (
                       <div className="text-xs text-gray-400 mt-1 italic">
-                        "{metrics.task_intent_specification_comment}"
+                        &quot;{metrics.task_intent_specification_comment}&quot;
                       </div>
                     )}
                   </div>
@@ -335,7 +335,7 @@ export default function MetricsDisplay({
                     </span>
                     {metrics.goal_objective_articulation_comment && (
                       <div className="text-xs text-gray-400 mt-1 italic">
-                        "{metrics.goal_objective_articulation_comment}"
+                        &quot;{metrics.goal_objective_articulation_comment}&quot;
                       </div>
                     )}
                   </div>
@@ -346,7 +346,7 @@ export default function MetricsDisplay({
                     </span>
                     {metrics.persona_role_definition_comment && (
                       <div className="text-xs text-gray-400 mt-1 italic">
-                        "{metrics.persona_role_definition_comment}"
+                        &quot;{metrics.persona_role_definition_comment}&quot;
                       </div>
                     )}
                   </div>
@@ -357,7 +357,7 @@ export default function MetricsDisplay({
                     </span>
                     {metrics.step_by_step_decomposition_comment && (
                       <div className="text-xs text-gray-400 mt-1 italic">
-                        "{metrics.step_by_step_decomposition_comment}"
+                        &quot;{metrics.step_by_step_decomposition_comment}&quot;
                       </div>
                     )}
                   </div>
@@ -368,7 +368,7 @@ export default function MetricsDisplay({
                     </span>
                     {metrics.chain_of_thought_structure_comment && (
                       <div className="text-xs text-gray-400 mt-1 italic">
-                        "{metrics.chain_of_thought_structure_comment}"
+                        &quot;{metrics.chain_of_thought_structure_comment}&quot;
                       </div>
                     )}
                   </div>
@@ -378,7 +378,7 @@ export default function MetricsDisplay({
               <div className="text-sm text-gray-600">Prompt Strategy Classification</div>
               <div className="mt-1 text-sm font-medium text-gray-900">{metrics.prompt_strategy_classification}</div>
               {metrics.prompt_strategy_justification && (
-                <div className="mt-1 text-xs text-gray-500 italic">"{metrics.prompt_strategy_justification}"</div>
+                <div className="mt-1 text-xs text-gray-500 italic">&quot;{metrics.prompt_strategy_justification}&quot;</div>
               )}
             </div>
           )}
@@ -391,7 +391,7 @@ export default function MetricsDisplay({
                     </span>
                     {metrics.context_provisioning_comment && (
                       <div className="text-xs text-gray-400 mt-1 italic">
-                        "{metrics.context_provisioning_comment}"
+                        &quot;{metrics.context_provisioning_comment}&quot;
                       </div>
                     )}
                   </div>
@@ -402,7 +402,7 @@ export default function MetricsDisplay({
                     </span>
                     {metrics.reference_use_comment && (
                       <div className="text-xs text-gray-400 mt-1 italic">
-                        "{metrics.reference_use_comment}"
+                        &quot;{metrics.reference_use_comment}&quot;
                       </div>
                     )}
                   </div>
@@ -413,7 +413,7 @@ export default function MetricsDisplay({
                     </span>
                     {metrics.example_use_comment && (
                       <div className="text-xs text-gray-400 mt-1 italic">
-                        "{metrics.example_use_comment}"
+                        &quot;{metrics.example_use_comment}&quot;
                       </div>
                     )}
                   </div>
@@ -424,7 +424,7 @@ export default function MetricsDisplay({
                     </span>
                     {metrics.tonality_writing_style_comment && (
                       <div className="text-xs text-gray-400 mt-1 italic">
-                        "{metrics.tonality_writing_style_comment}"
+                        &quot;{metrics.tonality_writing_style_comment}&quot;
                       </div>
                     )}
                   </div>
@@ -435,7 +435,7 @@ export default function MetricsDisplay({
                     </span>
                     {metrics.output_format_specification_comment && (
                       <div className="text-xs text-gray-400 mt-1 italic">
-                        "{metrics.output_format_specification_comment}"
+                        &quot;{metrics.output_format_specification_comment}&quot;
                       </div>
                     )}
                   </div>
@@ -446,7 +446,7 @@ export default function MetricsDisplay({
                     </span>
                     {metrics.information_hierarchy_comment && (
                       <div className="text-xs text-gray-400 mt-1 italic">
-                        "{metrics.information_hierarchy_comment}"
+                        &quot;{metrics.information_hierarchy_comment}&quot;
                       </div>
                     )}
                   </div>
